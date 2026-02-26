@@ -1,0 +1,13 @@
+services:
+  sumo:
+    image: ghcr.io/eclipse-sumo/sumo:v1_25_0
+    volumes:
+      - ./:/data
+    working_dir: /data
+    command: >
+      sumo -c osm.sumocfg
+      --remote-port 8813
+      --seed 42
+      --no-warnings
+    ports:
+      - "8813:8813"

@@ -1,0 +1,108 @@
+%-----------------------------------------------
+%  Engineer's & Master's Thesis Template
+%  Copyleft by Artur M. Brodzki & Piotr Woźniak
+%  Warsaw University of Technology, 2019-2022
+%-----------------------------------------------
+
+\documentclass[
+    bindingoffset=5mm,  % Binding offset
+    footnoteindent=3mm, % Footnote indent
+    hyphenation=true    % Hyphenation turn on/off
+]{src/wut-thesis}
+
+\graphicspath{{tex/img/}} % Katalog z obrazkami.
+\addbibresource{bibliografia.bib} % Plik .bib z bibliografią
+
+%-------------------------------------------------------------
+% Wybór wydziału:
+%  \facultyeiti: Wydział Elektroniki i Technik Informacyjnych
+%  \facultymeil: Wydział Mechaniczny Energetyki i Lotnictwa
+% --
+% Rodzaj pracy: \EngineerThesis, \MasterThesis
+% --
+% Wybór języka: \langpol, \langeng
+%-------------------------------------------------------------
+\facultyeiti    % Wydział Elektroniki i Technik Informacyjnych
+\MasterThesis % Praca magisterska
+\langpol % Praca w języku polskim
+
+\begin{document}
+
+%------------------
+% Strona tytułowa
+%------------------
+\instytut{Telekomunikacji}
+\kierunek{Telekomunikacja}
+\specjalnosc{Teleinformatyka i cyberbezpieczeństwo}
+\title{
+    ...
+}
+\engtitle{
+    ...
+}
+\author{Tomasz Lewiński}
+\album{323692}
+\promotor{dr inż Tomasz Mrozek}
+\date{\the\year}
+\maketitle
+
+%-------------------------------------
+% Streszczenie po polsku dla \langpol
+% English abstract if \langeng is set
+%-------------------------------------
+\cleardoublepage % Zaczynamy od nieparzystej strony
+\abstract
+
+\keywords
+
+%----------------------------------------
+% Streszczenie po angielsku dla \langpol
+% Polish abstract if \langeng is set
+%----------------------------------------
+\clearpage
+\secondabstract
+
+\secondkeywords
+
+\pagestyle{plain}
+
+%--------------
+% Spis treści
+%--------------
+\cleardoublepage % Zaczynamy od nieparzystej strony
+\tableofcontents
+
+%------------
+% Rozdziały
+%------------
+\cleardoublepage % Zaczynamy od nieparzystej strony
+\pagestyle{headings}
+
+\input{tex/przedmowa}
+\input{tex/1-wstep}
+
+%---------------
+% Bibliografia
+%---------------
+\cleardoublepage % Zaczynamy od nieparzystej strony
+% \printbibliography
+\clearpage
+
+% Wykaz symboli i skrótów.
+% Pamiętaj, żeby posortować symbole alfabetycznie
+% we własnym zakresie. Makro \acronymlist
+% generuje właściwy tytuł sekcji, w zależności od języka.
+% Makro \acronym dodaje skrót/symbol do listy,
+% zapewniając podstawowe formatowanie.
+\acronymlist
+% \acronym{AE}{Autoenkoder}
+% ....
+\clearpage
+%--------------------------------------
+% Spisy: rysunków, tabel, załączników
+%--------------------------------------
+\pagestyle{plain}
+\listoffigurestoc    % Spis rysunków.
+\clearpage      % vertical space
+\listoftablestoc     % Spis tabel.
+\end{document} % Dobranoc.
