@@ -1,13 +1,18 @@
 services:
   sumo:
     image: ghcr.io/eclipse-sumo/sumo:v1_25_0
+    platform: linux/amd64
     volumes:
       - ./:/data
     working_dir: /data
+    ports:
+      - "8813:8813"
     command: >
-      sumo -c osm.sumocfg
+      sumo -c /data/data/osm.sumocfg
       --remote-port 8813
       --seed 42
       --no-warnings
-    ports:
-      - "8813:8813"
+      --tripinfo-output /data/data/out/tripinfo.xml
+      --summary-output /data/data/out/sumo_summary.xml
+      --queue-output /data/data/out/queue.xml
+      --statistic-output /data/data/out/statistic.xml
