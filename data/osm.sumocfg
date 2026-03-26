@@ -6,8 +6,8 @@
 <sumoConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
 
     <input>
-        <net-file value="osm.net.xml.gz"/>
-        <route-files value="T1/routes_T1_101.rou.xml"/>
+        <net-file value="osm_fixed.net.xml"/>
+        <route-files value="T3/routes_T3_305.rou.xml"/>
     </input>
 
     <processing>
