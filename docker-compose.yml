@@ -13,6 +13,4 @@ services:
       --seed 42
       --no-warnings
       --tripinfo-output /data/data/out/tripinfo.xml
-      --summary-output /data/data/out/sumo_summary.xml
-      --queue-output /data/data/out/queue.xml
       --statistic-output /data/data/out/statistic.xml

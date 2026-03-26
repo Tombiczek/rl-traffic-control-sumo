@@ -49,22 +49,43 @@ Statistics (avg of 720):
  DepartDelay: 0.09
 ```
 
+
+Zapasowe komendy które można dodać do `docker-compose.yml`
+```bash
+--summary-output /data/data/out/sumo_summary.xml
+--queue-output /data/data/out/queue.xml
+```
 ---
 
-To co powinno zostać policzone na końcu to:
-- średni czas oczekiwania,
-- średnie opóźnienie / time loss,
-- throughput,
-- średnia długość kolejki,
-- maksymalna długość kolejki,
-- liczba przełączeń faz.
-- Rozbite per wlot / per kierunek
-- średni czas oczekiwania dla N/S/E/W,
-- max queue dla N/S/E/W,
-- liczba obsłużonych pojazdów dla każdego wlotu.
-
----
 ```bash
 docker compose up -d sumo
 .venv/bin/python src/run_sim.py
 ```
+
+Literatura: [DEVELOPMENT OF A TRAFFIC SIGNAL PERFORMANCE MEASUREMENT SYSTEM (TSPMS)](https://www.researchgate.net/profile/Kevin-Balke/publication/265992572_DEVELOPMENT_OF_A_TRAFFIC_SIGNAL_PERFORMANCE_MEASUREMENT_SYSTEM_TSPMS/links/54be97660cf28ce68e69d8f5/DEVELOPMENT-OF-A-TRAFFIC-SIGNAL-PERFORMANCE-MEASUREMENT-SYSTEM-TSPMS.pdf)
+### Metryki zgodne z literaturą
+- `time`
+- `phase`
+- `queue_N`, `queue_S`, `queue_E`, `queue_W`
+- `queue_total`
+- `vehicles per cycle` (to jest podane w pliku `statistics.xml`)
+
+**Congestion metrics**
+(To wszystko można policzyć ze zbieranych wcześniej kolejek z każdego kierunku)
+- `mean queue length`
+- `max queue length`
+- `mean queue per approach`
+- `max queue per approach`
+
+**Delay metrics**
+- `mean waiting time` z pliku `tripinfo.xml` mogę wyciągnąć dla każdego pojazdu `waitingTime`
+- `mean delay (timeLoss)` z pliku `tripinfo.xml` mogę wyciągnąć dla każdego pojazdu `timeLoss`
+
+**Fairness**
+- `95 percentile waiting time` tak samo z pliku `tripinfo.xml` mogę wyciągnąć dla każdego pojazdu `waitingTime`
+- `max waiting time` tak samo z pliku `tripinfo.xml` mogę wyciągnąć dla każdego pojazdu `waitingTime`
+
+**Flow**
+- `throughput` czyli liczba pojazdów która opuszcza skrzyżowanie w godzinę. Można spokojnie policzyć to z pliku `tripinfo.xml`
+
+Wniosek jest taki że zbieram już wszystkie potrzebne dane. Z moich czterech metryk plus `tripinfo.xml` jestem wstanie wyliczyć wszystko to czego potrzebuje.

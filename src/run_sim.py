@@ -11,6 +11,7 @@ OUT_DIR = PROJECT_ROOT / "data" / "out"
 TRACI_PORT = 8813
 TLS_ID = "GS_cluster_300048112_300048176_300048179_32126015"
 
+
 INBOUND_LANES = {
     "N": ["450749096#0_0", "450749096#0_1", "450749096#0_2", "450749096#0_3"],
     "S": ["1029639687#0_0", "1029639687#0_1", "1029639687#0_2"],
@@ -18,6 +19,10 @@ INBOUND_LANES = {
     "W": ["231737246#0_0", "231737246#0_1", "231737246#0_2"],
 }
 
+# metadata
+SEED = 101
+METHOD = "actuated"
+DEMAND = "low"
 
 def get_queue_per_approach():
     return {
@@ -32,11 +37,6 @@ def build_summary_stats(rows):
     queue_s = [row["queue_S"] for row in rows]
     queue_e = [row["queue_E"] for row in rows]
     queue_w = [row["queue_W"] for row in rows]
-
-    sim_duration = rows[-1]["time"] - rows[0]["time"] if len(rows) > 1 else rows[-1]["time"]
-    switch_count = rows[-1]["switch_count"]
-    switching_frequency = (switch_count / sim_duration * 3600) if sim_duration > 0 else 0
-
     return [
         ["mean queue length", sum(queue_totals) / len(queue_totals)],
         ["max queue length", max(queue_totals)],
@@ -48,7 +48,7 @@ def build_summary_stats(rows):
         ["max queue S", max(queue_s)],
         ["max queue E", max(queue_e)],
         ["max queue W", max(queue_w)],
-        ["switching frequency", switching_frequency],
+        ["total phase switches", rows[-1]["phase_switches"]]
     ]
 
 
@@ -57,29 +57,35 @@ def run():
     traci.init(port=TRACI_PORT, host="127.0.0.1")
 
     rows = []
-    prev_phase = None
-    switch_count = 0
+    last_phase = None
+    last_main_phase = None
+    main_phase_switches = 0
 
     try:
         while cast(int, traci.simulation.getMinExpectedNumber()) > 0:
             traci.simulationStep()
 
             phase = traci.trafficlight.getPhase(TLS_ID)
-            if prev_phase is not None and phase != prev_phase:
-                switch_count += 1
-            prev_phase = phase
+            
+            state = cast(str, traci.trafficlight.getRedYellowGreenState(TLS_ID))
+
+            if phase != last_phase:
+                if 'y' not in state.lower():
+                    if last_main_phase is not None and phase != last_main_phase:
+                        main_phase_switches += 1
+                    last_main_phase = phase
+            last_phase = phase
 
             queues = get_queue_per_approach()
-
             rows.append({
                 "time": traci.simulation.getTime(),
-                "phase": phase,
                 "queue_N": queues["N"],
                 "queue_S": queues["S"],
                 "queue_E": queues["E"],
                 "queue_W": queues["W"],
                 "queue_total": sum(queues.values()),
-                "switch_count": switch_count,
+                "phase": phase,
+                "phase_switches": main_phase_switches
             })
     finally:
         traci.close()
