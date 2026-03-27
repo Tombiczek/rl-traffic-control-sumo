@@ -49,9 +49,17 @@ class TrainerConfig:
 	method: str = "dqn"
 	demand: str = "high"
 	seed: int = 305
-	episodes: int = 100
 	model_path: Path = MODELS_DIR / "dqn_tls.pt"
+	best_model_path: Path = MODELS_DIR / "dqn_tls_best.pt"
 	sumocfg_path: Path = PROJECT_ROOT / "data" / "osm.sumocfg"
+	train_routes_dir: Path = PROJECT_ROOT / "data" / "train"
+	valid_routes_dir: Path = PROJECT_ROOT / "data" / "valid"
+	validation_interval: int = 5
+	early_stopping_patience: int = 8
+	score_weight_waiting: float = 1.0
+	score_weight_delay: float = 0.2
+	score_weight_p95: float = 0.05
+	score_weight_switching: float = 0.0
 	decision_interval: int = 5
 	min_green_duration: int = 10
 	yellow_duration: int = 3
@@ -242,6 +250,7 @@ class Trainer:
 
 		env_config = SumoEnvConfig(
 			sumocfg_path=self.config.sumocfg_path,
+			route_files=None,
 			decision_interval=self.config.decision_interval,
 			yellow_duration=self.config.yellow_duration,
 			min_green_duration=self.config.min_green_duration,
@@ -251,12 +260,116 @@ class Trainer:
 		)
 		return SumoTrafficEnv(config=env_config, seed=seed)
 
+	def _list_route_files(self, routes_dir: Path, split_name: str) -> list[Path]:
+		route_files = sorted(routes_dir.glob("*.rou.xml"))
+		if not route_files:
+			raise FileNotFoundError(
+				f"No {split_name} route files found in {routes_dir}. "
+				"Expected at least one '*.rou.xml' file."
+			)
+		return route_files
+
+	def _list_training_route_files(self) -> list[Path]:
+		return self._list_route_files(self.config.train_routes_dir, "training")
+
+	def _list_validation_route_files(self) -> list[Path]:
+		return self._list_route_files(self.config.valid_routes_dir, "validation")
+
+	def _aggregate_validation_metrics(self, per_route_metrics: list[dict[str, float]]) -> dict[str, float]:
+		metric_names = ["mean_waiting", "mean_delay", "p95_waiting", "switching_freq"]
+		return {
+			name: sum(route[name] for route in per_route_metrics) / len(per_route_metrics)
+			for name in metric_names
+		}
+
+	def _build_ranking_tuple(self, metrics: dict[str, float]) -> tuple[float, float, float, float]:
+		score = (
+			self.config.score_weight_waiting * metrics["mean_waiting"]
+			+ self.config.score_weight_delay * metrics["mean_delay"]
+			+ self.config.score_weight_p95 * metrics["p95_waiting"]
+			+ self.config.score_weight_switching * metrics["switching_freq"]
+		)
+		return (
+			score,
+			metrics["mean_waiting"],
+			metrics["mean_delay"],
+			metrics["p95_waiting"],
+		)
+
+	def validate_on_routes(self, route_files: list[Path]) -> dict[str, float]:
+		env = self._make_env(seed=self.config.seed, with_outputs=True)
+		per_route_metrics: list[dict[str, float]] = []
+
+		for route_file in route_files:
+			env.config.route_files = (str(route_file),)
+			state, _ = env.reset()
+			done = False
+			rows: list[dict[str, Any]] = []
+			phase_switches = 0
+
+			while not done:
+				action = self.agent.choose_action(state, explore=False)
+				next_state, _, done, info = env.step(action)
+
+				if info["switched"]:
+					phase_switches += 1
+
+				queues = info["queues"]
+				rows.append(
+					{
+						"time": info["time"],
+						"queue_N": queues["N"],
+						"queue_S": queues["S"],
+						"queue_E": queues["E"],
+						"queue_W": queues["W"],
+						"queue_total": info["queue_total"],
+						"phase": info["current_green_phase"],
+						"phase_switches": phase_switches,
+					}
+				)
+				state = next_state
+
+			if not rows:
+				raise RuntimeError(f"No rows collected during validation for route {route_file}")
+
+			write_summary_and_timeseries(rows)
+			wait_for_output_files()
+			tripinfo_metrics = parse_tripinfo_metrics(OUT_DIR / "tripinfo.xml")
+
+			duration = max(float(rows[-1]["time"]) - float(rows[0]["time"]), 1.0)
+			switching_freq = phase_switches / duration * 3600.0
+
+			per_route_metrics.append(
+				{
+					"mean_waiting": tripinfo_metrics["mean_waiting"],
+					"mean_delay": tripinfo_metrics["mean_delay"],
+					"p95_waiting": tripinfo_metrics["p95_waiting"],
+					"switching_freq": switching_freq,
+				}
+			)
+
+		env.close()
+		if not per_route_metrics:
+			raise RuntimeError("Validation route list was empty.")
+
+		aggregated = self._aggregate_validation_metrics(per_route_metrics)
+		ranking = self._build_ranking_tuple(aggregated)
+		return {
+			"score": ranking[0],
+			"mean_waiting": ranking[1],
+			"mean_delay": ranking[2],
+			"p95_waiting": ranking[3],
+			"switching_freq": aggregated["switching_freq"],
+		}
+
 	def train(self) -> None:
 		episode_rewards: list[float] = []
-		env = self._make_env(seed=self.config.seed, with_outputs=False)
+		route_files = self._list_training_route_files()
+		env = self._make_env(seed=None, with_outputs=False)
+		episode_count = len(route_files)
 
-		for episode in range(self.config.episodes):
-			env.seed = self.config.seed + episode
+		for episode, route_file in enumerate(route_files):
+			env.config.route_files = (str(route_file),)
 			state, _ = env.reset()
 			done = False
 			total_reward = 0.0
@@ -274,7 +387,8 @@ class Trainer:
 			if (episode + 1) % 10 == 0:
 				avg_reward = sum(episode_rewards[-10:]) / min(10, len(episode_rewards))
 				print(
-					f"Episode {episode + 1}/{self.config.episodes} | "
+					f"Episode {episode + 1}/{episode_count} | "
+					f"route={route_file.name} | "
 					f"avg_reward_10={avg_reward:.2f} | epsilon={self.agent.epsilon:.4f}"
 				)
 
@@ -282,6 +396,91 @@ class Trainer:
 
 		self.agent.save(self.config.model_path)
 		print(f"Model saved to: {self.config.model_path}")
+
+	def train_and_validate(self) -> None:
+		episode_rewards: list[float] = []
+		train_route_files = self._list_training_route_files()
+		valid_route_files = self._list_validation_route_files()
+		env = self._make_env(seed=None, with_outputs=False)
+		episode_count = len(train_route_files)
+		validation_interval = max(1, self.config.validation_interval)
+		patience = max(1, self.config.early_stopping_patience)
+
+		best_ranking: tuple[float, float, float, float] | None = None
+		best_epoch = -1
+		no_improve = 0
+
+		for episode, route_file in enumerate(train_route_files):
+			env.config.route_files = (str(route_file),)
+			state, _ = env.reset()
+			done = False
+			total_reward = 0.0
+
+			while not done:
+				action = self.agent.choose_action(state, explore=True)
+				next_state, reward, done, _ = env.step(action)
+				self.agent.update(state, action, reward, next_state, done)
+				state = next_state
+				total_reward += reward
+
+			self.agent.decay_epsilon()
+			episode_rewards.append(total_reward)
+
+			if (episode + 1) % 10 == 0:
+				avg_reward = sum(episode_rewards[-10:]) / min(10, len(episode_rewards))
+				print(
+					f"Episode {episode + 1}/{episode_count} | "
+					f"route={route_file.name} | "
+					f"avg_reward_10={avg_reward:.2f} | epsilon={self.agent.epsilon:.4f}"
+				)
+
+			should_validate = (episode + 1) % validation_interval == 0 or (episode + 1) == episode_count
+			if not should_validate:
+				continue
+
+			validation = self.validate_on_routes(valid_route_files)
+			current_ranking = (
+				validation["score"],
+				validation["mean_waiting"],
+				validation["mean_delay"],
+				validation["p95_waiting"],
+			)
+			print(
+				f"Validation after episode {episode + 1}: "
+				f"score={validation['score']:.4f}, "
+				f"mean_waiting={validation['mean_waiting']:.4f}, "
+				f"mean_delay={validation['mean_delay']:.4f}, "
+				f"p95_waiting={validation['p95_waiting']:.4f}, "
+				f"switching_freq={validation['switching_freq']:.4f}"
+			)
+
+			if best_ranking is None or current_ranking < best_ranking:
+				best_ranking = current_ranking
+				best_epoch = episode + 1
+				no_improve = 0
+				self.agent.save(self.config.best_model_path)
+				print(
+					f"New best model at episode {best_epoch} "
+					f"saved to: {self.config.best_model_path}"
+				)
+			else:
+				no_improve += 1
+				if no_improve >= patience:
+					print(
+						f"Early stopping at episode {episode + 1} "
+						f"(no improvement for {patience} validations)."
+					)
+					break
+
+		env.close()
+
+		self.agent.save(self.config.model_path)
+		print(f"Final model saved to: {self.config.model_path}")
+		if best_ranking is not None:
+			print(
+				f"Best validation model from episode {best_epoch} | "
+				f"score={best_ranking[0]:.4f} | path={self.config.best_model_path}"
+			)
 
 	def simulate(self) -> None:
 		self.agent.load(self.config.model_path)
@@ -332,14 +531,67 @@ def parse_args() -> argparse.Namespace:
 	parser = argparse.ArgumentParser(description="DQN trainer/simulator for SUMO traffic signal control")
 	parser.add_argument(
 		"--mode",
-		choices=["train", "simulate", "train_and_simulate"],
+		choices=["train", "simulate", "train_and_simulate", "train_and_validate"],
 		default="train_and_simulate",
 		help="Run only training, only simulation, or both in sequence.",
 	)
-	parser.add_argument("--episodes", type=int, default=100, help="Number of training episodes.")
 	parser.add_argument("--seed", type=int, default=305, help="Base random seed.")
 	parser.add_argument("--demand", type=str, default="high", help="Demand label for results.csv row.")
 	parser.add_argument("--method", type=str, default="dqn", help="Method label for results.csv row.")
+	parser.add_argument(
+		"--train-routes-dir",
+		type=Path,
+		default=PROJECT_ROOT / "data" / "train",
+		help="Directory with training route files (*.rou.xml). One file is one episode.",
+	)
+	parser.add_argument(
+		"--valid-routes-dir",
+		type=Path,
+		default=PROJECT_ROOT / "data" / "valid",
+		help="Directory with validation route files (*.rou.xml).",
+	)
+	parser.add_argument(
+		"--validation-interval",
+		type=int,
+		default=5,
+		help="Run validation every N training episodes in train_and_validate mode.",
+	)
+	parser.add_argument(
+		"--early-stopping-patience",
+		type=int,
+		default=8,
+		help="Stop if validation does not improve for this many validation rounds.",
+	)
+	parser.add_argument(
+		"--best-model-path",
+		type=Path,
+		default=MODELS_DIR / "dqn_tls_best.pt",
+		help="Path for saving the best validation checkpoint.",
+	)
+	parser.add_argument(
+		"--score-weight-waiting",
+		type=float,
+		default=1.0,
+		help="Weight for mean_waiting in validation ranking score.",
+	)
+	parser.add_argument(
+		"--score-weight-delay",
+		type=float,
+		default=0.2,
+		help="Weight for mean_delay in validation ranking score.",
+	)
+	parser.add_argument(
+		"--score-weight-p95",
+		type=float,
+		default=0.05,
+		help="Weight for p95_waiting in validation ranking score.",
+	)
+	parser.add_argument(
+		"--score-weight-switching",
+		type=float,
+		default=0.0,
+		help="Optional weight for switching_freq penalty in ranking score.",
+	)
 	parser.add_argument(
 		"--sumocfg",
 		type=Path,
@@ -361,14 +613,24 @@ def main() -> None:
 		method=args.method,
 		demand=args.demand,
 		seed=args.seed,
-		episodes=args.episodes,
 		model_path=args.model_path,
+		best_model_path=args.best_model_path,
 		sumocfg_path=args.sumocfg,
+		train_routes_dir=args.train_routes_dir,
+		valid_routes_dir=args.valid_routes_dir,
+		validation_interval=args.validation_interval,
+		early_stopping_patience=args.early_stopping_patience,
+		score_weight_waiting=args.score_weight_waiting,
+		score_weight_delay=args.score_weight_delay,
+		score_weight_p95=args.score_weight_p95,
+		score_weight_switching=args.score_weight_switching,
 	)
 	trainer = Trainer(config)
 
 	if args.mode in ("train", "train_and_simulate"):
 		trainer.train()
+	if args.mode == "train_and_validate":
+		trainer.train_and_validate()
 	if args.mode in ("simulate", "train_and_simulate"):
 		trainer.simulate()
 

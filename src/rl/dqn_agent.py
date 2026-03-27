@@ -134,6 +134,11 @@ class DQNAgent:
 		self.epsilon = max(self.config.epsilon_min, self.epsilon * self.config.epsilon_decay)
 		return self.epsilon
 
+	def set_learning_rate(self, learning_rate: float) -> None:
+		for param_group in self.optimizer.param_groups:
+			param_group["lr"] = learning_rate
+		self.config.learning_rate = learning_rate
+
 	def save(self, path: str | Path) -> None:
 		path_obj = Path(path)
 		path_obj.parent.mkdir(parents=True, exist_ok=True)

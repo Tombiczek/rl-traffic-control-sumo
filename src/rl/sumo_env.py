@@ -27,6 +27,7 @@ class SumoEnvConfig:
 	tls_id: str = TLS_ID
 	remote_host: str = "127.0.0.1"
 	remote_port: int = 8813
+	route_files: tuple[str, ...] | None = None
 	sumo_extra_args: tuple[str, ...] = ()
 	decision_interval: int = 5
 	yellow_duration: int = 3
@@ -160,6 +161,8 @@ class SumoTrafficEnv:
 
 	def _load_simulation(self) -> None:
 		load_args = ["-c", str(self.config.sumocfg_path)]
+		if self.config.route_files:
+			load_args.extend(["--route-files", ",".join(self.config.route_files)])
 		if self.config.sumo_extra_args:
 			load_args.extend(self.config.sumo_extra_args)
 		if self.seed is not None:
