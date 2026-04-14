@@ -120,6 +120,18 @@ docker run --rm -it \
   --model-path /workspace/data/models/dqn/dqn_model.zip \
 ```
 
+Uruchomienie ewaluacji modelu DQN na zbiorze walidacyjnym:
+```bash
+docker run --rm -it \
+  -v "$PWD":/workspace \
+  thesis-dqn evaluate \
+  --sumocfg-file /workspace/data/osm.sumocfg \
+  --route-file /workspace/data/T3/routes_T3_305.rou.xml \
+  --model-path /workspace/data/models/dqn/dqn_model.zip \
+  --validate
+
+```
+
 Uruchamianie ewaluacji modelu DQN:
 ```bash
 docker run --rm -it \

@@ -11,6 +11,7 @@ import yaml
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_SUMOCFG_PATH = PROJECT_ROOT / "data" / "osm.sumocfg"
 DEFAULT_RESULTS_CSV_PATH = PROJECT_ROOT / "data" / "results.csv"
+DEFAULT_VALIDATION_RESULTS_CSV_PATH = PROJECT_ROOT / "data" / "validation_results.csv"
 DEFAULT_OUT_DIR = PROJECT_ROOT / "data" / "out"
 DEFAULT_MODELS_DIR = PROJECT_ROOT / "data" / "models" / "dqn"
 DEFAULT_MODEL_PATH = DEFAULT_MODELS_DIR / "dqn_model.zip"

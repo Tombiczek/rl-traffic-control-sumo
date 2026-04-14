@@ -2,7 +2,7 @@ environment:
   tls_id: GS_cluster_300048112_300048176_300048179_32126015
   decision_interval: 5
   yellow_time: 3
-  min_green: 10
+  min_green: 5
   num_seconds: 20000
   reward_fn: diff-waiting-time
   use_gui: false
@@ -23,5 +23,5 @@ training:
   device: auto
 
 hub:
-  upload_to_hub: true
-  model_name: dqn_50k_
+  upload_to_hub: false
+  model_name: dqn_base_50k

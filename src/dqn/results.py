@@ -146,6 +146,26 @@ def append_results_row(
         writer.writerow(row)
 
 
+def append_validation_row(
+    *,
+    validation_results_csv_path: Path,
+    model_name: str,
+    mean_delay: float,
+    route_file: str,
+) -> None:
+    needs_header = (
+        not validation_results_csv_path.exists()
+        or validation_results_csv_path.stat().st_size == 0
+    )
+
+    validation_results_csv_path.parent.mkdir(parents=True, exist_ok=True)
+    with validation_results_csv_path.open("a", newline="") as file_obj:
+        writer = csv.writer(file_obj)
+        if needs_header:
+            writer.writerow(["model_name", "route_file", "mean_delay"])
+        writer.writerow([model_name, route_file, mean_delay])
+
+
 def archive_run_outputs(*, out_dir: Path, demand: str, seed: int, method: str) -> Path:
     target_dir = out_dir / f"run_{demand}_{seed}_{method}"
     if target_dir.exists():
