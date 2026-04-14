@@ -4,6 +4,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
 ENV PIP_NO_CACHE_DIR=1
 ENV SUMO_HOME=/usr/share/sumo
+ENV LIBSUMO_AS_TRACI=1
 
 RUN apt-get update \
     && apt-get install -y python3 python3-pip python3-venv \

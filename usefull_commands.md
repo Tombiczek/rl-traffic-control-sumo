@@ -115,9 +115,9 @@ docker run --rm -it \
   -v "$PWD":/workspace \
   thesis-dqn train \
   --sumocfg-file /workspace/data/osm.sumocfg \
-  --train-route-glob "/workspace/data/train/routes_train_*.rou.xml" \
-  --config-file /workspace/src/dqn/train_config.example.yml \
-  --model-path /workspace/data/models/dqn/dqn_model.zip \
+  --train-route-glob "/workspace/data/train/fixed/routes_train_*.rou.xml" \
+  --config-file /workspace/src/dqn/base_config.yml \
+  --model-path /workspace/data/models/dqn/dqn_fixed_base_50k.zip \
 ```
 
 Uruchomienie ewaluacji modelu DQN na zbiorze walidacyjnym:
