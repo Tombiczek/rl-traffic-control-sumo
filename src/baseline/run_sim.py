@@ -7,7 +7,7 @@ import xml.etree.ElementTree as ET
 
 import traci
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 OUT_DIR = PROJECT_ROOT / "data" / "out"
 RESULTS_CSV_PATH = PROJECT_ROOT / "data" / "results.csv"
 
@@ -23,8 +23,8 @@ INBOUND_LANES = {
 }
 
 # metadata
-SEED = 401
-METHOD = "actuated"
+SEED = 405
+METHOD = "fixed"
 DEMAND = "random"
 
 OUTPUT_FILES = ["tripinfo.xml", "statistic.xml", "summary.csv", "timeseries.csv"]
@@ -258,6 +258,6 @@ def run():
 
 if __name__ == "__main__":
     run()
-    wait_for_output_files()
+    wait_for_output_files(20)
     append_results_row(RESULTS_CSV_PATH)
     archive_run_outputs()
