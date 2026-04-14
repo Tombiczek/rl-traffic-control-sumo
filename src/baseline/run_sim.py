@@ -23,9 +23,9 @@ INBOUND_LANES = {
 }
 
 # metadata
-SEED = 305
-METHOD = "fixed"
-DEMAND = "high"
+SEED = 401
+METHOD = "actuated"
+DEMAND = "random"
 
 OUTPUT_FILES = ["tripinfo.xml", "statistic.xml", "summary.csv", "timeseries.csv"]
 RESULTS_HEADERS = [

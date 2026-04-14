@@ -18,6 +18,22 @@ Ustaliliśmy wstępnie, że:
 
 I na ten moment powinno to sensownie symulować mały/średni/duży ruch na skrzyżowaniu.
 
+Jeszcze generowanie losowego ruchu:
+```bash
+seeds=(401 402 403 404 405)
+for i in {0..4}; do
+  docker run --rm -v "$PWD/data":/data ghcr.io/eclipse-sumo/sumo:v1_25_0 \
+    python3 /usr/share/sumo/tools/randomTrips.py \
+      -n /data/osm.net.xml.gz \
+      -o /data/G1/trips_G1_${seeds[$i]}.trips.xml \
+      --route-file /data/G1/routes_G1_${seeds[$i]}.rou.xml \
+      -e 3600 \
+      --period 5.0 2.5 1.25 \
+      --random-depart \
+      --binomial 4 \
+      --seed ${seeds[$i]}
+done
+```
 ---
 
 Aby zrobić sanity-check i uruchomić symulację bez TraCI w konsoli używając obrazu dockerowego wykonujemy komendę:
@@ -100,8 +116,8 @@ docker run --rm -it \
   thesis-dqn train \
   --sumocfg-file /workspace/data/osm.sumocfg \
   --train-route-glob "/workspace/data/train/routes_train_*.rou.xml" \
+  --config-file /workspace/src/dqn/train_config.example.yml \
   --model-path /workspace/data/models/dqn/dqn_model.zip \
-  --total-timesteps 50000
 ```
 
 Uruchamianie ewaluacji modelu DQN:

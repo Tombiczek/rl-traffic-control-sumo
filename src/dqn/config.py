@@ -5,6 +5,8 @@ from pathlib import Path
 from typing import Any
 import xml.etree.ElementTree as ET
 
+import yaml
+
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_SUMOCFG_PATH = PROJECT_ROOT / "data" / "osm.sumocfg"
@@ -109,3 +111,8 @@ def resolve_eval_route_file(sumocfg_file: Path | None, route_file: Path | None) 
     # so evaluation uses the first configured route file unless the caller overrides it.
     first_route = route_value.split(",")[0].strip()
     return (sumocfg_file.parent / first_route).resolve()
+
+
+def load_train_config(config_file: Path) -> dict[str, Any]:
+    with config_file.open() as file_obj:
+        return yaml.safe_load(file_obj)

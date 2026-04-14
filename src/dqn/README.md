@@ -9,7 +9,8 @@ Osobny moduł eksperymentalny do trenowania i ewaluacji sterownika sygnalizacji 
 ## Założenia
 
 - Domyślny `tls_id` i mapowanie pasów `N/S/E/W` odpowiadają obecnemu scenariuszowi z pracy.
-- Dla innej sieci można nadpisać `--tls-id` i przekazać `--lane-map-file`.
+- Dla treningu `tls_id` definiuje YAML, a dla innej sieci można dodatkowo przekazać `--lane-map-file`.
+- Przy ewaluacji `tls_id` nadal można nadpisać flagą `--tls-id`.
 - Ewaluacja zapisuje `tripinfo.xml`, `statistic.xml`, `summary.csv`, `timeseries.csv`, a potem dopisuje jeden wiersz do `results.csv` w tym samym układzie kolumn co baseline.
 
 Przykładowy `lane-map-file` w JSON:
@@ -31,6 +32,8 @@ docker build -f src/dqn/Dockerfile -t thesis-dqn .
 
 ## Trening
 
+Trening korzysta z obowiązkowego pliku YAML z hiperparametrami i konfiguracją środowiska, np. [train_config.example.yml](/Users/tomek/Developer/szkola/msc_thesis/src/dqn/train_config.example.yml).
+
 Przykład na wszystkich trasach z katalogów `T1` i `T2`:
 
 ```bash
@@ -39,8 +42,8 @@ docker run --rm -it \
   thesis-dqn train \
   --sumocfg-file /workspace/data/osm.sumocfg \
   --train-route-glob "/workspace/data/T1/routes_*.rou.xml" "/workspace/data/T2/routes_*.rou.xml" \
-  --model-path /workspace/data/models/dqn/dqn_model.zip \
-  --total-timesteps 50000
+  --config-file /workspace/src/dqn/train_config.example.yml \
+  --model-path /workspace/data/models/dqn/dqn_model.zip
 ```
 
 Jeżeli chcesz jawnie wskazać sieć zamiast korzystać z `sumocfg`:
@@ -51,6 +54,7 @@ docker run --rm -it \
   thesis-dqn train \
   --net-file /workspace/data/osm_fixed.net.xml \
   --train-route-glob "/workspace/data/T1/routes_*.rou.xml" \
+  --config-file /workspace/src/dqn/train_config.example.yml \
   --model-path /workspace/data/models/dqn/dqn_model.zip
 ```
 
@@ -96,7 +100,8 @@ Wymagane zmienne środowiskowe:
 
 - `HF_TOKEN`
 - `HF_REPO_ID`
-- opcjonalnie `HF_PATH_IN_REPO`
+
+Nazwa pliku wrzucanego do repozytorium jest budowana z pola `hub.model_name` z YAML. To pole wpływa tylko na `path_in_repo` podczas uploadu i pozwala rozróżniać modele trenowane różnymi konfiguracjami.
 
 Przykład:
 
@@ -108,6 +113,7 @@ docker run --rm -it \
   thesis-dqn train \
   --sumocfg-file /workspace/data/osm.sumocfg \
   --train-route-glob "/workspace/data/T1/routes_*.rou.xml" \
+  --config-file /workspace/src/dqn/train_config.example.yml \
   --model-path /workspace/data/models/dqn/dqn_model.zip \
   --upload-to-hub
 ```
