@@ -86,6 +86,35 @@ Literatura: [DEVELOPMENT OF A TRAFFIC SIGNAL PERFORMANCE MEASUREMENT SYSTEM (TSP
 - `max waiting time` tak samo z pliku `tripinfo.xml` mogę wyciągnąć dla każdego pojazdu `waitingTime`
 
 **Flow**
-- `throughput` czyli liczba pojazdów która opuszcza skrzyżowanie w godzinę. Można spokojnie policzyć to z pliku `tripinfo.xml`
+- `throughput` czyli liczba pojazdów, która opuszcza skrzyżowanie w godzinę. Można spokojnie policzyć to z pliku `tripinfo.xml`
 
-Wniosek jest taki że zbieram już wszystkie potrzebne dane. Z moich czterech metryk plus `tripinfo.xml` jestem wstanie wyliczyć wszystko to czego potrzebuje.
+Wniosek jest taki, że zbieram już wszystkie potrzebne dane. Z moich czterech metryk plus `tripinfo.xml` jestem wstanie wyliczyć wszystko to czego potrzebuje.
+
+---
+
+Uruchamianie treningu DQN:
+```bash
+docker run --rm -it \
+  --env-file .env \
+  -v "$PWD":/workspace \
+  thesis-dqn train \
+  --sumocfg-file /workspace/data/osm.sumocfg \
+  --train-route-glob "/workspace/data/train/routes_train_*.rou.xml" \
+  --model-path /workspace/data/models/dqn/dqn_model.zip \
+  --total-timesteps 50000
+```
+
+Uruchamianie ewaluacji modelu DQN:
+```bash
+docker run --rm -it \
+  -v "$PWD":/workspace \
+  thesis-dqn evaluate \
+  --sumocfg-file /workspace/data/osm.sumocfg \
+  --route-file /workspace/data/T3/routes_T3_305.rou.xml \
+  --model-path /workspace/data/models/dqn/dqn_model.zip \
+  --results-csv /workspace/data/results.csv \
+  --out-dir /workspace/data/out \
+  --method dqn \
+  --demand high \
+  --seed 305
+```
