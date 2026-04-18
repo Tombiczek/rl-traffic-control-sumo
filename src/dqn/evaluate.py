@@ -150,6 +150,9 @@ def run_validation_mode(
     route_file: Path,
     inbound_lanes: dict[str, list[str]],
 ) -> None:
+    args.out_dir.mkdir(parents=True, exist_ok=True)
+    clear_output_files(args.out_dir)
+
     env = DqnSumoEnv(
         net_file=net_file,
         route_files=[route_file],
@@ -178,7 +181,7 @@ def run_validation_mode(
     finally:
         env.close()
 
-    wait_for_output_files(args.out_dir)
+    wait_for_output_files(args.out_dir, expected_files=["tripinfo.xml", "statistic.xml"])
     metrics = parse_tripinfo_metrics(args.out_dir / "tripinfo.xml")
 
     append_validation_row(

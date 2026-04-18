@@ -18,9 +18,15 @@ def clear_output_files(out_dir: Path) -> None:
             file_path.unlink()
 
 
-def wait_for_output_files(out_dir: Path, timeout_seconds: float = 30.0, poll_interval: float = 0.25) -> None:
+def wait_for_output_files(
+    out_dir: Path,
+    timeout_seconds: float = 30.0,
+    poll_interval: float = 0.25,
+    expected_files: list[str] | tuple[str, ...] | None = None,
+) -> None:
     deadline = time.time() + timeout_seconds
-    required_paths = [out_dir / file_name for file_name in OUTPUT_FILES]
+    required = expected_files or OUTPUT_FILES
+    required_paths = [out_dir / file_name for file_name in required]
     while time.time() < deadline:
         if all(path.exists() for path in required_paths):
             return

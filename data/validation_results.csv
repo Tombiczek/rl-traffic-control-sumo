@@ -1,0 +1,2 @@
+model_name,route_file,mean_delay
+dqn_fixed_base_5k,routes_T3_305.rou,43.088233657858126

@@ -1,10 +1,9 @@
-FROM ghcr.io/eclipse-sumo/sumo:v1_25_0
+FROM --platform=linux/amd64 ghcr.io/eclipse-sumo/sumo:v1_25_0
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
 ENV PIP_NO_CACHE_DIR=1
 ENV SUMO_HOME=/usr/share/sumo
-ENV LIBSUMO_AS_TRACI=1
 
 RUN apt-get update \
     && apt-get install -y python3 python3-pip python3-venv \
@@ -20,7 +19,7 @@ RUN pip install --upgrade pip \
         "huggingface_hub>=0.30,<1.0" \
     && git clone https://github.com/LucasAlegre/sumo-rl \
     && cd sumo-rl \
-    && pip install -e . \
+    && pip install -e .
 
 WORKDIR /workspace
 COPY . /workspace

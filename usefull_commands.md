@@ -107,17 +107,23 @@ Literatura: [DEVELOPMENT OF A TRAFFIC SIGNAL PERFORMANCE MEASUREMENT SYSTEM (TSP
 Wniosek jest taki, że zbieram już wszystkie potrzebne dane. Z moich czterech metryk plus `tripinfo.xml` jestem wstanie wyliczyć wszystko to czego potrzebuje.
 
 ---
+Zbudowanie obrazu:
+```bash
+docker build -f src/dqn/Dockerfile -t thesis-dqn .
+```
+
 
 Uruchamianie treningu DQN:
 ```bash
 docker run --rm -it \
   --env-file .env \
   -v "$PWD":/workspace \
+  --platform=linux/amd64 \
   thesis-dqn train \
   --sumocfg-file /workspace/data/osm.sumocfg \
   --train-route-glob "/workspace/data/train/fixed/routes_train_*.rou.xml" \
   --config-file /workspace/src/dqn/base_config.yml \
-  --model-path /workspace/data/models/dqn/dqn_fixed_base_50k.zip \
+  --model-path /workspace/data/models/dqn/dqn_fixed_base_5k.zip \
 ```
 
 Uruchomienie ewaluacji modelu DQN na zbiorze walidacyjnym:
@@ -127,7 +133,7 @@ docker run --rm -it \
   thesis-dqn evaluate \
   --sumocfg-file /workspace/data/osm.sumocfg \
   --route-file /workspace/data/T3/routes_T3_305.rou.xml \
-  --model-path /workspace/data/models/dqn/dqn_model.zip \
+  --model-path /workspace/data/models/dqn/dqn_fixed_base_5k.zip \
   --validate
 
 ```
