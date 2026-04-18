@@ -16,9 +16,11 @@ ENV PATH="/opt/venv/bin:${PATH}"
 RUN pip install --upgrade pip \
     && pip install \
         "pyyaml>=6.0,<7.0" \
-        "sumo-rl==1.4.5" \
         "stable-baselines3>=2.3,<3.0" \
-        "huggingface_hub>=0.30,<1.0"
+        "huggingface_hub>=0.30,<1.0" \
+    && git clone https://github.com/LucasAlegre/sumo-rl \
+    && cd sumo-rl \
+    && pip install -e . \
 
 WORKDIR /workspace
 COPY . /workspace

@@ -130,26 +130,40 @@ class DqnSumoEnv(gym.Env[np.ndarray, int]):
         # step() advances the whole decision window at once. Stepping the internal
         # simulation second-by-second keeps training semantics aligned with sumo-rl
         # while letting evaluation log queues exactly like the baseline code.
-        while True:
-            self._env._sumo_step()
-            for signal in self._env.traffic_signals.values():
-                signal.update()
+
+        max_inner_steps = max(1, self._env.delta_time + self._env.yellow_time + self._env.min_green + 5)
+        for inner_step in range(max_inner_steps):
+            self._env.sumo.simulationStep()
+
+            for ts in self._env.ts_ids:
+                self._env.traffic_signals[ts].update()
 
             if self._recorder is not None:
                 self._recorder.record_step(self._env.sumo)
 
-            if self._simulation_finished():
+            truncated = self._simulation_finished()
+            if truncated:
                 break
 
-            if self._env.traffic_signals[self.tls_id].time_to_act:
+            if any(self._env.traffic_signals[ts].time_to_act for ts in self._env.ts_ids):
                 break
+        else:
+            raise RuntimeError(
+                f"Inner step loop exceeded {max_inner_steps} seconds without reaching "
+                f"time_to_act or termination. sim_step={self._env.sim_step}, tls_id={self.tls_id}"
+            )
 
-        observation = self._env.traffic_signals[self.tls_id].compute_observation()
-        reward = float(self._env.traffic_signals[self.tls_id].compute_reward())
-        info = self._env._compute_info()
+        traffic_signal = self._env.traffic_signals[self.tls_id]
+        observation = traffic_signal.compute_observation()
+        reward = traffic_signal.compute_reward()
+        info = {
+            "step": self._env.sim_step,
+            "tls_id": self.tls_id,
+            "time_to_act": traffic_signal.time_to_act,
+            "truncated": truncated,
+        }
 
         terminated = False
-        truncated = self._simulation_finished()
         return observation, reward, terminated, truncated, info
 
     def _simulation_finished(self) -> bool:
