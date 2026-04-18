@@ -3,5 +3,11 @@ dqn_fixed_base_100k,routes_valid_heavy.rou,40.49150000000008
 dqn_fixed_base_100k,routes_valid_light.rou,14.05693055555555
 dqn_fixed_base_100k,routes_valid_medium.rou,18.62765277777776
 dqn_fixed_base_100k,routes_valid_random.rou,29.216263282172385
-dqn_fixed_base_100k,routes_T3_301.rou,38.29401041666659
-dqn_fixed_base_5k,routes_T3_301.rou,47.360697593303136
+dqn_fixed_base_50k,routes_valid_heavy.rou,54.18550694444424
+dqn_fixed_base_50k,routes_valid_light.rou,30.28212500000001
+dqn_fixed_base_50k,routes_valid_medium.rou,47.78615277777778
+dqn_fixed_base_50k,routes_valid_random.rou,43.3179069767442
+dqn_fixed_base_5k,routes_valid_heavy.rou,46.709816965857
+dqn_fixed_base_5k,routes_valid_light.rou,77.92881019830038
+dqn_fixed_base_5k,routes_valid_medium.rou,49.51017543859644
+dqn_fixed_base_5k,routes_valid_random.rou,51.77741358760426

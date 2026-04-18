@@ -1,4 +1,4 @@
-Generowanie plików które definiują napływ pojazdów:
+Generowanie plików, które definiują napływ pojazdów:
 ```bash
 docker run --rm -v "$PWD/data":/data ghcr.io/eclipse-sumo/sumo:v1_25_0 \
   python3 /usr/share/sumo/tools/randomTrips.py \
@@ -66,7 +66,7 @@ Statistics (avg of 720):
 ```
 
 
-Zapasowe komendy które można dodać do `docker-compose.yml`
+Zapasowe komendy, które można dodać do `docker-compose.yml`
 ```bash
 --summary-output /data/data/out/sumo_summary.xml
 --queue-output /data/data/out/queue.xml
@@ -123,7 +123,7 @@ docker run --rm -it \
   --sumocfg-file /workspace/data/osm.sumocfg \
   --train-route-glob "/workspace/data/train/fixed/routes_train_*.rou.xml" \
   --config-file /workspace/src/dqn/base_config.yml \
-  --model-path /workspace/data/models/dqn/dqn_fixed_base_100k.zip
+  --model-path /workspace/data/models/dqn/dqn_fixed_base_50k.zip
 ```
 
 Uruchomienie ewaluacji modelu DQN na zbiorze walidacyjnym:
@@ -149,7 +149,7 @@ for route_file in data/valid/routes_valid_*.rou.xml; do
     thesis-dqn evaluate \
     --sumocfg-file /workspace/data/osm.sumocfg \
     --route-file "/workspace/$route_file" \
-    --model-path /workspace/data/models/dqn/dqn_fixed_base_100k.zip \
+    --model-path /workspace/data/models/dqn/dqn_fixed_base_50k.zip \
     --validate
 done
 ```

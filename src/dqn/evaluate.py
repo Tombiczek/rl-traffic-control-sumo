@@ -47,7 +47,7 @@ def add_evaluate_subparser(subparsers: argparse._SubParsersAction[argparse.Argum
     parser.add_argument("--decision-interval", type=int, default=5)
     parser.add_argument("--yellow-time", type=int, default=3)
     parser.add_argument("--min-green", type=int, default=10)
-    parser.add_argument("--num-seconds", type=int, default=50_000)
+    parser.add_argument("--num-seconds", type=int, default=20_000)
     parser.add_argument("--reward-fn", type=str, default="diff-waiting-time")
     parser.add_argument("--use-gui", action="store_true")
     parser.add_argument("--validate", action="store_true")
