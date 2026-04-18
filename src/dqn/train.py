@@ -112,11 +112,13 @@ def upload_model_to_hub(*, model_path: Path, model_name: str) -> None:
     path_in_repo = model_name if Path(model_name).suffix else f"{model_name}{suffix}"
 
     api = HfApi(token=token)
-    api.create_repo(repo_id=repo_id, repo_type="model", exist_ok=True)
+    repo_url = api.create_repo(repo_id=repo_id, repo_type="model", exist_ok=True)
+    resolved_repo_id = repo_url.repo_id
     api.upload_file(
         path_or_fileobj=str(model_path),
         path_in_repo=path_in_repo,
-        repo_id=repo_id,
+        repo_id=resolved_repo_id,
+        token=token,
         repo_type="model",
     )
-    print(f"Uploaded model to Hugging Face Hub: {repo_id}/{path_in_repo}")
+    print(f"Uploaded model to Hugging Face Hub: {resolved_repo_id}/{path_in_repo}")

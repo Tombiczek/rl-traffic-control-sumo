@@ -123,19 +123,35 @@ docker run --rm -it \
   --sumocfg-file /workspace/data/osm.sumocfg \
   --train-route-glob "/workspace/data/train/fixed/routes_train_*.rou.xml" \
   --config-file /workspace/src/dqn/base_config.yml \
-  --model-path /workspace/data/models/dqn/dqn_fixed_base_5k.zip \
+  --model-path /workspace/data/models/dqn/dqn_fixed_base_100k.zip
 ```
 
 Uruchomienie ewaluacji modelu DQN na zbiorze walidacyjnym:
 ```bash
 docker run --rm -it \
   -v "$PWD":/workspace \
+  --platform=linux/amd64 \
   thesis-dqn evaluate \
   --sumocfg-file /workspace/data/osm.sumocfg \
-  --route-file /workspace/data/T3/routes_T3_305.rou.xml \
+  --route-file /workspace/data/T3/routes_T3_301.rou.xml \
   --model-path /workspace/data/models/dqn/dqn_fixed_base_5k.zip \
   --validate
+```
 
+Na wszystkich plikach:
+```bash
+for route_file in data/valid/routes_valid_*.rou.xml; do
+  echo "Uruchamiam walidację dla: $route_file"
+
+  docker run --rm -it \
+    -v "$PWD":/workspace \
+    --platform=linux/amd64 \
+    thesis-dqn evaluate \
+    --sumocfg-file /workspace/data/osm.sumocfg \
+    --route-file "/workspace/$route_file" \
+    --model-path /workspace/data/models/dqn/dqn_fixed_base_100k.zip \
+    --validate
+done
 ```
 
 Uruchamianie ewaluacji modelu DQN:

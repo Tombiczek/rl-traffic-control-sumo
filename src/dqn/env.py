@@ -6,75 +6,8 @@ from typing import Any, Sequence
 import gymnasium as gym
 import numpy as np
 from sumo_rl import SumoEnvironment
-from sumo_rl.environment.traffic_signal import TrafficSignal
-from traci import FatalTraCIError
 
 from .results import EpisodeRecorder
-
-
-def _patch_sumo_rl_phase_control() -> None:
-    if getattr(TrafficSignal, "_msc_thesis_setphase_patch", False):
-        return
-
-    # The current upstream control path rewrites the full program and drives the
-    # junction via setRedYellowGreenState(...). On this network that combination
-    # makes SUMO drop TraCI after certain phase switches. Keeping the original
-    # green/yellow program and switching by phase index stays stable.
-    def _build_phases_with_original_program(self: TrafficSignal) -> None:
-        phases = self.sumo.trafficlight.getAllProgramLogics(self.id)[0].phases
-        if self.env.fixed_ts:
-            self.num_green_phases = len(phases) // 2
-            return
-
-        self._green_phase_indices = []
-        self._yellow_phase_indices = {}
-        for phase_idx, phase in enumerate(phases):
-            state = phase.state
-            if "y" not in state and (state.count("r") + state.count("s") != len(state)):
-                green_idx = len(self._green_phase_indices)
-                self._green_phase_indices.append(phase_idx)
-                if phase_idx + 1 < len(phases) and "y" in phases[phase_idx + 1].state:
-                    self._yellow_phase_indices[green_idx] = phase_idx + 1
-
-        self.num_green_phases = len(self._green_phase_indices)
-        logic = self.sumo.trafficlight.getAllProgramLogics(self.id)[0]
-        logic.type = 0
-        self.sumo.trafficlight.setProgramLogic(self.id, logic)
-        self.sumo.trafficlight.setPhase(self.id, self._green_phase_indices[0])
-
-    def _update_with_original_program(self: TrafficSignal) -> None:
-        self.time_since_last_phase_change += 1
-        if self.is_yellow and self.time_since_last_phase_change == self.yellow_time:
-            self.sumo.trafficlight.setPhase(self.id, self._green_phase_indices[self.green_phase])
-            self.is_yellow = False
-
-    def _set_next_phase_with_original_program(self: TrafficSignal, new_phase: int) -> None:
-        new_phase = int(new_phase)
-        enforce_max_green = getattr(self, "enforce_max_green", False)
-        if enforce_max_green and new_phase == self.green_phase and self.time_since_last_phase_change >= self.max_green:
-            new_phase = (self.green_phase + 1) % self.num_green_phases
-
-        if self.green_phase == new_phase or self.time_since_last_phase_change < self.yellow_time + self.min_green:
-            self.sumo.trafficlight.setPhase(self.id, self._green_phase_indices[self.green_phase])
-            self.next_action_time = self.env.sim_step + self.delta_time
-        else:
-            yellow_phase_idx = self._yellow_phase_indices.get(self.green_phase)
-            if yellow_phase_idx is None:
-                self.sumo.trafficlight.setPhase(self.id, self._green_phase_indices[new_phase])
-                self.green_phase = new_phase
-                self.next_action_time = self.env.sim_step + self.delta_time
-                return
-
-            self.sumo.trafficlight.setPhase(self.id, yellow_phase_idx)
-            self.green_phase = new_phase
-            self.next_action_time = self.env.sim_step + self.delta_time
-            self.is_yellow = True
-            self.time_since_last_phase_change = 0
-
-    TrafficSignal._build_phases = _build_phases_with_original_program
-    TrafficSignal.update = _update_with_original_program
-    TrafficSignal.set_next_phase = _set_next_phase_with_original_program
-    TrafficSignal._msc_thesis_setphase_patch = True
 
 
 class DqnSumoEnv(gym.Env[np.ndarray, int]):
@@ -91,12 +24,12 @@ class DqnSumoEnv(gym.Env[np.ndarray, int]):
         reward_fn: str,
         use_gui: bool,
         sumo_seed: int | str,
+        terminate_on_no_vehicles: bool = False,
         output_dir: Path | None = None,
         inbound_lanes: dict[str, list[str]] | None = None,
         record_steps: bool = False,
     ) -> None:
         super().__init__()
-        _patch_sumo_rl_phase_control()
 
         if not route_files:
             raise ValueError("route_files cannot be empty.")
@@ -111,6 +44,7 @@ class DqnSumoEnv(gym.Env[np.ndarray, int]):
         self.reward_fn = reward_fn
         self.use_gui = use_gui
         self.sumo_seed = sumo_seed
+        self.terminate_on_no_vehicles = terminate_on_no_vehicles
         self.output_dir = output_dir
         self.inbound_lanes = inbound_lanes or {}
         self.record_steps = record_steps
@@ -201,11 +135,9 @@ class DqnSumoEnv(gym.Env[np.ndarray, int]):
         # while letting evaluation log queues exactly like the baseline code.
 
         max_inner_steps = max(1, self._env.delta_time + self._env.yellow_time + self._env.min_green + 5)
-        terminated = False
-        truncated = False
         for _ in range(max_inner_steps):
-            truncated = self._simulation_finished()
-            if truncated:
+            terminated, truncated = self._episode_flags()
+            if terminated or truncated:
                 break
 
             self._env._sumo_step()
@@ -218,8 +150,8 @@ class DqnSumoEnv(gym.Env[np.ndarray, int]):
             if self._recorder is not None:
                 self._recorder.record_step(self._env.sumo)
 
-            truncated = self._simulation_finished()
-            if truncated:
+            terminated, truncated = self._episode_flags()
+            if terminated or truncated:
                 break
 
             if any(self._env.traffic_signals[ts].time_to_act for ts in self._env.ts_ids):
@@ -233,19 +165,33 @@ class DqnSumoEnv(gym.Env[np.ndarray, int]):
         traffic_signal = self._env.traffic_signals[self.tls_id]
         observation = traffic_signal.compute_observation()
         reward = traffic_signal.compute_reward()
+        min_expected_number = self._min_expected_number()
         info = {
             "step": self._last_sim_step,
             "tls_id": self.tls_id,
             "time_to_act": traffic_signal.time_to_act,
+            "min_expected_number": min_expected_number,
+            "terminated": terminated,
             "truncated": truncated,
+            "episode_end_reason": (
+                "time_limit"
+                if truncated
+                else "no_more_vehicles"
+                if terminated
+                else "in_progress"
+            ),
         }
 
-        terminated = False
         return observation, reward, terminated, truncated, info
 
-    def _simulation_finished(self) -> bool:
+    def _episode_flags(self) -> tuple[bool, bool]:
         self._last_sim_step = float(self._env.sim_step)
-        return self._last_sim_step >= self._env.sim_max_time or int(self._env.sumo.simulation.getMinExpectedNumber()) <= 0
+        truncated = self._last_sim_step >= self._env.sim_max_time
+        terminated = self.terminate_on_no_vehicles and not truncated and self._min_expected_number() <= 0
+        return terminated, truncated
+
+    def _min_expected_number(self) -> int:
+        return int(self._env.sumo.simulation.getMinExpectedNumber())
 
     def pop_recorded_rows(self) -> list[dict[str, Any]]:
         if self._recorder is None:
