@@ -131,8 +131,6 @@ class DqnSumoEnv(gym.Env[np.ndarray, int]):
             additional_sumo_cmd = (
                 f"--tripinfo-output {self.output_dir / 'tripinfo.xml'} "
                 f"--statistic-output {self.output_dir / 'statistic.xml'} "
-                f"--error-log {self.output_dir / 'sumo_error.log'} "
-                f"--log {self.output_dir / 'sumo.log'}"
             )
 
         return SumoEnvironment(
@@ -210,14 +208,7 @@ class DqnSumoEnv(gym.Env[np.ndarray, int]):
             if truncated:
                 break
 
-            try:
-                self._env._sumo_step()
-            except FatalTraCIError as exc:
-                raise RuntimeError(
-                    "SUMO closed TraCI connection unexpectedly. "
-                    f"route={self._current_route_file}, last_sim_step={self._last_sim_step}, action={action}. "
-                    "Check sumo_error.log / sumo.log."
-                ) from exc
+            self._env._sumo_step()
 
             self._last_sim_step = float(self._env.sim_step)
 
