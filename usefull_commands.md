@@ -121,7 +121,7 @@ docker run --rm -it \
   --platform=linux/amd64 \
   thesis-dqn train \
   --sumocfg-file /workspace/data/osm.sumocfg \
-  --train-route-glob "/workspace/data/train/randomized/routes_train_*.rou.xml" \
+  --train-route-glob "/workspace/data/train/fixed/routes_train_*.rou.xml" \
   --config-file /workspace/src/dqn/base_config.yml \
   --model-path /workspace/data/models/dqn/dqn_random_base_300k.zip
 ```
@@ -167,4 +167,80 @@ docker run --rm -it \
   --method dqn \
   --demand high \
   --seed 305
+```
+
+---
+Trening windows:
+```bash
+configs=(
+  "src/dqn/configs/config_batch128.yml"
+  "src/dqn/configs/config_buffer1e5.yml"
+)
+
+for rel_config in "${configs[@]}"; do
+  config_file="$PWD/$rel_config"
+  model_name=$(python3 -c 'import sys, yaml; print(yaml.safe_load(open(sys.argv[1]))["hub"]["model_name"])' "$config_file")
+
+  echo "Training for: $rel_config -> $model_name"
+
+  docker run --rm -it \
+    --env-file .env \
+    -v "$PWD":/workspace \
+    thesis-dqn train \
+    --sumocfg-file /workspace/data/osm.sumocfg \
+    --train-route-glob "/workspace/data/train/fixed/routes_train_*.rou.xml" \
+    --config-file "/workspace/$rel_config" \
+    --model-path "/workspace/data/models/dqn/${model_name}.zip"
+done
+```
+
+Trening mac 1:
+```bash
+configs=(
+  "src/dqn/configs/config_explore1e-1.yml"
+  "src/dqn/configs/config_gamma98e-2.yml"
+  "src/dqn/configs/config_lr3e-4.yml"
+)
+
+for rel_config in "${configs[@]}"; do
+  config_file="$PWD/$rel_config"
+  model_name=$(python3 -c 'import sys, yaml; print(yaml.safe_load(open(sys.argv[1]))["hub"]["model_name"])' "$config_file")
+
+  echo "Training for: $rel_config -> $model_name"
+
+  docker run --rm -it \
+    --env-file .env \
+    -v "$PWD":/workspace \
+    --platform=linux/amd64 \
+    thesis-dqn train \
+    --sumocfg-file /workspace/data/osm.sumocfg \
+    --train-route-glob "/workspace/data/train/fixed/routes_train_*.rou.xml" \
+    --config-file "/workspace/$rel_config" \
+    --model-path "/workspace/data/models/dqn/${model_name}.zip"
+done
+```
+
+Trening mac 2:
+```bash
+configs=(
+  "src/dqn/configs/config_lr5e-4.yml"
+  "src/dqn/configs/config_tui1e3.yml"
+)
+
+for rel_config in "${configs[@]}"; do
+  config_file="$PWD/$rel_config"
+  model_name=$(python3 -c 'import sys, yaml; print(yaml.safe_load(open(sys.argv[1]))["hub"]["model_name"])' "$config_file")
+
+  echo "Training for: $rel_config -> $model_name"
+
+  docker run --rm -it \
+    --env-file .env \
+    -v "$PWD":/workspace \
+    --platform=linux/amd64 \
+    thesis-dqn train \
+    --sumocfg-file /workspace/data/osm.sumocfg \
+    --train-route-glob "/workspace/data/train/fixed/routes_train_*.rou.xml" \
+    --config-file "/workspace/$rel_config" \
+    --model-path "/workspace/data/models/dqn/${model_name}.zip"
+done
 ```
