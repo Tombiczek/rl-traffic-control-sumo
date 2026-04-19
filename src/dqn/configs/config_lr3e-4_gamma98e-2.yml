@@ -1,0 +1,27 @@
+environment:
+  tls_id: GS_cluster_300048112_300048176_300048179_32126015
+  decision_interval: 5
+  yellow_time: 3
+  min_green: 5
+  num_seconds: 2100
+  reward_fn: diff-waiting-time
+  use_gui: false
+
+training:
+  total_timesteps: 225_000
+  seed: 42
+  learning_rate: 0.0003
+  buffer_size: 50000
+  learning_starts: 1000
+  batch_size: 64
+  gamma: 0.98
+  train_freq: 1
+  target_update_interval: 500
+  exploration_fraction: 0.2
+  exploration_initial_eps: 1.0
+  exploration_final_eps: 0.05
+  device: auto
+
+hub:
+  upload_to_hub: true
+  model_name: dqn_fixed_lr_3e-4_gamma_98e-2_225k
