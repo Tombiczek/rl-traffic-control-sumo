@@ -105,6 +105,7 @@ def run_standard_evaluation(
         output_dir=args.out_dir,
         inbound_lanes=inbound_lanes,
         record_steps=True,
+        terminate_on_no_vehicles=True
     )
 
     model = DQN.load(str(args.model_path))

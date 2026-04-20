@@ -31,3 +31,7 @@ dqn_fixed_tui_1e3_225k,routes_valid_heavy.rou,7.11815723270439
 dqn_fixed_tui_1e3_225k,routes_valid_light.rou,17.267708333333342
 dqn_fixed_tui_1e3_225k,routes_valid_medium.rou,105.54542688081166
 dqn_fixed_tui_1e3_225k,routes_valid_random.rou,36.69725730442979
+dqn_fixed_lr_3e-4_gamma_98e-2_225k,routes_valid_heavy.rou,65.56180166540503
+dqn_fixed_lr_3e-4_gamma_98e-2_225k,routes_valid_light.rou,12.690416666666664
+dqn_fixed_lr_3e-4_gamma_98e-2_225k,routes_valid_medium.rou,14.935798611111078
+dqn_fixed_lr_3e-4_gamma_98e-2_225k,routes_valid_random.rou,20.685129870129902

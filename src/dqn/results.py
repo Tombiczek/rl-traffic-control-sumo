@@ -232,20 +232,22 @@ class EpisodeRecorder:
     tls_id: str
     inbound_lanes: dict[str, list[str]]
     rows: list[dict[str, Any]] = field(default_factory=list)
-    last_phase: int | None = None
-    last_main_phase: int | None = None
+    last_state: str | None = None
+    last_main_state: str | None = None
     main_phase_switches: int = 0
 
     def record_step(self, sumo: Any) -> None:
         phase = int(sumo.trafficlight.getPhase(self.tls_id))
         state = str(sumo.trafficlight.getRedYellowGreenState(self.tls_id))
 
-        if phase != self.last_phase:
-            if "y" not in state.lower():
-                if self.last_main_phase is not None and phase != self.last_main_phase:
+        # Check if the literal state character string changed instead
+        if state != self.last_state:
+            if "y" not in state.lower():  # Ignore transitions into yellow states
+                # Verify it genuinely shifted to a new green configuration
+                if self.last_main_state is not None and state != self.last_main_state:
                     self.main_phase_switches += 1
-                self.last_main_phase = phase
-        self.last_phase = phase
+                self.last_main_state = state
+        self.last_state = state
 
         queues = get_queue_per_approach(sumo, self.inbound_lanes)
         self.rows.append(

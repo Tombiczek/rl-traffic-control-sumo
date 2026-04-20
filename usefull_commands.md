@@ -122,8 +122,8 @@ docker run --rm -it \
   thesis-dqn train \
   --sumocfg-file /workspace/data/osm.sumocfg \
   --train-route-glob "/workspace/data/train/fixed/routes_train_*.rou.xml" \
-  --config-file /workspace/src/dqn/base_config.yml \
-  --model-path /workspace/data/models/dqn/dqn_random_base_300k.zip
+  --config-file /workspace/src/dqn/configs/config_lr3e-4_gamma98e-2.yml \
+  --model-path /workspace/data/models/finetune/dqn_fixed_lr_3e-4_gamma_98e-2_225k.zip
 ```
 
 Uruchomienie ewaluacji modelu DQN na zbiorze walidacyjnym:
@@ -149,7 +149,7 @@ for route_file in data/valid/routes_valid_*.rou.xml; do
     thesis-dqn evaluate \
     --sumocfg-file /workspace/data/osm.sumocfg \
     --route-file "/workspace/$route_file" \
-    --model-path /workspace/data/models/dqn/dqn_fixed_base_50k.zip \
+    --model-path /workspace/data/models/finetune/dqn_fixed_lr_3e-4_gamma_98e-2_225k.zip \
     --validate
 done
 ```
@@ -161,10 +161,41 @@ docker run --rm -it \
   thesis-dqn evaluate \
   --sumocfg-file /workspace/data/osm.sumocfg \
   --route-file /workspace/data/T3/routes_T3_305.rou.xml \
-  --model-path /workspace/data/models/dqn/dqn_model.zip \
+  --model-path /workspace/data/models/dqn/dqn_fixed_lr_5e-4_225k_final.zip \
   --results-csv /workspace/data/results.csv \
   --out-dir /workspace/data/out \
   --method dqn \
   --demand high \
   --seed 305
+```
+
+```bash
+for route_file in data/{T1,T2,T3,G1}/routes_*.rou.xml(.N); do
+  folder=${route_file:h:t}
+
+  case "$folder" in
+    T1) demand="low" ;;
+    T2) demand="medium" ;;
+    T3) demand="high" ;;
+    G1) demand="random" ;;
+    *)  echo "Pomijam nieznany folder: $folder"; continue ;;
+  esac
+
+  seed=$(basename "$route_file" | sed -E 's/.*_([0-9]+)\.rou\.xml/\1/')
+
+  echo ">>> Eval: $route_file | demand=$demand | seed=$seed"
+
+  docker run --rm -it \
+    -v "$PWD":/workspace \
+    --platform=linux/amd64 \
+    thesis-dqn evaluate \
+    --sumocfg-file /workspace/data/osm.sumocfg \
+    --route-file "/workspace/$route_file" \
+    --model-path /workspace/data/models/dqn/dqn_fixed_lr_5e-4_225k_final.zip \
+    --results-csv /workspace/data/results.csv \
+    --out-dir /workspace/data/out \
+    --method dqn \
+    --demand "$demand" \
+    --seed "$seed"
+done
 ```
