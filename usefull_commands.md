@@ -191,10 +191,10 @@ for route_file in data/{T1,T2,T3,G1}/routes_*.rou.xml(.N); do
     thesis-dqn evaluate \
     --sumocfg-file /workspace/data/osm.sumocfg \
     --route-file "/workspace/$route_file" \
-    --model-path /workspace/data/models/dqn/dqn_fixed_lr_5e-4_225k_final.zip \
+    --model-path /workspace/data/models/finetune/dqn_fixed_tui_1e3_225k.zip \
     --results-csv /workspace/data/results.csv \
     --out-dir /workspace/data/out \
-    --method dqn \
+    --method dqn-tui-1e3 \
     --demand "$demand" \
     --seed "$seed"
 done
