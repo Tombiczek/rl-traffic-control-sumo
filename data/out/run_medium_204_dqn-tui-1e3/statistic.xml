@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on 2026-05-04T15:50:00.677133+00:00 by Eclipse SUMO sumo 1.25.0
+<sumoConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
+
+    <input>
+        <net-file value="/workspace/data/osm_fixed.net.xml"/>
+        <route-files value="/workspace/data/T2/routes_T2_204.rou.xml"/>
+    </input>
+
+    <output>
+        <tripinfo-output value="/workspace/data/out/tripinfo.xml"/>
+        <statistic-output value="/workspace/data/out/statistic.xml"/>
+    </output>
+
+    <processing>
+        <time-to-teleport value="-1"/>
+        <waiting-time-memory value="1000"/>
+        <max-depart-delay value="-1"/>
+    </processing>
+
+    <report>
+        <no-warnings value="true"/>
+    </report>
+
+    <traci_server>
+        <remote-port value="42137"/>
+    </traci_server>
+
+    <random_number>
+        <seed value="204"/>
+    </random_number>
+
+</sumoConfiguration>
+-->
+
+<statistics xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/statistic_file.xsd">
+    <performance clockBegin="1777909800.69" clockEnd="1777909837.06" clockDuration="36.37" traciDuration="30.06" realTimeFactor="549.90" vehicleUpdatesPerSecond="72226.62" personUpdatesPerSecond="0.00" begin="0.00" end="20000.00" duration="20000.00"/>
+    <vehicles loaded="1440" inserted="988" running="136" waiting="452"/>
+    <teleports total="0" jam="0" yield="0" wrongLane="0"/>
+    <safety collisions="0" emergencyStops="0" emergencyBraking="0"/>
+    <persons loaded="0" running="0" jammed="0"/>
+    <personTeleports total="0" abortWait="0" wrongDest="0"/>
+    <vehicleTripStatistics count="852" routeLength="432.44" speed="10.49" duration="40.84" waitingTime="1.60" timeLoss="8.69" departDelay="0.45" departDelayWaiting="-1.00" totalTravelTime="34793.00" totalDepartDelay="382.50"/>
+    <pedestrianStatistics number="0" routeLength="0.00" duration="0.00" timeLoss="0.00"/>
+    <rideStatistics number="0"/>
+    <transportStatistics number="0"/>
+</statistics>
