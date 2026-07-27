@@ -1,2 +1,63 @@
 \clearpage
 \section{Wstęp}
+\label{sec:wstep}
+
+\subsection{Wprowadzenie do problematyki}
+\label{subsec:wprowadzenie}
+
+Postępująca urbanizacja oraz rosnąca liczba pojazdów prowadzą do systematycznego wzrostu natężenia ruchu drogowego w miastach. W wielu obszarach istniejąca infrastruktura drogowa nie jest w stanie sprawnie obsłużyć zwiększającego się popytu na przejazdy, co skutkuje powstawaniem zatorów, szczególnie w godzinach szczytu.
+
+Zatory drogowe niosą ze sobą szereg negatywnych konsekwencji [DO UZUPEŁNIENIA: cytowanie]. Do najistotniejszych z nich należą:
+\begin{itemize}
+    \item wydłużenie czasu przejazdu oraz spadek przewidywalności podróży;
+    \item zwiększone zużycie paliwa, wynikające z częstych zatrzymań i ruszania;
+    \item wzrost emisji zanieczyszczeń oraz hałasu;
+    \item większe obciążenie infrastruktury drogowej.
+\end{itemize}
+
+Jednym z podstawowych narzędzi zarządzania ruchem w miastach jest sterowanie sygnalizacją świetlną na skrzyżowaniach. Sposób, w jaki sygnalizacja przydziela prawo przejazdu poszczególnym strumieniom pojazdów, bezpośrednio wpływa na przepustowość skrzyżowania, czas oczekiwania oraz długość kolejek, a tym samym na sprawność całej sieci drogowej \cite{LEITNER2022507}.
+
+Tradycyjne programy sygnalizacji często działają według z góry ustalonych reguł. W sterowaniu stałoczasowym sekwencja faz oraz czas ich trwania są określone z wyprzedzeniem i nie zmieniają się w reakcji na bieżącą sytuację ruchową. Bardziej zaawansowane metody, takie jak sterowanie akomodacyjne typu gap-based, reagują na obecność i napływ pojazdów, jednak nadal opierają się na wcześniej zdefiniowanej logice, a nie na polityce wypracowanej na podstawie doświadczenia.
+
+Alternatywę stanowi adaptacyjne sterowanie wykorzystujące uczenie ze wzmocnieniem. W tym podejściu agent uczy się polityki sterowania na podstawie interakcji ze środowiskiem: obserwuje stan skrzyżowania, podejmuje decyzje dotyczące fazy sygnalizacji i otrzymuje sygnał nagrody odzwierciedlający jakość podjętych decyzji. Dzięki temu polityka sterowania nie musi być z góry zaprogramowana, lecz może być kształtowana w procesie uczenia. Potencjał takiego podejścia stanowi punkt wyjścia dla niniejszej pracy.
+
+\subsection{Problem badawczy i hipoteza}
+\label{subsec:problem-hipoteza}
+
+Na potrzeby pracy przyjęto następujące pytanie badawcze:
+\begin{quote}
+    \emph{Czy algorytm głębokiego uczenia ze wzmocnieniem może sterować sygnalizacją świetlną na pojedynczym skrzyżowaniu skuteczniej niż sterowanie stałoczasowe oraz akomodacyjne?}
+\end{quote}
+
+Z pytaniem badawczym powiązano hipotezę:
+\begin{quote}
+    \emph{Odpowiednio wytrenowany algorytm DQN jest w stanie zmniejszyć opóźnienie, czas oczekiwania oraz długość kolejek pojazdów względem klasycznych metod sterowania, szczególnie w warunkach zmiennego lub wysokiego natężenia ruchu.}
+\end{quote}
+
+Hipoteza koncentruje się na wskaźnikach opisujących płynność ruchu, przede wszystkim opóźnieniu, czasie oczekiwania oraz długości kolejek. Poprawa tych wskaźników nie musi jednak oznaczać przewagi algorytmu DQN pod względem każdej metryki ani w każdym scenariuszu ruchu, przy czym może na przykład współwystępować z częstszym przełączaniem sygnalizacji. Stopień oraz warunki potwierdzenia hipotezy są przedmiotem dalszej części pracy, w której metody sterowania porównano na niezależnym zbiorze testowym.
+
+\subsection{Cel i zakres pracy}
+\label{subsec:cel-zakres}
+
+Celem głównym pracy jest zaprojektowanie, wytrenowanie oraz ocena algorytmu DQN sterującego sygnalizacją świetlną na zamodelowanym skrzyżowaniu ulicy Belgradzkiej oraz alei Komisji Edukacji Narodowej (al. KEN).
+
+Realizacja celu głównego wymagała osiągnięcia następujących celów szczegółowych:
+\begin{itemize}
+    \item odwzorowanie skrzyżowania w środowisku symulacyjnym SUMO;
+    \item implementacja środowiska uczenia ze wzmocnieniem, integrującego symulację z procesem treningowym;
+    \item zdefiniowanie przestrzeni obserwacji, przestrzeni akcji oraz funkcji nagrody;
+    \item przygotowanie rozdzielnych zbiorów: treningowego, walidacyjnego oraz testowego;
+    \item implementacja metod referencyjnych: sterowania stałoczasowego oraz akomodacyjnego;
+    \item wyznaczenie odpowiedniej liczby kroków treningowych;
+    \item porównanie dwóch sposobów generowania danych treningowych;
+    \item dobór hiperparametrów algorytmu DQN;
+    \item ocena stabilności procesu uczenia;
+    \item porównanie rozpatrywanych metod na niezależnym zbiorze testowym.
+\end{itemize}
+
+\subsection{Założenia i ograniczenia pracy}
+\label{subsec:zalozenia-ograniczenia}
+
+Zakres pracy został świadomie ograniczony, aby umożliwić przeprowadzenie kontrolowanego eksperymentu. Analizie poddano pojedyncze skrzyżowanie, bez uwzględnienia wzajemnego oddziaływania sąsiednich skrzyżowań. W modelu ruchu pominięto uczestników innych niż pojazdy silnikowe, to znaczy nie uwzględniono ruchu pieszego, rowerowego ani komunikacji miejskiej. Ruch drogowy generowany jest syntetycznie, z wykorzystaniem skryptu \texttt{randomTrips.py} [DO UZUPEŁNIENIA: cytowanie], i nie odwzorowuje bezpośrednio rzeczywistych pomiarów natężenia. Sterowanie ograniczono do wyboru faz sygnalizacji świetlnej: agent dysponuje czterema akcjami i obserwuje ciągły, 31-wymiarowy stan skrzyżowania. Wszystkie eksperymenty przeprowadzono wyłącznie w środowisku symulacyjnym, bez wdrożenia na rzeczywistym sterowniku sygnalizacji.
+
+Należy podkreślić, że celem pracy nie było stworzenie gotowego systemu produkcyjnego ani certyfikowanego sterownika ruchu. Zamierzeniem było przeprowadzenie kontrolowanego eksperymentu, pozwalającego ocenić potencjał algorytmu DQN w adaptacyjnym sterowaniu sygnalizacją świetlną w porównaniu z klasycznymi, deterministycznymi metodami sterowania.

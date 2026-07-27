@@ -440,6 +440,19 @@ Należy unikać:
 - powtarzania tej samej informacji w wielu miejscach,
 - zdań sugerujących wyniki, których jeszcze nie przedstawiono.
 
+### Interpunkcja i myślniki
+
+Nie wolno używać długich myślników, tak zwanych em dashów (długi myślnik, znak Unicode U+2014). Zakaz obowiązuje w całej pracy oraz we wszystkich fragmentach redagowanych automatycznie.
+
+Zamiast długiego myślnika należy:
+
+- przeredagować zdanie tak, aby myślnik nie był potrzebny,
+- użyć przecinka, dwukropka albo nawiasu, gdy pasuje to do treści,
+- podzielić wypowiedź na dwa zdania,
+- jeżeli myślnik jest rzeczywiście konieczny, na przykład jako wtrącenie, zastosować krótszą półpauzę „–” (znak Unicode U+2013) zgodnie z polską typografią.
+
+Jeżeli w tekście pojawi się długi myślnik, na przykład wklejony z innego źródła, należy go usunąć i zastąpić poprawną interpunkcją.
+
 ### Osoba i styl narracji
 
 Model powinien zachować styl otaczającego tekstu. Należy jednak pamiętać że praca ta jest pisana bezosobowo, i jeżeli użytkownik napisze fragment przez przypadek w pierwszej osobie, trzeba to poprawić aby praca była spójna.
