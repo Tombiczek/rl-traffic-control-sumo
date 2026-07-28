@@ -7,7 +7,7 @@
 
 Postępująca urbanizacja oraz rosnąca liczba pojazdów prowadzą do systematycznego wzrostu natężenia ruchu drogowego w miastach. W wielu obszarach istniejąca infrastruktura drogowa nie jest w stanie sprawnie obsłużyć zwiększającego się popytu na przejazdy, co skutkuje powstawaniem zatorów, szczególnie w godzinach szczytu.
 
-Zatory drogowe niosą ze sobą szereg negatywnych konsekwencji [DO UZUPEŁNIENIA: cytowanie]. Do najistotniejszych z nich należą:
+Zatory drogowe niosą ze sobą szereg negatywnych konsekwencji \cite{treiber2008congestion}. Do najistotniejszych z nich należą:
 \begin{itemize}
     \item wydłużenie czasu przejazdu oraz spadek przewidywalności podróży;
     \item zwiększone zużycie paliwa, wynikające z częstych zatrzymań i ruszania;
@@ -58,6 +58,6 @@ Realizacja celu głównego wymagała osiągnięcia następujących celów szczeg
 \subsection{Założenia i ograniczenia pracy}
 \label{subsec:zalozenia-ograniczenia}
 
-Zakres pracy został świadomie ograniczony, aby umożliwić przeprowadzenie kontrolowanego eksperymentu. Analizie poddano pojedyncze skrzyżowanie, bez uwzględnienia wzajemnego oddziaływania sąsiednich skrzyżowań. W modelu ruchu pominięto uczestników innych niż pojazdy silnikowe, to znaczy nie uwzględniono ruchu pieszego, rowerowego ani komunikacji miejskiej. Ruch drogowy generowany jest syntetycznie, z wykorzystaniem skryptu \texttt{randomTrips.py} [DO UZUPEŁNIENIA: cytowanie], i nie odwzorowuje bezpośrednio rzeczywistych pomiarów natężenia. Sterowanie ograniczono do wyboru faz sygnalizacji świetlnej: agent dysponuje czterema akcjami i obserwuje ciągły, 31-wymiarowy stan skrzyżowania. Wszystkie eksperymenty przeprowadzono wyłącznie w środowisku symulacyjnym, bez wdrożenia na rzeczywistym sterowniku sygnalizacji.
+Zakres pracy został świadomie ograniczony, aby umożliwić przeprowadzenie kontrolowanego eksperymentu. Analizie poddano pojedyncze skrzyżowanie, bez uwzględnienia wzajemnego oddziaływania sąsiednich skrzyżowań. W modelu ruchu pominięto uczestników innych niż pojazdy silnikowe, to znaczy nie uwzględniono ruchu pieszego, rowerowego ani komunikacji miejskiej. Ruch drogowy generowany jest syntetycznie, z wykorzystaniem skryptu \texttt{randomTrips.py} \cite{sumo_randomtrips_docs}, i nie odwzorowuje bezpośrednio rzeczywistych pomiarów natężenia. Sterowanie ograniczono do wyboru faz sygnalizacji świetlnej: agent dysponuje czterema akcjami i obserwuje ciągły, 31-wymiarowy stan skrzyżowania. Wszystkie eksperymenty przeprowadzono wyłącznie w środowisku symulacyjnym, bez wdrożenia na rzeczywistym sterowniku sygnalizacji.
 
 Należy podkreślić, że celem pracy nie było stworzenie gotowego systemu produkcyjnego ani certyfikowanego sterownika ruchu. Zamierzeniem było przeprowadzenie kontrolowanego eksperymentu, pozwalającego ocenić potencjał algorytmu DQN w adaptacyjnym sterowaniu sygnalizacją świetlną w porównaniu z klasycznymi, deterministycznymi metodami sterowania.
