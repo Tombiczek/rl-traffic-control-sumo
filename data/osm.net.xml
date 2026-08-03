@@ -218,11 +218,11 @@
     </edge>
 
     <tlLogic id="GS_cluster_300048112_300048176_300048179_32126015" type="actuated" programID="0" offset="0">
-        <phase duration="33" state="rrrrGGGrrrrrGGGr" minDur="5" maxDur="50"/>
+        <phase duration="14" state="rrrrGGGrrrrrGGGr" minDur="5" maxDur="21"/>
         <phase duration="3"  state="rrrryyyrrrrryyyr"/>
-        <phase duration="6"  state="rrrrrrrGrrrrrrrG" minDur="5" maxDur="50"/>
+        <phase duration="29" state="rrrrrrrGrrrrrrrG" minDur="5" maxDur="43"/>
         <phase duration="3"  state="rrrrrrryrrrrrrry"/>
-        <phase duration="33" state="GGGgrrrrGGGgrrrr" minDur="5" maxDur="50"/>
+        <phase duration="29" state="GGGgrrrrGGGgrrrr" minDur="5" maxDur="44"/>
         <phase duration="3"  state="yyyyrrrryyyyrrrr"/>
     </tlLogic>
 
