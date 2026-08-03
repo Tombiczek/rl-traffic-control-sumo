@@ -58,6 +58,7 @@
 \RequirePackage{graphicx}      % Enhanced images support
 \RequirePackage{ifluatex}      % LuaTeX-specific options
 \RequirePackage{kantlipsum}    % English kantian-style lipsum
+\RequirePackage{float}
 \RequirePackage{lipsum}        % Lorem ipsum
 \RequirePackage{listings}      % Code listings
 \RequirePackage{longtable}     % Multi-page tables
