@@ -7,8 +7,10 @@ from pathlib import Path
 
 from huggingface_hub import HfApi
 from stable_baselines3 import DQN
+from stable_baselines3.common.callbacks import CheckpointCallback
 
 from .config import (
+    DEFAULT_CHECKPOINT_DIR,
     DEFAULT_MODEL_PATH,
     DEFAULT_SUMOCFG_PATH,
     load_inbound_lanes,
@@ -38,6 +40,19 @@ def add_train_subparser(subparsers: argparse._SubParsersAction[argparse.Argument
     )
     parser.add_argument("--lane-map-file", type=Path, default=None)
     parser.add_argument("--model-path", type=Path, default=DEFAULT_MODEL_PATH)
+    parser.add_argument("--checkpoint-dir", type=Path, default=DEFAULT_CHECKPOINT_DIR)
+    parser.add_argument(
+        "--checkpoint-freq",
+        type=int,
+        default=25_000,
+        help="Save a checkpoint every N steps. Use 0 to disable checkpointing.",
+    )
+    parser.add_argument(
+        "--checkpoint-prefix",
+        type=str,
+        default=None,
+        help="Checkpoint file prefix. Defaults to the model file name.",
+    )
     parser.add_argument("--upload-to-hub", action="store_true")
 
 
@@ -84,7 +99,10 @@ def run_train(args: argparse.Namespace) -> None:
     )
 
     try:
-        model.learn(total_timesteps=int(training_config["total_timesteps"]))
+        model.learn(
+            total_timesteps=int(training_config["total_timesteps"]),
+            callback=build_checkpoint_callback(args),
+        )
         args.model_path.parent.mkdir(parents=True, exist_ok=True)
         model.save(str(args.model_path))
         print(f"Model saved to: {args.model_path}")
@@ -96,6 +114,20 @@ def run_train(args: argparse.Namespace) -> None:
             )
     finally:
         env.close()
+
+
+def build_checkpoint_callback(args: argparse.Namespace) -> CheckpointCallback | None:
+    if args.checkpoint_freq <= 0:
+        return None
+
+    args.checkpoint_dir.mkdir(parents=True, exist_ok=True)
+    prefix = args.checkpoint_prefix or args.model_path.stem
+    print(f"Checkpoints every {args.checkpoint_freq} steps -> {args.checkpoint_dir}/{prefix}_*_steps.zip")
+    return CheckpointCallback(
+        save_freq=args.checkpoint_freq,
+        save_path=str(args.checkpoint_dir),
+        name_prefix=prefix,
+    )
 
 
 def collect_route_files(patterns: list[str]) -> list[Path]:

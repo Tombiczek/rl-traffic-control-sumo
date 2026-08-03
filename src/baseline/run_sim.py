@@ -1,4 +1,5 @@
 import csv
+import os
 from pathlib import Path
 import shutil
 import time
@@ -8,10 +9,10 @@ import xml.etree.ElementTree as ET
 import traci
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-OUT_DIR = PROJECT_ROOT / "data" / "out"
-RESULTS_CSV_PATH = PROJECT_ROOT / "data" / "results.csv"
+OUT_DIR = Path(os.environ.get("OUT_DIR") or PROJECT_ROOT / "data" / "out")
+RESULTS_CSV_PATH = Path(os.environ.get("RESULTS_CSV") or PROJECT_ROOT / "data" / "results.csv")
 
-TRACI_PORT = 8813
+TRACI_PORT = int(os.environ.get("TRACI_PORT", "8813"))
 TLS_ID = "GS_cluster_300048112_300048176_300048179_32126015"
 
 
@@ -23,9 +24,9 @@ INBOUND_LANES = {
 }
 
 # metadata
-SEED = 405
-METHOD = "fixed"
-DEMAND = "random"
+SEED = int(os.environ.get("SEED", "405"))
+METHOD = os.environ.get("METHOD", "fixed")
+DEMAND = os.environ.get("DEMAND", "random")
 
 OUTPUT_FILES = ["tripinfo.xml", "statistic.xml", "summary.csv", "timeseries.csv"]
 RESULTS_HEADERS = [
@@ -51,15 +52,36 @@ RESULTS_HEADERS = [
 ]
 
 
+def _is_complete_xml(path):
+    # SUMO tworzy plik na starcie, a zamyka go dopiero po zakonczeniu symulacji.
+    try:
+        ET.parse(path)
+    except (ET.ParseError, FileNotFoundError, OSError):
+        return False
+    return True
+
+
 def wait_for_output_files(timeout_seconds=30.0, poll_interval=0.25):
     deadline = time.time() + timeout_seconds
     required_paths = [OUT_DIR / file_name for file_name in OUTPUT_FILES]
     while time.time() < deadline:
-        if all(path.exists() for path in required_paths):
+        ready = all(path.exists() for path in required_paths) and all(
+            _is_complete_xml(path) for path in required_paths if path.suffix == ".xml"
+        )
+        if ready:
             return
         time.sleep(poll_interval)
+
     missing = [str(path) for path in required_paths if not path.exists()]
-    raise FileNotFoundError(f"Missing output files after run: {', '.join(missing)}")
+    incomplete = [
+        str(path)
+        for path in required_paths
+        if path.suffix == ".xml" and path.exists() and not _is_complete_xml(path)
+    ]
+    raise FileNotFoundError(
+        f"Missing output files after run: {', '.join(missing) or 'none'}; "
+        f"incomplete: {', '.join(incomplete) or 'none'}"
+    )
 
 
 def parse_summary_metrics(summary_path):
