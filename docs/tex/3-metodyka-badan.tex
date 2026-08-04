@@ -11,8 +11,8 @@ Procedurę badawczą podzielono na następujące etapy:
 \begin{enumerate}
     \item przygotowanie modelu skrzyżowania w środowisku symulacyjnym SUMO;
     \item wygenerowanie scenariuszy ruchu odpowiadających różnym poziomom natężenia;
-    \item pomiar wyników metod klasycznych, to jest sterowania stałoczasowego oraz akomodacyjnego;
     \item podział danych na zbiór treningowy, walidacyjny i testowy;
+    \item dobór parametrów czasowych metod referencyjnych na podstawie scenariuszy treningowych;
     \item trening modeli DQN na przygotowanych danych treningowych;
     \item wyznaczenie odpowiedniej liczby kroków treningowych oraz porównanie dwóch sposobów generowania danych treningowych;
     \item dobór hiperparametrów metodą zmiany pojedynczego parametru;
@@ -55,11 +55,9 @@ Do badania wybrano skrzyżowanie ulicy Belgradzkiej z aleją Komisji Edukacji Na
 
 Skrzyżowanie ma cztery wloty, oznaczane w dalszej części pracy jako północny, południowy, wschodni oraz zachodni. Model dopuszcza ruch z każdego wlotu we wszystkich dostępnych kierunkach, z wyłączeniem zawracania. Liczba pasów na poszczególnych wlotach jest zróżnicowana: wlot północny obejmuje cztery pasy, natomiast pozostałe trzy wloty po trzy pasy, co daje łącznie trzynaście pasów wlotowych objętych sterowaniem.
 
-Program sygnalizacji obejmuje cztery fazy z sygnałem zielonym, rozdzielone fazami żółtymi. Dwie fazy podstawowe przydzielają prawo przejazdu naprzemiennie obu osiom skrzyżowania, obejmując jazdę na wprost oraz skręty. Dwie pozostałe fazy realizują skręt w lewo chroniony osobnym sygnałem, dzięki czemu relacja skrętna jest rozdzielona w czasie od kolizyjnego strumienia jadącego na wprost z kierunku przeciwnego.
+Program sygnalizacji obejmuje trzy fazy z sygnałem zielonym, rozdzielone fazami żółtymi. Pierwsza faza obsługuje jazdę na wprost oraz skręt w prawo na alei Komisji Edukacji Narodowej, jednocześnie z obu kierunków tej osi. Druga faza realizuje skręt w lewo z alei Komisji Edukacji Narodowej, chroniony osobnym sygnałem i rozdzielony w czasie od kolizyjnego strumienia jadącego na wprost z kierunku przeciwnego. Trzecia faza obsługuje ulicę Belgradzką, obejmując jazdę na wprost, skręt w prawo oraz skręt w lewo realizowany warunkowo, to jest przy ustąpieniu pierwszeństwa pojazdom nadjeżdżającym z przeciwka.
 
-\vspace{2mm}
-\noindent\fbox{\parbox{0.97\linewidth}{\small \textbf{[DO POTWIERDZENIA]} W pliku sieci obie osie skrzyżowania mają wydzieloną fazę skrętu w lewo. Przed oddaniem pracy należy potwierdzić i doprecyzować w tekście, która oś odpowiada alei Komisji Edukacji Narodowej, a która ulicy Belgradzkiej, oraz czy opis relacji skrętnych jest zgodny z organizacją ruchu w terenie.}}
-\vspace{2mm}
+Taki układ faz odwzorowuje organizację ruchu obowiązującą na analizowanym skrzyżowaniu. Wydzielony sygnał skrętu w lewo występuje wyłącznie na kierunku głównym, natomiast na ulicy Belgradzkiej relacja skrętna w lewo odbywa się w ramach fazy ogólnej, bez osobnej ochrony sygnałowej. Rozróżnienie to jest istotne dla interpretacji wyników, ponieważ wpływa na przepustowość relacji skrętnych na obu osiach.
 
 W modelu odwzorowano geometrię skrzyżowania, liczbę i przeznaczenie pasów ruchu, relacje kolizyjne oraz program sygnalizacji świetlnej. Model zbudowano na podstawie danych OpenStreetMap, a następnie skorygowano na potrzeby eksperymentu. Odwzorowane skrzyżowanie w środowisku SUMO przedstawiono na rysunku~\ref{fig:symulacja}.
 
@@ -82,12 +80,7 @@ Problem sterowania sygnalizacją sformułowano jako zadanie uczenia ze wzmocnien
 Warstwę pośredniczącą między symulatorem a algorytmem uczenia stanowi biblioteka \texttt{sumo-rl}, udostępniająca symulację jako środowisko zgodne z interfejsem Gymnasium. Na jej podstawie przygotowano własną warstwę integracyjną, dostosowującą przebieg pojedynczego kroku środowiska oraz sposób zbierania metryk. Modyfikacja ta była konieczna, ponieważ standardowa implementacja realizuje całe okno decyzyjne jednym wywołaniem, co uniemożliwiałoby rejestrowanie stanu ruchu z rozdzielczością jednej sekundy. Dzięki zmianie dane zbierane podczas ewaluacji agenta są porównywalne z danymi zbieranymi dla metod referencyjnych. Architekturę systemu oraz przepływ pojedynczej decyzji przedstawiono na rysunku~\ref{fig:architektura}.
 
 \begin{figure}[!h] \centering
-    \fbox{\parbox[c][6cm][c]{0.92\linewidth}{\centering
-        \textbf{[MIEJSCE NA RYSUNEK: architektura systemu i pętla decyzyjna]}\\[2mm]
-        \small Diagram wygenerowany z kodu Mermaid (diagram nr 2).\\
-        Przedstawia powiązania: agent DQN, Stable-Baselines3,\\
-        warstwa własna, \texttt{sumo-rl}, TraCI, SUMO.
-    }}
+    \includegraphics[width=\linewidth]{architektura_systemu.png}
     \caption{Architektura systemu oraz przepływ pojedynczej decyzji agenta.}
     \label{fig:architektura}
 \end{figure}
@@ -95,9 +88,9 @@ Warstwę pośredniczącą między symulatorem a algorytmem uczenia stanowi bibli
 \subsubsection{Przestrzeń obserwacji}
 \label{subsubsec:obserwacja}
 
-Przestrzeń obserwacji jest ciągła i ma postać \texttt{Box(0.0, 1.0, (31,), float32)}, czyli wektora trzydziestu jeden wartości rzeczywistych z przedziału od 0 do 1. Wykorzystano domyślną reprezentację stanu udostępnianą przez bibliotekę \texttt{sumo-rl}, na którą składają się cztery grupy cech:
+Przestrzeń obserwacji jest ciągła i ma postać \texttt{Box(0.0, 1.0, (30,), float32)}, czyli wektora trzydziestu wartości rzeczywistych z przedziału od 0 do 1. Wykorzystano domyślną reprezentację stanu udostępnianą przez bibliotekę \texttt{sumo-rl}, na którą składają się cztery grupy cech:
 \begin{itemize}
-    \item \emph{kodowanie aktywnej fazy} (4 wartości): wektor zero-jedynkowy typu one-hot wskazujący, która z czterech faz zielonych jest aktualnie realizowana;
+    \item \emph{kodowanie aktywnej fazy} (3 wartości): wektor zero-jedynkowy typu one-hot wskazujący, która z trzech faz zielonych jest aktualnie realizowana;
     \item \emph{znacznik minimalnego czasu zielonego} (1 wartość): zmienna binarna przyjmująca wartość 1, jeżeli od ostatniej zmiany fazy upłynął już minimalny czas zielony powiększony o czas trwania fazy żółtej, a w przeciwnym razie wartość 0;
     \item \emph{gęstość pasów} (13 wartości): dla każdego z trzynastu pasów wlotowych liczba pojazdów znajdujących się na pasie podzielona przez maksymalną liczbę pojazdów, które mogłyby się na nim zmieścić;
     \item \emph{zapełnienie kolejki} (13 wartości): dla każdego pasa wlotowego liczba pojazdów zatrzymanych, czyli poruszających się z prędkością poniżej 0,1~m/s, podzielona przez tę samą pojemność pasa.
@@ -110,7 +103,7 @@ Przyjęta reprezentacja opisuje zatem jednocześnie stan sygnalizacji, dopuszcza
 \subsubsection{Przestrzeń akcji}
 \label{subsubsec:akcje}
 
-Przestrzeń akcji jest dyskretna i ma postać \texttt{Discrete(4)}. Każda akcja odpowiada wskazaniu fazy zielonej, która ma obowiązywać w kolejnym oknie decyzyjnym. Cztery dostępne akcje odpowiadają czterem fazom zielonym zdefiniowanym w programie sygnalizacji, opisanym w podrozdziale~\ref{subsec:skrzyzowanie}.
+Przestrzeń akcji jest dyskretna i ma postać \texttt{Discrete(3)}. Każda akcja odpowiada wskazaniu fazy zielonej, która ma obowiązywać w kolejnym oknie decyzyjnym. Trzy dostępne akcje odpowiadają trzem fazom zielonym zdefiniowanym w programie sygnalizacji, opisanym w podrozdziale~\ref{subsec:skrzyzowanie}.
 
 Agent nie steruje bezpośrednio sygnałami na poszczególnych pasach ani nie ustala długości fazy w sposób dowolny. Wskazuje jedynie fazę docelową, natomiast egzekwowanie ograniczeń bezpieczeństwa pozostaje po stronie środowiska. Obowiązują przy tym następujące reguły:
 \begin{itemize}
@@ -119,11 +112,7 @@ Agent nie steruje bezpośrednio sygnałami na poszczególnych pasach ani nie ust
     \item jeżeli agent wskaże fazę inną niż aktualna, a warunek czasowy jest spełniony, środowisko wprowadza fazę żółtą jako przejście, a dopiero po jej zakończeniu włącza wskazaną fazę zieloną.
 \end{itemize}
 
-Faza żółta jest generowana automatycznie na podstawie porównania stanu sygnałów fazy bieżącej i docelowej, co zapewnia wygaszanie tylko tych relacji, które tracą prawo przejazdu. Mechanizm ten sprawia, że agent nie może przełączać sygnałów natychmiastowo ani z pominięciem czasu międzyzielonego. W eksperymencie przyjęto czas trwania fazy żółtej równy 3~s oraz minimalny czas zielony równy 5~s.
-
-\vspace{2mm}
-\noindent\fbox{\parbox{0.97\linewidth}{\small \textbf{[DO POTWIERDZENIA]} Wartość minimalnego czasu zielonego równa 5~s pochodzi z pliku konfiguracji treningowej. Domyślna wartość tego parametru w skrypcie ewaluacyjnym wynosi 10~s. Należy potwierdzić, jaka wartość obowiązywała podczas ewaluacji, i w razie potrzeby ujednolicić opis.}}
-\vspace{2mm}
+Faza żółta jest generowana automatycznie na podstawie porównania stanu sygnałów fazy bieżącej i docelowej, co zapewnia wygaszanie tylko tych relacji, które tracą prawo przejazdu. Mechanizm ten sprawia, że agent nie może przełączać sygnałów natychmiastowo ani z pominięciem czasu międzyzielonego. W eksperymencie przyjęto czas trwania fazy żółtej równy 3~s oraz minimalny czas zielony równy 5~s. Te same wartości obowiązywały podczas treningu, walidacji oraz końcowej oceny na zbiorze testowym, dzięki czemu warunki działania agenta były identyczne na wszystkich etapach eksperymentu.
 
 \subsubsection{Funkcja nagrody}
 \label{subsubsec:nagroda}
@@ -155,11 +144,11 @@ Dobór interwału decyzyjnego stanowi kompromis między częstotliwością reago
 
 Punktem wyjścia przy wyborze metody był klasyczny, tablicowy algorytm Q-Learning, opisany w podrozdziale~\ref{subsec:qlearning}. Algorytm ten przechowuje oszacowania wartości akcji w tablicy indeksowanej parami stanu i akcji, co wymaga skończonej i stosunkowo niewielkiej przestrzeni stanów \cite{watkins1992qlearning, sutton2018reinforcement}.
 
-Podejście to odrzucono ze względu na charakter przyjętej reprezentacji stanu. Przestrzeń obserwacji jest ciągła i ma trzydzieści jeden wymiarów, a jej zastosowanie w wersji tablicowej wymagałoby wcześniejszej dyskretyzacji. Nawet przy zgrubnym podziale każdego wymiaru na kilka przedziałów liczba możliwych kombinacji rośnie wykładniczo wraz z liczbą wymiarów, co czyniłoby tablicę wartości niepraktyczną. Dodatkowo znaczna część stanów byłaby odwiedzana rzadko lub wcale, co uniemożliwiałoby wiarygodne oszacowanie ich wartości. Dyskretyzacja prowadziłaby również do utraty informacji o niewielkich różnicach gęstości i zapełnienia kolejek, istotnych przy podejmowaniu decyzji.
+Podejście to odrzucono ze względu na charakter przyjętej reprezentacji stanu. Przestrzeń obserwacji jest ciągła i ma trzydzieści wymiarów, a jej zastosowanie w wersji tablicowej wymagałoby wcześniejszej dyskretyzacji. Nawet przy zgrubnym podziale każdego wymiaru na kilka przedziałów liczba możliwych kombinacji rośnie wykładniczo wraz z liczbą wymiarów, co czyniłoby tablicę wartości niepraktyczną. Dodatkowo znaczna część stanów byłaby odwiedzana rzadko lub wcale, co uniemożliwiałoby wiarygodne oszacowanie ich wartości. Dyskretyzacja prowadziłaby również do utraty informacji o niewielkich różnicach gęstości i zapełnienia kolejek, istotnych przy podejmowaniu decyzji.
 
 Z tych powodów wybrano algorytm Deep Q-Network, w którym tablica wartości zastępowana jest siecią neuronową aproksymującą funkcję wartości akcji \cite{mnih2013playing}. Za wyborem tym przemawiały następujące przesłanki:
 \begin{itemize}
-    \item przestrzeń akcji jest dyskretna i obejmuje jedynie cztery działania, co odpowiada założeniom algorytmu opartego na funkcji wartości;
+    \item przestrzeń akcji jest dyskretna i obejmuje jedynie trzy działania, co odpowiada założeniom algorytmu opartego na funkcji wartości;
     \item przestrzeń obserwacji jest ciągła i wielowymiarowa, a sieć neuronowa pozwala uogólniać między podobnymi stanami bez ich jawnego wyliczania;
     \item algorytm dysponuje mechanizmami stabilizującymi uczenie, to jest buforem doświadczeń oraz siecią docelową;
     \item dostępna jest stabilna i szeroko wykorzystywana implementacja, umożliwiająca kontrolowaną zmianę poszczególnych hiperparametrów.
@@ -179,12 +168,14 @@ Aby ocena agenta DQN była osadzona w realnym punkcie odniesienia, przygotowano 
 
 Sterowanie stałoczasowe stanowi podstawowy punkt odniesienia. Sygnalizacja realizuje cyklicznie ustaloną sekwencję faz, a czas trwania każdej z nich jest z góry określony i nie zależy od bieżącej sytuacji ruchowej. W środowisku SUMO metoda ta jest realizowana jako statyczna logika sygnalizacji \cite{sumoTrafficLights}.
 
+Czasy trwania faz zielonych wyznaczono proporcjonalnie do natężenia na pasie krytycznym obsługiwanym przez każdą fazę, oszacowanego na podstawie scenariuszy ze zbioru treningowego. Otrzymany program obejmuje trzy fazy zielone trwające odpowiednio 14~s, 29~s oraz 29~s, rozdzielone fazami żółtymi po 3~s, co daje cykl o długości 81~s. Wyznaczenie tych wartości wyłącznie na podstawie danych treningowych zapewnia, że metoda referencyjna nie korzysta z informacji zawartych w zbiorze testowym.
+
 Metoda ta pełni w eksperymencie rolę odniesienia dolnego. Pozwala ocenić, jaką poprawę można uzyskać dzięki jakiejkolwiek formie reagowania na ruch, oraz odpowiada rozwiązaniu najprostszemu w realizacji i utrzymaniu.
 
 \subsubsection{Sterowanie akomodacyjne}
 \label{subsubsec:ref-akomodacyjne}
 
-Sterowanie akomodacyjne typu gap-based stanowi bardziej wymagający punkt odniesienia. Sygnalizacja reaguje na pojazdy wykrywane przez detektory i może przedłużać aktywną fazę, dopóki utrzymuje się strumień pojazdów. Gdy w strumieniu pojawi się dostatecznie duża przerwa, faza zostaje zakończona przed osiągnięciem maksymalnego czasu zielonego. Działanie ograniczają minimalny oraz maksymalny czas trwania fazy \cite{sumoTrafficLights, NAP22097}.
+Sterowanie akomodacyjne typu gap-based stanowi bardziej wymagający punkt odniesienia. Sygnalizacja reaguje na pojazdy wykrywane przez detektory i może przedłużać aktywną fazę, dopóki utrzymuje się strumień pojazdów. Gdy w strumieniu pojawi się dostatecznie duża przerwa, faza zostaje zakończona przed osiągnięciem maksymalnego czasu zielonego. Działanie ograniczają minimalny oraz maksymalny czas trwania fazy \cite{sumoTrafficLights, NAP22097}. Przyjęto minimalny czas zielony równy 5~s, taki sam jak w środowisku agenta, oraz maksymalne czasy trwania faz odpowiadające około półtorakrotności czasów zielonych programu stałoczasowego.
 
 Metoda ta jest adaptacyjna w ograniczonym, regułowym sensie. Reaguje na bieżącą detekcję, lecz nie uczy się polityki sterowania na podstawie doświadczenia i nie optymalizuje decyzji w dłuższym horyzoncie czasowym. Włączenie jej do porównania pozwala sprawdzić, czy ewentualna przewaga agenta DQN utrzymuje się także względem rozwiązania reagującego na ruch, a nie tylko względem programu stałoczasowego.
 
@@ -241,12 +232,7 @@ Scenariusze ruchu wygenerowano przy użyciu skryptu \texttt{randomTrips.py}, dos
 Dane podzielono na trzy rozłączne zbiory: treningowy, walidacyjny i testowy. Podział ten przedstawiono na rysunku~\ref{fig:podzial-danych}.
 
 \begin{figure}[!h] \centering
-    \fbox{\parbox[c][6cm][c]{0.92\linewidth}{\centering
-        \textbf{[MIEJSCE NA RYSUNEK: podział danych eksperymentalnych]}\\[2mm]
-        \small Diagram wygenerowany z kodu Mermaid (diagram nr 3).\\
-        Przedstawia zbiory treningowy, walidacyjny i testowy\\
-        wraz z ich przeznaczeniem w procesie badawczym.
-    }}
+    \includegraphics[width=\linewidth]{podzial_danych.png}
     \caption{Podział danych eksperymentalnych oraz przeznaczenie poszczególnych zbiorów.}
     \label{fig:podzial-danych}
 \end{figure}
@@ -287,9 +273,10 @@ Zastosowanie pięciu wariantów w obrębie każdej grupy pozwala ograniczyć wp�
 Rozdzielenie zbiorów jest istotnym elementem metodyki, ponieważ wielokrotne korzystanie z tych samych danych na etapie strojenia i oceny prowadziłoby do zawyżenia wyników i utraty wiarygodności wniosków. W eksperymencie przyjęto następujące zasady:
 \begin{itemize}
     \item wszystkie decyzje dotyczące liczby kroków treningowych, wyboru zbioru treningowego oraz wartości hiperparametrów podejmowano wyłącznie na podstawie wyników na zbiorze walidacyjnym;
+    \item parametry czasowe metod referencyjnych, to jest czasy trwania faz programu stałoczasowego oraz ograniczenia czasowe sterowania akomodacyjnego, wyznaczono wyłącznie na podstawie scenariuszy ze zbioru treningowego;
     \item konfigurację modelu końcowego ustalono i zamrożono przed pierwszym uruchomieniem ewaluacji testowej;
     \item zbioru testowego nie wykorzystywano podczas treningu ani strojenia, a jego scenariusze zostały wygenerowane z użyciem ziaren niezależnych od pozostałych zbiorów;
     \item po obejrzeniu wyników testowych nie wprowadzano zmian w modelu ani w jego konfiguracji.
 \end{itemize}
 
-Dzięki temu wyniki uzyskane na zbiorze testowym można traktować jako ocenę zdolności modelu do działania na danych wcześniej niewidzianych. Zasada ta dotyczy wyłącznie agenta DQN, ponieważ metody referencyjne nie podlegają uczeniu ani strojeniu na danych. Obie metody klasyczne oceniono na tych samych scenariuszach testowych, co zapewnia porównywalność wyników.
+Dzięki temu wyniki uzyskane na zbiorze testowym można traktować jako ocenę zdolności modelu do działania na danych wcześniej niewidzianych. Metody referencyjne nie podlegają uczeniu, jednak ich parametry czasowe również ustalono na podstawie scenariuszy treningowych, dzięki czemu żadna z porównywanych metod nie była dostrajana do danych testowych. Wszystkie metody oceniono na tych samych scenariuszach testowych, co zapewnia porównywalność wyników.
