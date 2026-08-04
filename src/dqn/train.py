@@ -80,9 +80,14 @@ def run_train(args: argparse.Namespace) -> None:
         record_steps=False,
     )
 
+    # Pominiecie net_arch zostawia domyslna architekture MlpPolicy ze Stable-Baselines3.
+    net_arch = training_config.get("net_arch")
+    policy_kwargs = {"net_arch": [int(n) for n in net_arch]} if net_arch else None
+
     model = DQN(
         policy="MlpPolicy",
         env=env,
+        policy_kwargs=policy_kwargs,
         learning_rate=float(training_config["learning_rate"]),
         buffer_size=int(training_config["buffer_size"]),
         learning_starts=int(training_config["learning_starts"]),

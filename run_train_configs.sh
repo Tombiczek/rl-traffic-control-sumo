@@ -13,14 +13,10 @@ TRAIN_SET="${TRAIN_SET:-fixed}"
 MEM_LIMIT_GIB="${MEM_LIMIT_GIB:-5.5}"
 
 CONFIGS=(
-  batch128
-  buffer1e5
-  explore1e-1
-  gamma98e-2
-  lr3e-4
-  lr5e-4
-  lr3e-4_gamma98e-2
-  tui1e3
+    lr3e-4_batch32 
+    trainfreq4 
+    net128 
+    starts5e3
 )
 
 LOG_DIR="logs/train_${TRAIN_SET}"
