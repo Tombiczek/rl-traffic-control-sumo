@@ -53,11 +53,9 @@ Do badania wybrano skrzyżowanie ulicy Belgradzkiej z aleją Komisji Edukacji Na
     \label{fig:satelita}
 \end{figure}
 
-Skrzyżowanie ma cztery wloty, oznaczane w dalszej części pracy jako północny, południowy, wschodni oraz zachodni. Model dopuszcza ruch z każdego wlotu we wszystkich dostępnych kierunkach, z wyłączeniem zawracania. Liczba pasów na poszczególnych wlotach jest zróżnicowana: wlot północny obejmuje cztery pasy, natomiast pozostałe trzy wloty po trzy pasy, co daje łącznie trzynaście pasów wlotowych objętych sterowaniem.
+Skrzyżowanie ma cztery wloty, oznaczane w dalszej części pracy jako północny, południowy, wschodni oraz zachodni. Model dopuszcza ruch z każdego wlotu we wszystkich dostępnych kierunkach, z wyłączeniem zawracania. Liczba pasów na poszczególnych wlotach jest zróżnicowana: wlot południowy obejmuje cztery pasy, natomiast pozostałe trzy wloty po trzy pasy, co daje łącznie trzynaście pasów wlotowych objętych sterowaniem.
 
-Program sygnalizacji obejmuje trzy fazy z sygnałem zielonym, rozdzielone fazami żółtymi. Pierwsza faza obsługuje jazdę na wprost oraz skręt w prawo na alei Komisji Edukacji Narodowej, jednocześnie z obu kierunków tej osi. Druga faza realizuje skręt w lewo z alei Komisji Edukacji Narodowej, chroniony osobnym sygnałem i rozdzielony w czasie od kolizyjnego strumienia jadącego na wprost z kierunku przeciwnego. Trzecia faza obsługuje ulicę Belgradzką, obejmując jazdę na wprost, skręt w prawo oraz skręt w lewo realizowany warunkowo, to jest przy ustąpieniu pierwszeństwa pojazdom nadjeżdżającym z przeciwka.
-
-Taki układ faz odwzorowuje organizację ruchu obowiązującą na analizowanym skrzyżowaniu. Wydzielony sygnał skrętu w lewo występuje wyłącznie na kierunku głównym, natomiast na ulicy Belgradzkiej relacja skrętna w lewo odbywa się w ramach fazy ogólnej, bez osobnej ochrony sygnałowej. Rozróżnienie to jest istotne dla interpretacji wyników, ponieważ wpływa na przepustowość relacji skrętnych na obu osiach.
+Program sygnalizacji obejmuje trzy fazy z sygnałem zielonym, rozdzielone fazami żółtymi. Pierwsza faza obsługuje jazdę na wprost oraz skręt w prawo na alei Komisji Edukacji Narodowej, jednocześnie z obu kierunków tej osi. Druga faza realizuje skręt w lewo z alei Komisji Edukacji Narodowej, chroniony osobnym sygnałem i rozdzielony w czasie od kolizyjnego strumienia jadącego na wprost z kierunku przeciwnego. Trzecia faza obsługuje ulicę Belgradzką, obejmując jazdę na wprost, skręt w prawo oraz skręt w lewo realizowany warunkowo, to jest przy ustąpieniu pierwszeństwa pojazdom nadjeżdżającym z przeciwka. Różnica w sposobie obsługi lewoskrętów wpływa na przepustowość tych relacji i dlatego jest istotna dla interpretacji wyników.
 
 W modelu odwzorowano geometrię skrzyżowania, liczbę i przeznaczenie pasów ruchu, relacje kolizyjne oraz program sygnalizacji świetlnej. Model zbudowano na podstawie danych OpenStreetMap, a następnie skorygowano na potrzeby eksperymentu. Odwzorowane skrzyżowanie w środowisku SUMO przedstawiono na rysunku~\ref{fig:symulacja}.
 
@@ -67,7 +65,7 @@ W modelu odwzorowano geometrię skrzyżowania, liczbę i przeznaczenie pasów ru
     \label{fig:symulacja}
 \end{figure}
 
-W modelu nie uwzględniono ruchu pieszego ani rowerowego. Jest to świadome ograniczenie zakresu pracy, wynikające z przyjętego celu badania, którym jest porównanie metod sterowania ruchem pojazdów. Pominięcie ruchu pieszego oznacza, że w modelu nie występują fazy ani ograniczenia czasowe związane z obsługą przejść dla pieszych, co należy uwzględnić przy interpretacji wyników.
+Zgodnie z ograniczeniami zakresu przedstawionymi w podrozdziale~\ref{subsec:zalozenia-ograniczenia}, model nie obejmuje faz ani ograniczeń czasowych związanych z obsługą przejść dla pieszych.
 
 \subsection{Sformułowanie problemu jako zadania uczenia ze wzmocnieniem}
 \label{subsec:sformulowanie-rl}
@@ -75,7 +73,7 @@ W modelu nie uwzględniono ruchu pieszego ani rowerowego. Jest to świadome ogra
 \subsubsection{Agent i środowisko}
 \label{subsubsec:agent-srodowisko}
 
-Problem sterowania sygnalizacją sformułowano jako zadanie uczenia ze wzmocnieniem. Agentem jest algorytm wybierający fazę sygnalizacji świetlnej, natomiast środowiskiem jest mikroskopowa symulacja ruchu realizowana przez SUMO. Komunikację między agentem a symulatorem zapewnia interfejs TraCI, który umożliwia wykonywanie kolejnych kroków symulacji, odczyt stanu ruchu oraz zmianę sygnalizacji.
+Problem sterowania sygnalizacją sformułowano jako zadanie uczenia ze wzmocnieniem. Agent odpowiada za wybór fazy sygnalizacji świetlnej, natomiast środowisko stanowi symulacja ruchu drogowego realizowana w SUMO. Komunikację między agentem a symulatorem zapewnia interfejs TraCI, który umożliwia wykonywanie kolejnych kroków symulacji, odczyt stanu ruchu oraz zmianę sygnalizacji.
 
 Warstwę pośredniczącą między symulatorem a algorytmem uczenia stanowi biblioteka \texttt{sumo-rl}, udostępniająca symulację jako środowisko zgodne z interfejsem Gymnasium. Na jej podstawie przygotowano własną warstwę integracyjną, dostosowującą przebieg pojedynczego kroku środowiska oraz sposób zbierania metryk. Modyfikacja ta była konieczna, ponieważ standardowa implementacja realizuje całe okno decyzyjne jednym wywołaniem, co uniemożliwiałoby rejestrowanie stanu ruchu z rozdzielczością jednej sekundy. Dzięki zmianie dane zbierane podczas ewaluacji agenta są porównywalne z danymi zbieranymi dla metod referencyjnych. Architekturę systemu oraz przepływ pojedynczej decyzji przedstawiono na rysunku~\ref{fig:architektura}.
 
@@ -117,12 +115,12 @@ Faza żółta jest generowana automatycznie na podstawie porównania stanu sygna
 \subsubsection{Funkcja nagrody}
 \label{subsubsec:nagroda}
 
-W eksperymencie wykorzystano funkcję nagrody określaną w konfiguracji jako \texttt{diff-waiting-time}, opartą na zmianie skumulowanego czasu oczekiwania pojazdów. W chwili decyzyjnej $t$ wyznaczana jest wielkość
+W eksperymencie wykorzystano funkcję nagrody określaną w konfiguracji jako \\ \texttt{diff-waiting-time}, opartą na zmianie skumulowanego czasu oczekiwania pojazdów. W chwili decyzyjnej $t$ wyznaczana jest wielkość
 \begin{equation}
     W_t = \frac{1}{100} \sum_{l \in L} w_{l,t},
     \label{eq:waiting-total}
 \end{equation}
-gdzie $L$ oznacza zbiór pasów wlotowych sterowanego skrzyżowania, a $w_{l,t}$ skumulowany czas oczekiwania pojazdów znajdujących się na pasie $l$. Stała skalująca ogranicza zakres wartości nagrody. Nagroda przekazywana agentowi jest różnicą między wartością z poprzedniej i bieżącej chwili decyzyjnej:
+gdzie $L$ oznacza zbiór pasów wlotowych sterowanych przez sygnalizację, a $w_{l,t}$ część skumulowanego czasu oczekiwania pojazdów znajdujących się na pasie $l$, przypisaną temu pasowi. Skumulowany czas oczekiwania pojedynczego pojazdu raportowany jest przez SUMO i obejmuje czas, w którym pojazd poruszał się z prędkością poniżej progu zatrzymania. Jeżeli pojazd zmienił pas w obrębie sterowanego obszaru, wykorzystana biblioteka rozdziela tę wielkość między kolejno zajmowane pasy, dzięki czemu ten sam czas oczekiwania nie jest uwzględniany wielokrotnie. Czynnik $\frac{1}{100}$ skaluje sumę do mniejszego zakresu liczbowego. Nagroda przekazywana agentowi jest różnicą między wartością z poprzedniej i bieżącej chwili decyzyjnej:
 \begin{equation}
     r_t = W_{t-1} - W_t.
     \label{eq:reward}
@@ -182,7 +180,7 @@ Metoda ta jest adaptacyjna w ograniczonym, regułowym sensie. Reaguje na bieżą
 \subsection{Metryki oceny}
 \label{subsec:metryki}
 
-Metody porównywane są według kilku metryk, ponieważ pojedyncza wielkość nie opisuje wszystkich aspektów jakości sterowania. Dane pochodzą z dwóch źródeł: z pliku \texttt{tripinfo.xml} generowanego przez SUMO po zakończeniu symulacji, zawierającego podsumowanie każdej zrealizowanej podróży, oraz z szeregu czasowego rejestrowanego przez interfejs TraCI w każdej sekundzie symulacji. Dla wszystkich metod zastosowano ten sam sposób zbierania i agregacji danych.
+Metody porównywane są według kilku metryk, ponieważ pojedyncza wielkość nie opisuje wszystkich aspektów jakości sterowania. Dane pochodzą z dwóch źródeł: z pliku \texttt{tripinfo.xml} generowanego przez SUMO po zakończeniu symulacji, zawierającego podsumowanie każdej zrealizowanej podróży, oraz z danych rejestrowanych przez interfejs TraCI w każdej sekundzie symulacji. Dla wszystkich metod zastosowano ten sam sposób zbierania i agregacji danych.
 
 \subsubsection{Średnie opóźnienie}
 \label{subsubsec:metryka-opoznienie}
@@ -201,7 +199,7 @@ Metryki tej nie należy utożsamiać z opóźnieniem. Opóźnienie obejmuje wszy
 \subsubsection{Średnia długość kolejki}
 \label{subsubsec:metryka-kolejka}
 
-Długość kolejki wyznaczana jest na podstawie szeregu czasowego rejestrowanego w każdej sekundzie symulacji. W każdym kroku zliczana jest liczba pojazdów zatrzymanych na trzynastu pasach wlotowych, przy czym za pojazd należący do kolejki uznawany jest pojazd poruszający się z prędkością poniżej progu zatrzymania stosowanego przez SUMO. Wartości sumowane są w obrębie czterech wlotów, a następnie uśredniane po wszystkich krokach symulacji.
+Długość kolejki wyznaczana jest na podstawie danych rejestrowanych w każdej sekundzie symulacji. W każdym kroku zliczana jest liczba pojazdów zatrzymanych na trzynastu pasach wlotowych, przy czym za pojazd należący do kolejki uznawany jest pojazd poruszający się z prędkością poniżej progu zatrzymania stosowanego przez SUMO. Wartości sumowane są w obrębie czterech wlotów, a następnie uśredniane po wszystkich krokach symulacji.
 
 Metryka wyrażana jest w pojazdach, a wartości niższe są korzystniejsze. Poza wartością średnią rejestrowano również wartość maksymalną oraz wartości w podziale na poszczególne wloty, co pozwala ocenić, czy sterowanie nie poprawia sytuacji na jednym wlocie kosztem pozostałych.
 
