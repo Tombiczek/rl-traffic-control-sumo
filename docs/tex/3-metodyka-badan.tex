@@ -23,7 +23,7 @@ Procedurę badawczą podzielono na następujące etapy:
 
 Etapy od czwartego do ósmego realizowano wyłącznie na danych treningowych i walidacyjnych. Zbiór testowy wykorzystano dopiero w etapie dziewiątym, po ostatecznym ustaleniu konfiguracji modelu. Schemat całego procesu badawczego przedstawiono na rysunku~\ref{fig:proces-badawczy}.
 
-\begin{figure}[!h] 
+\begin{figure}[!htbp]
     \centering
     \includegraphics[width=0.65\textwidth]{proces_badawczy.png}
     \caption{Schemat procedury badawczej z rozdzieleniem danych treningowych, walidacyjnych i testowych.}
@@ -35,19 +35,19 @@ Etapy od czwartego do ósmego realizowano wyłącznie na danych treningowych i w
 
 Do badania wybrano skrzyżowanie ulicy Belgradzkiej z aleją Komisji Edukacji Narodowej, położone w dzielnicy Ursynów w Warszawie. Skrzyżowanie wybrano jako stosunkowo prosty pod względem geometrii, lecz istotnie obciążony układ drogowy, w którym aleja Komisji Edukacji Narodowej stanowi kierunek główny. Położenie skrzyżowania w skali dzielnicy przedstawiono na rysunku~\ref{fig:mapa-ursynow}, a jego bezpośrednie otoczenie na rysunkach~\ref{fig:mapa-osm} oraz~\ref{fig:satelita}.
 
-\begin{figure}[!h] \centering
+\begin{figure}[!htbp] \centering
     \includegraphics[width=0.75\linewidth]{map-2.png}
     \caption{Położenie analizowanego skrzyżowania na tle warszawskiego Ursynowa. Skrzyżowanie zaznaczono czerwonym okręgiem. Źródło: OpenStreetMap.}
     \label{fig:mapa-ursynow}
 \end{figure}
 
-\begin{figure}[!h] \centering
+\begin{figure}[!htbp] \centering
     \includegraphics[width=0.75\linewidth]{map.png}
     \caption{Analizowane skrzyżowanie na mapie OpenStreetMap.}
     \label{fig:mapa-osm}
 \end{figure}
 
-\begin{figure}[!h] \centering
+\begin{figure}[!htbp] \centering
     \includegraphics[width=0.75\linewidth]{satelita.png}
     \caption{Widok satelitarny analizowanego skrzyżowania. Źródło: Google Maps.}
     \label{fig:satelita}
@@ -59,7 +59,7 @@ Program sygnalizacji obejmuje trzy fazy z sygnałem zielonym, rozdzielone fazami
 
 W modelu odwzorowano geometrię skrzyżowania, liczbę i przeznaczenie pasów ruchu, relacje kolizyjne oraz program sygnalizacji świetlnej. Model zbudowano na podstawie danych OpenStreetMap, a następnie skorygowano na potrzeby eksperymentu. Odwzorowane skrzyżowanie w środowisku SUMO przedstawiono na rysunku~\ref{fig:symulacja}.
 
-\begin{figure}[!h] \centering
+\begin{figure}[!htbp] \centering
     \includegraphics[width=0.8\linewidth]{symulacja.png}
     \caption{Model analizowanego skrzyżowania w środowisku symulacyjnym SUMO.}
     \label{fig:symulacja}
@@ -77,7 +77,7 @@ Problem sterowania sygnalizacją sformułowano jako zadanie uczenia ze wzmocnien
 
 Warstwę pośredniczącą między symulatorem a algorytmem uczenia stanowi biblioteka \texttt{sumo-rl}, udostępniająca symulację jako środowisko zgodne z interfejsem Gymnasium. Na jej podstawie przygotowano własną warstwę integracyjną, dostosowującą przebieg pojedynczego kroku środowiska oraz sposób zbierania metryk. Modyfikacja ta była konieczna, ponieważ standardowa implementacja realizuje całe okno decyzyjne jednym wywołaniem, co uniemożliwiałoby rejestrowanie stanu ruchu z rozdzielczością jednej sekundy. Dzięki zmianie dane zbierane podczas ewaluacji agenta są porównywalne z danymi zbieranymi dla metod referencyjnych. Architekturę systemu oraz przepływ pojedynczej decyzji przedstawiono na rysunku~\ref{fig:architektura}.
 
-\begin{figure}[!h] \centering
+\begin{figure}[!htbp] \centering
     \includegraphics[width=\linewidth]{architektura_systemu.png}
     \caption{Architektura systemu oraz przepływ pojedynczej decyzji agenta.}
     \label{fig:architektura}
@@ -229,7 +229,7 @@ Scenariusze ruchu wygenerowano przy użyciu skryptu \texttt{randomTrips.py}, dos
 
 Dane podzielono na trzy rozłączne zbiory: treningowy, walidacyjny i testowy. Podział ten przedstawiono na rysunku~\ref{fig:podzial-danych}.
 
-\begin{figure}[!h] \centering
+\begin{figure}[!htbp] \centering
     \includegraphics[width=\linewidth]{podzial_danych.png}
     \caption{Podział danych eksperymentalnych oraz przeznaczenie poszczególnych zbiorów.}
     \label{fig:podzial-danych}
