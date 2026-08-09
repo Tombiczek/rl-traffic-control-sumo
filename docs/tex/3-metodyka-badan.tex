@@ -152,7 +152,7 @@ Z tych powodów wybrano algorytm Deep Q-Network, w którym tablica wartości zas
     \item dostępna jest stabilna i szeroko wykorzystywana implementacja, umożliwiająca kontrolowaną zmianę poszczególnych hiperparametrów.
 \end{itemize}
 
-W pracy wykorzystano implementację algorytmu DQN dostępną w bibliotece Stable-Baselines3, z polityką \texttt{MlpPolicy}, czyli siecią typu perceptron wielowarstwowy. Architektura ta jest odpowiednia dla wektorowej reprezentacji obserwacji, która nie ma struktury przestrzennej wymagającej zastosowania sieci konwolucyjnej.
+W pracy wykorzystano implementację algorytmu DQN dostępną w bibliotece \\Stable-Baselines3, z polityką \texttt{MlpPolicy}, czyli siecią typu perceptron wielowarstwowy. Architektura ta jest odpowiednia dla wektorowej reprezentacji obserwacji, która nie ma struktury przestrzennej wymagającej zastosowania sieci konwolucyjnej.
 
 Należy zaznaczyć, że wybór algorytmu DQN nie oznacza, iż jest on rozwiązaniem obiektywnie najlepszym dla rozpatrywanego problemu. Stanowi on natomiast naturalny i uzasadniony wybór przy przyjętym sformułowaniu zadania oraz zakresie pracy.
 
@@ -192,7 +192,7 @@ Metryka wyrażana jest w sekundach na pojazd, a wartości niższe są korzystnie
 \subsubsection{Średni czas oczekiwania}
 \label{subsubsec:metryka-oczekiwanie}
 
-Średni czas oczekiwania wyznaczany jest jako średnia arytmetyczna wartości \texttt{waitingTime} ze wszystkich zakończonych podróży. Wielkość ta obejmuje wyłącznie czas, w którym pojazd pozostawał faktycznie zatrzymany, to jest poruszał się z prędkością poniżej progu uznawanego przez SUMO za zatrzymanie.
+Średni czas oczekiwania wyznaczany jest jako średnia arytmetyczna wartości \\\texttt{waitingTime} ze wszystkich zakończonych podróży. Wielkość ta obejmuje wyłącznie czas, w którym pojazd pozostawał faktycznie zatrzymany, to jest poruszał się z prędkością poniżej progu uznawanego przez SUMO za zatrzymanie.
 
 Metryki tej nie należy utożsamiać z opóźnieniem. Opóźnienie obejmuje wszystkie straty czasu, w tym te wynikające ze zwolnienia bez zatrzymania, natomiast czas oczekiwania dotyczy jedynie postoju. Pojazd, który wielokrotnie zwalnia, lecz nigdy się nie zatrzymuje, wykazuje niezerowe opóźnienie przy zerowym czasie oczekiwania. Metryka wyrażana jest w sekundach na pojazd, a wartości niższe są korzystniejsze. Dodatkowo rejestrowano wartość maksymalną oraz kwantyl rzędu 0,95 czasu oczekiwania, opisujące sytuację pojazdów obsłużonych najgorzej.
 
