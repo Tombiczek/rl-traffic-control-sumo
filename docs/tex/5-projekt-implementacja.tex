@@ -1,0 +1,667 @@
+\clearpage
+\section{Projekt i implementacja systemu}
+\label{sec:implementacja}
+
+Rozdział przedstawia szczegóły techniczne rozwiązania opisanego pod względem koncepcyjnym w rozdziałach~\ref{sec:metodyka} oraz~\ref{sec:architektura}. Omówiono w nim sposób przygotowania modelu sieci drogowej, generowanie scenariuszy ruchu, konfigurację metod referencyjnych, własną warstwę integracyjną nad biblioteką \texttt{sumo-rl}, implementację obserwacji, akcji i funkcji nagrody, przebieg treningu oraz sposób gromadzenia i przetwarzania wyników.
+
+\subsection{Przygotowanie modelu skrzyżowania}
+\label{subsec:model-skrzyzowania}
+
+\subsubsection{Pozyskanie i korekta sieci}
+\label{subsubsec:pozyskanie-sieci}
+
+Punktem wyjścia były dane OpenStreetMap obejmujące otoczenie analizowanego skrzyżowania. Import do formatu sieci SUMO wykonano narzędziem \texttt{netconvert}, a następnie model skorygowano w edytorze graficznym \texttt{netedit}. Korekta obejmowała liczbę i przeznaczenie pasów na wlotach, zestaw dopuszczalnych relacji skrętnych oraz definicję programu sygnalizacji, ponieważ dane źródłowe nie zawierają pełnej informacji o organizacji ruchu na skrzyżowaniu.
+
+Istotne dla eksperymentu ustawienia zapisane w konfiguracji narzędzia to:
+\begin{itemize}
+    \item \texttt{no-turnarounds}, wyłączające generowanie relacji zawracania, zgodnie z organizacją ruchu na skrzyżowaniu;
+    \item \texttt{walkingareas} o wartości zero, wyłączające tworzenie infrastruktury pieszej, co odpowiada ograniczeniu zakresu przedstawionemu w podrozdziale~\ref{subsec:zalozenia-ograniczenia};
+    \item \texttt{junctions.limit-turn-speed}, ograniczające prędkość na łukach skrętnych do 5,5~m/s, dzięki czemu pojazdy skręcające zwalniają w sposób zbliżony do rzeczywistego.
+\end{itemize}
+
+Model dopuszcza ruch pojazdów silnikowych, natomiast typ krawędzi zawiera listę wykluczeń obejmującą między innymi tramwaje, pojazdy szynowe oraz pojazdy jednośladowe, co utrzymuje jednorodność potoku ruchu.
+
+\subsubsection{Pasy ruchu i relacje skrętne}
+\label{subsubsec:pasy-relacje}
+
+Sterowaniem objętych jest trzynaście pasów wlotowych, którym odpowiada szesnaście sterowanych relacji, czyli powiązań pasa wlotowego z pasem wylotowym. Liczby te nie są równe, ponieważ na trzech wlotach skrajny prawy pas obsługuje jednocześnie skręt w prawo oraz jazdę na wprost, a więc jednemu pasowi odpowiadają dwie relacje. Każda relacja zapisana jest w pliku sieci jako element \texttt{connection} z atrybutami wskazującymi sygnalizator oraz indeks sygnału.
+
+Indeks sygnału określa pozycję znaku w łańcuchu opisującym stan sygnalizacji, dlatego jego układ jest niezbędny do interpretacji programu sygnalizacji. Przypisanie indeksów do wlotów przedstawiono w tabeli~\ref{tab:indeksy-sygnalow}.
+
+\begin{table}[!htbp] \centering
+    \caption{Przypisanie indeksów sygnałów do wlotów i relacji skrętnych.}
+    \label{tab:indeksy-sygnalow}
+    \small
+    \begin{tabular}{| c | l | l | l |} \hline
+        Indeksy & Krawędź wlotowa & Wlot & Kolejność relacji \\ \hline\hline
+        0--3   & \texttt{1454977049\#0} & Belgradzka, wschodni & prawo, wprost, wprost, lewo \\ \hline
+        4--7   & \texttt{450749096\#0}  & al. KEN, południowy  & prawo, wprost, wprost, lewo \\ \hline
+        8--11  & \texttt{231737246\#0}  & Belgradzka, zachodni & prawo, wprost, wprost, lewo \\ \hline
+        12--15 & \texttt{1029639687\#0} & al. KEN, północny    & prawo, wprost, wprost, lewo \\ \hline
+    \end{tabular}
+\end{table}
+
+Wlot południowy alei Komisji Edukacji Narodowej jest jedynym, na którym każdej z czterech relacji odpowiada osobny pas ruchu. Na pozostałych wlotach skręt w lewo odbywa się z wydzielonego pasa, natomiast skręt w prawo i jazda na wprost dzielą pas skrajny.
+
+\subsubsection{Konfiguracja sygnalizacji}
+\label{subsubsec:konfiguracja-sygnalizacji}
+
+Program sygnalizacji zapisano bezpośrednio w pliku sieci jako element \texttt{tlLogic}. Wariant stałoczasowy, wykorzystywany przez metodę referencyjną oraz przez agenta DQN, przedstawiono na listingu~\ref{lst:tllogic-static}.
+
+\begin{addmargin}[8mm]{0mm}
+\begin{lstlisting}[
+    language=XML,
+    numbers=left,
+    caption={Program sygnalizacji w wariancie stałoczasowym.},
+    label={lst:tllogic-static},
+    basicstyle=\ttfamily\scriptsize,
+    breaklines=true,
+    aboveskip=10pt
+]
+<tlLogic id="GS_cluster_..." type="static" programID="0" offset="0">
+    <phase duration="14" state="rrrrGGGrrrrrGGGr"/>
+    <phase duration="3"  state="rrrryyyrrrrryyyr"/>
+    <phase duration="29" state="rrrrrrrGrrrrrrrG"/>
+    <phase duration="3"  state="rrrrrrryrrrrrrry"/>
+    <phase duration="29" state="GGGgrrrrGGGgrrrr"/>
+    <phase duration="3"  state="yyyyrrrryyyyrrrr"/>
+</tlLogic>
+\end{lstlisting}
+\end{addmargin}
+
+Zestawienie stanów sygnałów z tabelą~\ref{tab:indeksy-sygnalow} pozwala odczytać strukturę faz opisaną w podrozdziale~\ref{subsec:skrzyzowanie}. W pierwszej fazie sygnał \texttt{G} otrzymują indeksy od 4 do 6 oraz od 12 do 14, czyli jazda na wprost i skręt w prawo z obu kierunków alei Komisji Edukacji Narodowej, przy czym oba lewoskręty pozostają zatrzymane. W drugiej fazie sygnał \texttt{G} mają wyłącznie indeksy 7 oraz 15, co odpowiada chronionemu skrętowi w lewo. W trzeciej fazie obsługiwana jest ulica Belgradzka, przy czym indeksy 3 oraz 11 mają sygnał \texttt{g}, oznaczający w SUMO zezwolenie na przejazd bez pierwszeństwa \cite{sumoTrafficLights}. Jest to formalny zapis skrętu warunkowego, wykonywanego po ustąpieniu pierwszeństwa pojazdom nadjeżdżającym z przeciwka.
+
+Kolejność faz w pliku jest zarazem kolejnością ich realizacji w programie stałoczasowym. Każda faza zielona jest rozdzielona fazą żółtą o czasie trwania 3~s, a znaki \texttt{y} występują wyłącznie na tych indeksach, które w kolejnej fazie tracą prawo przejazdu. W modelu nie odwzorowano sygnału czerwono-żółtego. Jest to uproszczenie stosowane jednakowo dla wszystkich porównywanych metod, przyjęte dlatego, że biblioteka \texttt{sumo-rl} rozpoznaje fazy zielone na podstawie zawartości łańcucha stanu, a dodatkowa faza przejściowa zmieniłaby rozmiar przestrzeni akcji agenta.
+
+Poprawność układu faz sprawdzono w edytorze \texttt{netedit}, potwierdzając brak jednoczesnego zezwolenia na przejazd dla wzajemnie kolizyjnych relacji, z wyjątkiem przewidzianych w modelu warunkowych skrętów w lewo.
+
+\subsection{Generowanie scenariuszy ruchu}
+\label{subsec:generowanie-scenariuszy}
+
+\subsubsection{Mechanizm generowania}
+\label{subsubsec:mechanizm-generowania}
+
+Wszystkie scenariusze wygenerowano skryptem \texttt{randomTrips.py}, dostarczanym wraz z SUMO \cite{sumo_randomtrips_docs}. Skrypt losuje krawędź początkową oraz końcową każdej podróży, domyślnie z rozkładem jednostajnym po krawędziach sieci, i zapisuje wynik jako zbiór podróży. Podanie opcji \texttt{-{}-route-file} powoduje automatyczne uruchomienie narzędzia \texttt{duarouter}, które wyznacza trasy przejazdu i odrzuca podróże niemożliwe do zrealizowania, na przykład takie, dla których nie istnieje połączenie między wylosowanymi krawędziami.
+
+Znaczenie wykorzystanych opcji jest następujące \cite{sumo_randomtrips_docs}:
+\begin{itemize}
+    \item \texttt{-n} wskazuje plik sieci, dla której generowane są podróże;
+    \item \texttt{-e} określa koniec przedziału, w którym pojazdy wjeżdżają do sieci, przy domyślnym początku równym zeru;
+    \item \texttt{-{}-period} określa średni odstęp między kolejnymi wyjazdami, a więc pośrednio natężenie ruchu; liczba wygenerowanych podróży wynika z długości przedziału podzielonej przez wartość tej opcji;
+    \item \texttt{-{}-seed} ustala ziarno generatora liczb pseudolosowych, dzięki czemu ten sam zestaw opcji zawsze daje ten sam plik wyjściowy;
+    \item \texttt{-{}-random-depart} zmienia sposób rozmieszczenia czasów wyjazdu: zamiast równych odstępów czasy losowane są z rozkładu jednostajnego na całym przedziale, co prowadzi do wykładniczego rozkładu odstępów między kolejnymi pojazdami;
+    \item \texttt{-{}-binomial} powoduje dodatkowe losowanie liczby wyjazdów przypadających na sekundę z rozkładu dwumianowego, w którym podana wartość jest maksymalną liczbą jednoczesnych wyjazdów.
+\end{itemize}
+
+Domyślne, równomierne rozmieszczenie czasów wyjazdu daje powtarzalny i przewidywalny napływ pojazdów. Opcje \texttt{-{}-random-depart} oraz \texttt{-{}-binomial} zwiększają nieregularność tego napływu przy zachowaniu zbliżonego natężenia średniego. Przykładowe wywołanie dla scenariusza o stałym natężeniu przedstawiono na listingu~\ref{lst:randomtrips}.
+
+\begin{addmargin}[8mm]{0mm}
+\begin{lstlisting}[
+    language=bash,
+    numbers=left,
+    caption={Generowanie scenariusza o stałym natężeniu ruchu.},
+    label={lst:randomtrips},
+    basicstyle=\ttfamily\scriptsize,
+    breaklines=true,
+    aboveskip=10pt
+]
+python3 randomTrips.py \
+  -n osm.net.xml \
+  -o T1/trips_T1_101.trips.xml \
+  --route-file T1/routes_T1_101.rou.xml \
+  -e 3600 \
+  --period 5.0 \
+  --seed 101
+\end{lstlisting}
+\end{addmargin}
+
+\subsubsection{Scenariusze o stałym natężeniu}
+\label{subsubsec:scenariusze-stale}
+
+Trzy poziomy natężenia ruchu odwzorowano wyłącznie przez zmianę wartości opcji \texttt{-{}-period}, przy pozostałych parametrach niezmienionych. Ruchowi lekkiemu odpowiada okres 5,0~s, ruchowi średniemu 2,5~s, a ruchowi wysokiemu 1,25~s. Kolejne poziomy różnią się zatem dwukrotnie, a poziom najwyższy odpowiada czterokrotności najniższego. Dla scenariusza o napływie trwającym 3600~s daje to odpowiednio 720, 1440 oraz 2880 podróży zgłoszonych do wygenerowania, pomniejszonych o podróże odrzucone przez \texttt{duarouter}.
+
+Warianty w obrębie jednego poziomu natężenia różnią się wyłącznie ziarnem generatora. Zmienia się przez to układ tras oraz przydział pojazdów do poszczególnych relacji, natomiast łączne natężenie pozostaje takie samo. Rozwiązanie to pozwala oceniać metody sterowania w kilku niezależnych realizacjach tego samego poziomu obciążenia.
+
+\subsubsection{Scenariusz o zmiennym natężeniu}
+\label{subsubsec:scenariusz-zmienny}
+
+Scenariusz o zmiennym natężeniu powstaje przez podanie trzech wartości opcji \texttt{-{}-period} jednocześnie. Skrypt dzieli wówczas przedział generowania na tyle równych podprzedziałów, ile podano wartości, i w każdym z nich stosuje odpowiedni okres napływu \cite{sumo_randomtrips_docs}. Dla przedziału o długości 3600~s oraz wartości 5,0, 2,5 i 1,25 otrzymuje się trzy podprzedziały po 1200~s, w których natężenie kolejno narasta od poziomu lekkiego, przez średni, do wysokiego.
+
+Scenariusz ten uzupełniono opcjami \texttt{-{}-random-depart} oraz \texttt{-{}-binomial 4}. Pierwsza z nich usuwa regularność odstępów między wyjazdami, druga wprowadza dodatkową zmienność liczby pojazdów wjeżdżających w kolejnych sekundach. Połączenie narastającego natężenia z nieregularnym napływem daje scenariusz, w którym sterowanie musi reagować zarówno na powolną zmianę obciążenia, jak i na krótkotrwałe skupiska pojazdów. Wariant ten występuje w zbiorze walidacyjnym oraz w zbiorze testowym, gdzie odpowiada mu grupa pięciu plików o ziarnach od 401 do 405.
+
+\subsubsection{Wariant treningowy o nieregularnym napływie}
+\label{subsubsec:trening-nieregularny}
+
+Drugi wariant zbioru treningowego, opisany w podrozdziale~\ref{subsubsec:zbior-treningowy}, powstał przez zastosowanie opcji \texttt{-{}-random-depart} do scenariuszy o stałym natężeniu. Wykorzystano przy tym nieco inne wartości okresu napływu, to jest 4,581~s, 2,493~s oraz 1,220~s, odpowiadające tym samym trzem poziomom obciążenia. Wariant ten różni się od podstawowego wyłącznie sposobem rozmieszczenia czasów wyjazdu oraz ziarnami generatora, dzięki czemu porównanie obu zbiorów dotyczy wpływu nieregularności napływu, a nie zmiany natężenia ruchu.
+
+\subsubsection{Zestawienie wygenerowanych zbiorów}
+\label{subsubsec:zestawienie-zbiorow}
+
+Pełną konfigurację wszystkich wygenerowanych scenariuszy przedstawiono w tabeli~\ref{tab:scenariusze}. Kolumna określająca długość odnosi się do przedziału, w którym pojazdy wjeżdżają do sieci. Czas trwania samej symulacji jest dłuższy, ponieważ przebieg kończy się dopiero po opuszczeniu sieci przez wszystkie pojazdy.
+
+\begin{table}[!htbp] \centering
+    \caption{Konfiguracja generowania scenariuszy ruchu.}
+    \label{tab:scenariusze}
+    \footnotesize
+    \begin{tabular}{| l | l | r | r | r | c | l |} \hline
+        Zbiór & Scenariusz & Okres [s] & Wariantów & Długość [s] & Losowe odjazdy & Ziarna \\ \hline\hline
+        treningowy 1 & lekki   & 5,000 & 10 & 1800 & nie & 1001--1010 \\ \hline
+        treningowy 1 & średni  & 2,500 & 10 & 1800 & nie & 2001--2010 \\ \hline
+        treningowy 1 & wysoki  & 1,250 & 10 & 1800 & nie & 3001--3010 \\ \hline
+        treningowy 2 & lekki   & 4,581 & 10 & 1800 & tak & 1101--1110 \\ \hline
+        treningowy 2 & średni  & 2,493 & 10 & 1800 & tak & 2101--2110 \\ \hline
+        treningowy 2 & wysoki  & 1,220 & 10 & 1800 & tak & 3101--3110 \\ \hline
+        walidacyjny  & lekki   & 5,000 & 1  & 3600 & nie & 1 \\ \hline
+        walidacyjny  & średni  & 2,500 & 1  & 3600 & nie & 2 \\ \hline
+        walidacyjny  & wysoki  & 1,250 & 1  & 3600 & nie & 3 \\ \hline
+        walidacyjny  & zmienny & 5,0; 2,5; 1,25 & 1 & 3600 & tak\tablefootnote{W scenariuszach o zmiennym natężeniu zastosowano dodatkowo opcję \texttt{-{}-binomial 4}.} & 4 \\ \hline
+        testowy T1   & lekki   & 5,000 & 5  & 3600 & nie & 101--105 \\ \hline
+        testowy T2   & średni  & 2,500 & 5  & 3600 & nie & 201--205 \\ \hline
+        testowy T3   & wysoki  & 1,250 & 5  & 3600 & nie & 301--305 \\ \hline
+        testowy G1   & zmienny & 5,0; 2,5; 1,25 & 5 & 3600 & tak & 401--405 \\ \hline
+    \end{tabular}
+\end{table}
+
+Zbiory różnią się ziarnami generatora, dzięki czemu żaden scenariusz nie powtarza się między zbiorem treningowym, walidacyjnym i testowym. Odpowiada to zasadom rozdzielenia danych przedstawionym w podrozdziale~\ref{subsubsec:przenikanie-danych}.
+
+\subsection{Implementacja metod referencyjnych}
+\label{subsec:implementacja-referencyjnych}
+
+Obie metody referencyjne realizowane są w całości wewnątrz symulatora, zgodnie z opisem z podrozdziału~\ref{subsec:traci}. Kod w języku Python pełni przy nich rolę obserwatora: wykonuje kolejne kroki symulacji, odczytuje stan ruchu i zapisuje dane pomiarowe, natomiast nie ingeruje w działanie sygnalizacji.
+
+\subsubsection{Program stałoczasowy}
+\label{subsubsec:impl-staloczasowy}
+
+Metoda stałoczasowa korzysta z programu przedstawionego na listingu~\ref{lst:tllogic-static}, wskazywanego przez osobny plik konfiguracyjny symulacji. Sterownik typu \texttt{static} realizuje kolejne fazy w zapisanej kolejności, każdą przez czas określony atrybutem \texttt{duration}, a po ostatniej fazie rozpoczyna cykl od początku \cite{sumoTrafficLights}.
+
+Czasy trwania faz zielonych wyznaczono metodą stosowaną w praktyce projektowej, opartą na natężeniach pasa krytycznego \cite{NAP22097, koonce2008traffic}. Dla każdej fazy wskazano pas o największym natężeniu spośród obsługiwanych przez tę fazę, a następnie wyznaczono stopień wykorzystania $y$ jako iloraz natężenia i natężenia nasycenia, przyjętego na poziomie 1800~poj./h na pas. Natężenia oszacowano wyłącznie na podstawie scenariuszy o dużym natężeniu ze zbioru treningowego, zgodnie z zasadą opisaną w podrozdziale~\ref{subsubsec:przenikanie-danych}. Przy długości cyklu 81~s oraz trzech fazach żółtych po 3~s do rozdziału pozostaje 72~s, które podzielono proporcjonalnie do wartości $y$. Otrzymane wielkości zestawiono w tabeli~\ref{tab:podzial-czasow}.
+
+\begin{table}[!htbp] \centering
+    \caption{Wyznaczenie podziału czasów zielonych na podstawie natężeń pasa krytycznego ze zbioru treningowego.}
+    \label{tab:podzial-czasow}
+    \small
+    \begin{tabular}{| l | r | r | r | r |} \hline
+        Faza & Natężenie [poj./h] & $y$ & Czas zielony [s] & \texttt{maxDur} [s] \\ \hline\hline
+        A: al. KEN, wprost i w prawo & 229 & 0,127 & 14 & 21 \\ \hline
+        B: al. KEN, skręt w lewo     & 463 & 0,257 & 29 & 43 \\ \hline
+        C: Belgradzka                & 477 & 0,265 & 29 & 44 \\ \hline
+        Suma                         &     & 0,649 & 72 &    \\ \hline
+    \end{tabular}
+\end{table}
+
+Podział ten sprawdzono również na pozostałych zbiorach danych i okazał się stabilny: wyznaczenie go na wariancie treningowym o nieregularnym napływie albo na zbiorze walidacyjnym prowadzi do wartości różniących się co najwyżej o jedną sekundę. Po ustaleniu parametry programu zamrożono i nie modyfikowano ich po zapoznaniu się z wynikami agenta DQN.
+
+Uruchomienie pojedynczego przebiegu realizuje skrypt powłoki, który dla każdego pliku tras startuje kontener z symulatorem, przekazując mu konfigurację, plik tras, ziarno oraz ścieżki plików wyjściowych, a następnie uruchamia obserwatora napisanego w języku Python. Nazwa katalogu wynikająca ze ścieżki pliku tras jest tłumaczona na etykietę poziomu natężenia, a ziarno odczytywane jest z nazwy pliku, dzięki czemu wiersz wyniku od razu zawiera pełny opis przebiegu.
+
+Rdzeń obserwatora przedstawiono na listingu~\ref{lst:baseline-loop}. Pętla wykonuje kolejne sekundy symulacji dopóty, dopóki w sieci pozostają pojazdy oczekujące na obsługę, a w każdej sekundzie zapisuje liczbę pojazdów zatrzymanych na pasach wlotowych, numer bieżącej fazy oraz łańcuch stanu sygnałów.
+
+\begin{addmargin}[8mm]{0mm}
+\begin{lstlisting}[
+    language=Python,
+    numbers=left,
+    caption={Petla pomiarowa metod referencyjnych.},
+    label={lst:baseline-loop},
+    basicstyle=\ttfamily\scriptsize,
+    breaklines=true,
+    aboveskip=10pt
+]
+traci.init(port=TRACI_PORT, host="127.0.0.1")
+while traci.simulation.getMinExpectedNumber() > 0:
+    traci.simulationStep()
+
+    phase = traci.trafficlight.getPhase(TLS_ID)
+    state = traci.trafficlight.getRedYellowGreenState(TLS_ID)
+    if phase != last_phase:
+        if "y" not in state.lower():
+            if last_main_phase is not None and phase != last_main_phase:
+                main_phase_switches += 1
+            last_main_phase = phase
+    last_phase = phase
+
+    queues = get_queue_per_approach()
+    rows.append({"time": traci.simulation.getTime(), ...})
+\end{lstlisting}
+\end{addmargin}
+
+Zliczanie przełączeń pomija fazy żółte, dzięki czemu jedna zmiana fazy zielonej nie jest liczona dwukrotnie, zgodnie z definicją metryki z podrozdziału~\ref{subsubsec:metryka-przelaczenia}. Po zakończeniu przebiegu zapisywany jest pełny szereg czasowy oraz plik podsumowania, a na ich podstawie oraz na podstawie pliku \texttt{tripinfo.xml} tworzony jest wiersz wyników.
+
+\subsubsection{Program akomodacyjny}
+\label{subsubsec:impl-akomodacyjny}
+
+Metoda akomodacyjna korzysta z drugiego pliku sieci, w którym ten sam zestaw faz zapisano jako sterownik typu \texttt{actuated}. Fazy zielone otrzymują dodatkowo atrybuty \texttt{minDur} oraz \texttt{maxDur}, wyznaczające dopuszczalny zakres czasu ich trwania, co przedstawiono na listingu~\ref{lst:tllogic-actuated}.
+
+\begin{addmargin}[8mm]{0mm}
+\begin{lstlisting}[
+    language=XML,
+    numbers=left,
+    caption={Program sygnalizacji w wariancie akomodacyjnym.},
+    label={lst:tllogic-actuated},
+    basicstyle=\ttfamily\scriptsize,
+    breaklines=true,
+    aboveskip=10pt
+]
+<tlLogic id="GS_cluster_..." type="actuated" programID="0" offset="0">
+    <phase duration="14" state="rrrrGGGrrrrrGGGr" minDur="5" maxDur="21"/>
+    <phase duration="3"  state="rrrryyyrrrrryyyr"/>
+    <phase duration="29" state="rrrrrrrGrrrrrrrG" minDur="5" maxDur="43"/>
+    <phase duration="3"  state="rrrrrrryrrrrrrry"/>
+    <phase duration="29" state="GGGgrrrrGGGgrrrr" minDur="5" maxDur="44"/>
+    <phase duration="3"  state="yyyyrrrryyyyrrrr"/>
+</tlLogic>
+\end{lstlisting}
+\end{addmargin}
+
+Minimalny czas zielony ustalono na 5~s, czyli tyle samo, ile wynosi minimalny czas zielony w środowisku agenta. Maksymalne czasy trwania faz przyjęto jako około półtorakrotność czasów zielonych programu stałoczasowego. Wartość ta zastępuje domyślne ustawienie symulatora, wynoszące 50~s jednakowo dla każdej fazy \cite{sumoTrafficLights}. Ustawienie domyślne pozwalałoby fazie A wydłużać się nawet do 50~s, mimo że wynikające z natężeń zapotrzebowanie tej fazy to 14~s, co przy dużym obciążeniu odbierałoby czas pozostałym fazom. Zastosowany dobór stawia zatem obie metody referencyjne na porównywalnym poziomie staranności projektowej.
+
+Sterownik typu \texttt{actuated} realizuje sterowanie oparte na przerwach w strumieniu pojazdów. Wykorzystuje przy tym detektory indukcyjne generowane automatycznie na pasach wlotowych, umieszczane w odległości wynikającej z parametru \texttt{detector-gap}, domyślnie odpowiadającej dwóm sekundom jazdy z prędkością dopuszczalną na danym pasie. Faza zielona jest przedłużana, dopóki odstęp czasu między kolejnymi wykryciami jest mniejszy od wartości parametru \texttt{max-gap}, domyślnie równej 3~s. Przekroczenie tej wartości kończy fazę przed osiągnięciem czasu maksymalnego, a osiągnięcie \texttt{maxDur} kończy ją niezależnie od stanu detekcji \cite{sumoTrafficLights}. W eksperymencie pozostawiono domyślne wartości obu parametrów, ponieważ dotyczą one mechanizmu wykrywania przerw, a nie podziału czasu między relacje.
+
+W konfiguracji symulacji ustawiono natomiast opcję \texttt{tls.actuated.jam-threshold} na wartość 30. Ma to znaczenie dla analizowanego skrzyżowania z dwóch powodów. Po pierwsze, zgodnie z dokumentacją detektor jest domyślnie wykorzystywany tylko wtedy, gdy wszystkie relacje wychodzące z danego pasa mają w danej fazie sygnał bezwarunkowy \texttt{G}. Pas lewoskrętu na ulicy Belgradzkiej ma w swojej fazie sygnał warunkowy \texttt{g}, więc bez tego ustawienia jego detektor nie mógłby przedłużać fazy. Po drugie, ustawienie to powoduje pomijanie pojazdów stojących na detektorze dłużej niż zadany czas, co zapobiega bezużytecznemu przedłużaniu fazy w sytuacji, gdy pas jest zablokowany \cite{sumoTrafficLights}.
+
+Sposób uruchamiania przebiegów oraz zbierania metryk jest identyczny jak dla programu stałoczasowego. Różnicę stanowi wyłącznie wskazany plik konfiguracyjny symulacji, a co za tym idzie plik sieci. Oba warianty mogą działać równolegle, ponieważ skrypt przyjmuje numer portu interfejsu TraCI oraz katalog wyjściowy jako parametry, dzięki czemu przebiegi nie nadpisują sobie plików pośrednich.
+
+\subsection{Dostosowanie środowiska \texttt{sumo-rl}}
+\label{subsec:wrapper}
+
+\subsubsection{Ograniczenie standardowej implementacji}
+\label{subsubsec:ograniczenie-sumo-rl}
+
+Biblioteka \texttt{sumo-rl} udostępnia symulację jako środowisko zgodne z interfejsem Gymnasium, w którym pojedyncze wywołanie metody kroku realizuje całe okno decyzyjne. Wewnątrz tego wywołania symulator wykonuje kolejne sekundy, aktualizuje maszynę stanów sygnalizacji i zwraca sterowanie dopiero w następnej chwili decyzyjnej. Kod wywołujący nie ma zatem dostępu do stanu ruchu w sekundach pośrednich.
+
+Ograniczenie to jest nieistotne podczas treningu, ponieważ agent i tak podejmuje decyzje wyłącznie w chwilach decyzyjnych. Staje się jednak problemem podczas ewaluacji. Średnia długość kolejki, zdefiniowana w podrozdziale~\ref{subsubsec:metryka-kolejka}, wyznaczana jest z danych rejestrowanych w każdej sekundzie symulacji. Gdyby dla agenta rejestrowano stan wyłącznie co pięć sekund, metryka miałaby inną rozdzielczość niż dla metod referencyjnych, a wyniki nie byłyby porównywalne.
+
+\subsubsection{Przebudowa kroku środowiska}
+\label{subsubsec:przebudowa-kroku}
+
+Z tego powodu przygotowano klasę \texttt{DqnSumoEnv}, zgodną z interfejsem środowiska Gymnasium i korzystającą wewnętrznie z obiektu \texttt{SumoEnvironment}. Klasa ta nie zastępuje biblioteki, lecz zmienia sposób przechodzenia przez okno decyzyjne. Uproszczoną postać metody kroku przedstawiono na listingu~\ref{lst:step}.
+
+\begin{addmargin}[8mm]{0mm}
+\begin{lstlisting}[
+    language=Python,
+    numbers=left,
+    caption={Rdzen przebudowanej metody kroku srodowiska.},
+    label={lst:step},
+    basicstyle=\ttfamily\scriptsize,
+    breaklines=true,
+    aboveskip=10pt
+]
+def step(self, action):
+    traffic_signal = self._env.traffic_signals[self.tls_id]
+    if traffic_signal.time_to_act:
+        traffic_signal.set_next_phase(int(action))
+
+    for _ in range(max_inner_steps):
+        terminated, truncated = self._episode_flags()
+        if terminated or truncated:
+            break
+
+        self._env._sumo_step()
+        for ts in self._env.ts_ids:
+            self._env.traffic_signals[ts].update()
+
+        if self._recorder is not None:
+            self._recorder.record_step(self._env.sumo)
+
+        terminated, truncated = self._episode_flags()
+        if terminated or truncated:
+            break
+        if any(self._env.traffic_signals[ts].time_to_act
+               for ts in self._env.ts_ids):
+            break
+    else:
+        raise RuntimeError(...)
+
+    observation = traffic_signal.compute_observation()
+    reward = traffic_signal.compute_reward()
+    return observation, reward, terminated, truncated, info
+\end{lstlisting}
+\end{addmargin}
+
+Przekazanie akcji, aktualizacja maszyny stanów oraz wyznaczenie obserwacji i nagrody realizowane są przez oryginalne metody biblioteki, dzięki czemu semantyka sterowania pozostaje niezmieniona. Zmieniona jest wyłącznie pętla wewnętrzna: symulacja postępuje sekunda po sekundzie, a po każdej sekundzie wywoływany jest moduł zbierania metryk. Pętla kończy się w chwili osiągnięcia następnej chwili decyzyjnej albo zakończenia epizodu. Jej przebieg przedstawiono na rysunku~\ref{fig:petla-kroku}.
+
+% \begin{figure}[!htbp] \centering
+%     \includegraphics[width=0.62\linewidth]{petla_kroku.png}
+%     \caption{Przebieg pojedynczego wywołania metody kroku w warstwie integracyjnej.}
+%     \label{fig:petla-kroku}
+% \end{figure}
+
+Pętla ma jawnie ograniczoną liczbę powtórzeń, wyznaczoną jako suma interwału decyzyjnego, czasu fazy żółtej oraz minimalnego czasu zielonego, powiększona o niewielki zapas. Jeżeli limit zostanie przekroczony, program zgłasza błąd wraz z informacją o chwili symulacji i identyfikatorze sygnalizacji, zamiast działać w nieskończonej pętli lub zapisać niekompletne wyniki.
+
+\subsubsection{Ujednolicenie pomiaru metryk}
+\label{subsubsec:ujednolicenie-metryk}
+
+Za rejestrowanie danych odpowiada klasa \texttt{EpisodeRecorder}, wykorzystywana wyłącznie w trybie ewaluacji testowej. Zapisuje ona te same wielkości i w tych samych chwilach co pętla pomiarowa metod referencyjnych, przedstawiona na listingu~\ref{lst:baseline-loop}. Struktura pliku szeregu czasowego jest zatem identyczna dla wszystkich porównywanych metod.
+
+Jedna różnica dotyczy sposobu wykrywania przełączeń. Biblioteka \texttt{sumo-rl} steruje sygnalizacją przez bezpośrednie ustawianie łańcucha stanu sygnałów, a nie przez wybór numeru fazy z programu zapisanego w pliku sieci. W konsekwencji numer fazy raportowany przez symulator pozostaje w przebiegach agenta stały. Z tego powodu w klasie \texttt{EpisodeRecorder} przełączenia wykrywane są przez porównywanie kolejnych łańcuchów stanu sygnałów, a nie numerów faz. Wynik jest poprawny dla obu rodzajów sterowania, ponieważ zmiana łańcucha stanu jest równoważna zmianie układu sygnałów na skrzyżowaniu.
+
+Warstwa integracyjna przekazuje ponadto do symulatora opcje generujące pliki \texttt{tripinfo.xml} oraz \texttt{statistic.xml}. Stanowią one drugie źródło metryk, opisane w podrozdziale~\ref{subsec:metryki}. Dzięki temu ten sam zestaw plików wyjściowych powstaje niezależnie od tego, czy sterowaniem zajmuje się agent, czy metoda referencyjna.
+
+\subsubsection{Obsługa epizodów i plików tras}
+\label{subsubsec:obsluga-epizodow}
+
+Warstwa integracyjna przyjmuje listę plików tras zamiast pojedynczego pliku. Przy rozpoczynaniu epizodu wybierany jest kolejny plik z listy, a po jej wyczerpaniu przeglądanie zaczyna się od początku. Możliwe jest również jawne wskazanie pliku przez parametr przekazany w wywołaniu, co wykorzystywane jest podczas walidacji i oceny testowej. Zmiana pliku wymaga ustawienia odpowiedniego pola w obiekcie biblioteki, ponieważ jest ono odczytywane dopiero przy uruchamianiu symulacji.
+
+Rozszerzono także warunki zakończenia epizodu. Biblioteka rozpoznaje jedynie przekroczenie zadanego czasu symulacji, co odpowiada zakończeniu przez ucięcie i jest właściwe podczas treningu, gdzie każdy epizod ma trwać ustaloną liczbę sekund. Podczas ewaluacji potrzebne jest natomiast doprowadzenie każdego pojazdu do celu, aby plik \texttt{tripinfo.xml} zawierał komplet podróży. Dodano zatem warunek kończący epizod w chwili, gdy w sieci nie pozostaje już żaden pojazd oczekujący na obsługę. Tryb ten włączany jest osobnym parametrem środowiska, dzięki czemu trening i ewaluacja korzystają z tego samego kodu.
+
+Informacje zwracane przez środowisko uzupełniono o dane diagnostyczne: nazwę pliku tras wybranego przy rozpoczynaniu epizodu oraz przyczynę jego zakończenia, rozróżniającą przekroczenie czasu symulacji i obsłużenie wszystkich pojazdów. Ułatwia to kontrolę przebiegu długich serii eksperymentów.
+
+\subsection{Implementacja przestrzeni obserwacji i akcji}
+\label{subsec:impl-obserwacja-akcje}
+
+\subsubsection{Budowa wektora obserwacji}
+\label{subsubsec:budowa-obserwacji}
+
+Wektor obserwacji budowany jest przez domyślną funkcję obserwacji biblioteki \texttt{sumo-rl}, której postać przedstawiono na listingu~\ref{lst:observation}. Znaczenie poszczególnych grup cech omówiono w podrozdziale~\ref{subsubsec:obserwacja}.
+
+\begin{addmargin}[8mm]{0mm}
+\begin{lstlisting}[
+    language=Python,
+    numbers=left,
+    caption={Budowa wektora obserwacji.},
+    label={lst:observation},
+    basicstyle=\ttfamily\scriptsize,
+    breaklines=true,
+    aboveskip=10pt
+]
+phase_id = [1 if self.green_phase == i else 0
+            for i in range(self.num_green_phases)]
+min_green = [0 if self.time_since_last_phase_change
+                  < self.min_green + self.yellow_time else 1]
+density = self.get_lanes_density()
+queue = self.get_lanes_queue()
+observation = np.array(phase_id + min_green + density + queue,
+                       dtype=np.float32)
+\end{lstlisting}
+\end{addmargin}
+
+Wektor powstaje przez połączenie czterech list w ustalonej kolejności. Trzy pierwsze pozycje to kodowanie aktywnej fazy typu one-hot, czwarta to znacznik upłynięcia minimalnego czasu zielonego powiększonego o czas fazy żółtej, a kolejnych dwadzieścia sześć pozycji to gęstość oraz zapełnienie kolejki dla trzynastu pasów wlotowych. Daje to łącznie trzydzieści wartości, czyli przestrzeń obserwacji \texttt{Box(0.0, 1.0, (30,), float32)}.
+
+Normalizacja dwóch ostatnich grup cech realizowana jest przez podzielenie liczby pojazdów przez pojemność pasa, wyznaczaną jako długość pasa podzielona przez sumę stałego minimalnego odstępu między pojazdami oraz średniej długości pojazdu zmierzonej na tym pasie w ostatnim kroku symulacji. Wynik ograniczany jest od góry wartością jeden, ponieważ chwilowe zagęszczenie pojazdów może przekroczyć oszacowaną pojemność. Dwie pierwsze grupy cech z definicji przyjmują wartości zero albo jeden, więc cały wektor mieści się we wspólnym przedziale i nie wymaga dodatkowego skalowania przed podaniem na wejście sieci neuronowej.
+
+\subsubsection{Odwzorowanie akcji na fazy}
+\label{subsubsec:odwzorowanie-akcji}
+
+Zbiór faz zielonych nie jest podawany w konfiguracji, lecz odczytywany z pliku sieci przy uruchamianiu symulacji. Biblioteka pobiera program sygnalizacji, a następnie uznaje za fazę zieloną każdą fazę, której łańcuch stanu nie zawiera znaku \texttt{y} i nie składa się wyłącznie ze znaków oznaczających zatrzymanie. Dla programu z listingu~\ref{lst:tllogic-static} daje to trzy fazy zielone, a więc przestrzeń akcji \texttt{Discrete(3)}. Numer akcji jest indeksem w tak zbudowanej liście, czyli odpowiada kolejności wystąpienia faz zielonych w pliku sieci.
+
+Następnie biblioteka generuje fazy przejściowe. Dla każdej uporządkowanej pary różnych faz zielonych tworzony jest łańcuch stanu, w którym znak \texttt{y} pojawia się dokładnie na tych pozycjach, które w fazie źródłowej mają sygnał zielony, a w fazie docelowej sygnał zatrzymania. Pozostałe pozycje zachowują stan z fazy źródłowej. Tak zbudowany komplet faz zastępuje program zapisany w pliku sieci. Konsekwencją tego mechanizmu jest fakt, że czasy trwania faz zapisane w pliku sieci nie mają wpływu na działanie agenta, natomiast wygaszane są wyłącznie te relacje, które faktycznie tracą prawo przejazdu.
+
+\subsubsection{Walidacja wybranej akcji}
+\label{subsubsec:walidacja-akcji}
+
+Egzekwowanie ograniczeń czasowych realizuje metoda ustawiająca kolejną fazę, przedstawiona na listingu~\ref{lst:action}.
+
+\begin{addmargin}[8mm]{0mm}
+\begin{lstlisting}[
+    language=Python,
+    numbers=left,
+    caption={Weryfikacja akcji i przejscie przez faze zolta.},
+    label={lst:action},
+    basicstyle=\ttfamily\scriptsize,
+    breaklines=true,
+    aboveskip=10pt
+]
+def set_next_phase(self, new_phase):
+    new_phase = int(new_phase)
+    if (self.green_phase == new_phase
+            or self.time_since_last_phase_change
+               < self.yellow_time + self.min_green):
+        self.sumo.trafficlight.setRedYellowGreenState(
+            self.id, self.all_phases[self.green_phase].state)
+        self.next_action_time = self.env.sim_step + self.delta_time
+    else:
+        self.sumo.trafficlight.setRedYellowGreenState(
+            self.id,
+            self.all_phases[
+                self.yellow_dict[(self.green_phase, new_phase)]].state)
+        self.green_phase = new_phase
+        self.next_action_time = self.env.sim_step + self.delta_time
+        self.is_yellow = True
+        self.time_since_last_phase_change = 0
+\end{lstlisting}
+\end{addmargin}
+
+Warunek w pierwszej gałęzi obejmuje dwa przypadki opisane w podrozdziale~\ref{subsubsec:akcje}: wskazanie fazy bieżącej oraz wskazanie fazy innej przed upływem minimalnego czasu zielonego powiększonego o czas fazy żółtej. W obu sygnalizacja kontynuuje bieżącą fazę, a jedynym skutkiem jest wyznaczenie następnej chwili decyzyjnej. Żądanie zmiany nie jest przy tym kolejkowane, co oznacza, że akcja odrzucona nie zostanie wykonana z opóźnieniem i agent musi ją powtórzyć w kolejnej chwili decyzyjnej.
+
+W przeciwnym razie wprowadzana jest faza żółta odpowiadająca przejściu z fazy bieżącej do docelowej, licznik czasu od ostatniej zmiany jest zerowany, a sygnalizacja oznaczana jako będąca w fazie przejściowej. Włączenie właściwej fazy zielonej następuje później, w metodzie aktualizacji wywoływanej po każdej sekundzie symulacji, dokładnie po upływie czasu fazy żółtej. Agent nie ma zatem możliwości pominięcia czasu międzyzielonego ani skrócenia go poniżej wartości zadanej w konfiguracji.
+
+\subsection{Implementacja funkcji nagrody}
+\label{subsec:impl-nagroda}
+
+Funkcję nagrody \texttt{diff-waiting-time} zaimplementowano w sposób przedstawiony na listingu~\ref{lst:reward}.
+
+\begin{addmargin}[8mm]{0mm}
+\begin{lstlisting}[
+    language=Python,
+    numbers=left,
+    caption={Funkcja nagrody oparta na zmianie czasu oczekiwania.},
+    label={lst:reward},
+    basicstyle=\ttfamily\scriptsize,
+    breaklines=true,
+    aboveskip=10pt
+]
+def _diff_waiting_time_reward(self):
+    ts_wait = sum(self.get_accumulated_waiting_time_per_lane()) / 100.0
+    reward = self.last_measure - ts_wait
+    self.last_measure = ts_wait
+    return reward
+\end{lstlisting}
+\end{addmargin}
+
+Wywołanie w pierwszej linii zwraca listę skumulowanych czasów oczekiwania przypisanych poszczególnym pasom wlotowym. Dla każdego pojazdu znajdującego się na danym pasie odczytywany jest skumulowany czas oczekiwania raportowany przez symulator, a następnie od wartości tej odejmowany jest udział zapisany już na innych pasach zajmowanych wcześniej przez ten sam pojazd. Zabieg ten sprawia, że zmiana pasa w obrębie sterowanego obszaru nie powoduje wielokrotnego zliczenia tego samego czasu oczekiwania. Suma wartości ze wszystkich pasów, przeskalowana czynnikiem $\frac{1}{100}$, odpowiada wielkości $W_t$ zdefiniowanej wzorem~(\ref{eq:waiting-total}).
+
+Druga linia realizuje właściwą nagrodę zgodnie ze wzorem~(\ref{eq:reward}). Pole \texttt{last\_measure} przechowuje wartość wyznaczoną w poprzedniej chwili decyzyjnej, a różnica między nią a wartością bieżącą stanowi nagrodę. Trzecia linia aktualizuje to pole na potrzeby kolejnego wywołania. Wartość ta jest zerowana przy rozpoczynaniu epizodu, podobnie jak struktura przechowująca udziały czasu oczekiwania poszczególnych pojazdów, dzięki czemu nagroda w pierwszej chwili decyzyjnej nie zależy od przebiegu poprzedniego epizodu.
+
+Działanie funkcji ilustruje następujący przykład. Wartości przyjęto arbitralnie, wyłącznie w celu pokazania kolejności obliczeń. Jeżeli w poprzedniej chwili decyzyjnej suma skumulowanych czasów oczekiwania wynosiła 1250~s, to $W_{t-1} = 12{,}5$. Jeżeli w bieżącej chwili decyzyjnej suma wzrosła do 1400~s, to $W_t = 14{,}0$, a nagroda wynosi $r_t = 12{,}5 - 14{,}0 = -1{,}5$. Gdyby natomiast suma zmalała do 1100~s, nagroda wyniosłaby $r_t = 12{,}5 - 11{,}0 = 1{,}5$.
+
+Przykład ten pokazuje istotną własność przyjętej funkcji. Nagroda nie mierzy bezwzględnego poziomu obciążenia skrzyżowania, lecz jego zmianę między kolejnymi decyzjami. Przy rosnącym natężeniu ruchu suma czasów oczekiwania rośnie niemal zawsze, więc nagrody są przeważnie ujemne, a agent uczy się wybierać działania ograniczające tempo tego wzrostu.
+
+\subsection{Proces treningu}
+\label{subsec:proces-treningu}
+
+\subsubsection{Inicjalizacja}
+\label{subsubsec:inicjalizacja-treningu}
+
+Trening uruchamiany jest poleceniem przyjmującym trzy istotne parametry: konfigurację symulacji, z której odczytywany jest plik sieci, wzorzec ścieżki wskazujący pliki tras zbioru treningowego oraz plik konfiguracyjny w formacie YAML. Wzorzec rozwijany jest do posortowanej listy plików, co zapewnia powtarzalną kolejność scenariuszy niezależnie od kolejności zwracanej przez system plików. Brak dopasowanych plików przerywa uruchomienie komunikatem błędu, zamiast prowadzić do treningu na pustym zbiorze.
+
+Plik konfiguracyjny dzieli się na sekcję środowiska oraz sekcję treningu. Sekcja środowiska, przedstawiona na listingu~\ref{lst:config-env}, opisuje parametry sterowania oraz długość epizodu.
+
+\begin{addmargin}[8mm]{0mm}
+\begin{lstlisting}[
+    numbers=left,
+    caption={Sekcja srodowiska w pliku konfiguracyjnym.},
+    label={lst:config-env},
+    basicstyle=\ttfamily\scriptsize,
+    breaklines=true,
+    aboveskip=10pt
+]
+environment:
+  tls_id: GS_cluster_300048112_300048176_300048179_32126015
+  decision_interval: 5
+  yellow_time: 3
+  min_green: 5
+  num_seconds: 2100
+  reward_fn: diff-waiting-time
+  use_gui: false
+\end{lstlisting}
+\end{addmargin}
+
+Rozdzielenie konfiguracji od kodu pozwoliło prowadzić wszystkie eksperymenty ze strojeniem hiperparametrów przez dodawanie kolejnych plików konfiguracyjnych, bez modyfikowania kodu źródłowego. Ma to znaczenie dla powtarzalności, ponieważ konfiguracja każdego przebiegu jest zapisana w repozytorium jako osobny plik.
+
+Na podstawie wczytanej konfiguracji tworzone jest środowisko oraz obiekt algorytmu DQN z biblioteki Stable-Baselines3, z polityką \texttt{MlpPolicy}. Architektura sieci jest opcjonalna: pominięcie odpowiedniego pola pozostawia domyślną architekturę biblioteki, a jego podanie pozwala wskazać własny układ warstw ukrytych, co wykorzystano w jednym z badanych wariantów strojenia.
+
+\subsubsection{Przebieg epizodów}
+\label{subsubsec:przebieg-epizodow}
+
+Epizod treningowy obejmuje 2100~s symulacji, przy napływie pojazdów trwającym 1800~s. Nadwyżka 300~s pozwala rozładować kolejki powstałe pod koniec napływu, dzięki czemu agent obserwuje także fazę wygaszania ruchu, a nie tylko okres stałego obciążenia.
+
+Kolejne epizody wykorzystują kolejne pliki tras z listy, a po jej wyczerpaniu przeglądanie zaczyna się od początku. Kolejność plików wynika z posortowanej listy ścieżek, więc agent styka się naprzemiennie ze scenariuszami o różnych poziomach natężenia w powtarzalnym porządku. Nie zastosowano losowego wyboru pliku, ponieważ cykliczne przeglądanie gwarantuje, że w obrębie jednego pełnego obiegu każdy scenariusz wystąpi dokładnie raz, co ogranicza przypadkową nierównowagę między poziomami obciążenia.
+
+\subsubsection{Checkpointy i logi}
+\label{subsubsec:checkpointy-logi}
+
+Zapis stanów pośrednich realizuje standardowy mechanizm wywołań zwrotnych biblioteki Stable-Baselines3, konfigurowany częstotliwością zapisu oraz przedrostkiem nazwy pliku. Domyślnie checkpoint zapisywany jest co 25\,000 kroków, a nazwa pliku zawiera przedrostek oraz numer kroku, co pozwala jednoznacznie powiązać model z etapem treningu. Podanie częstotliwości równej zeru wyłącza checkpointy, co zastosowano przy wariantach strojenia, porównywanych wyłącznie po zakończeniu treningu.
+
+Przebieg treningu zapisywany jest w postaci logów wypisywanych przez bibliotekę, obejmujących między innymi liczbę wykonanych kroków, bieżącą wartość współczynnika eksploracji, tempo przetwarzania oraz wartość funkcji straty. Logi kontenerów zapisywane są do plików w katalogu odpowiadającym wykorzystanemu zbiorowi treningowemu, osobno dla każdego wariantu konfiguracji.
+
+\subsubsection{Ewaluacja checkpointów}
+\label{subsubsec:ewaluacja-checkpointow}
+
+Ocena zapisanych modeli stanowi osobny proces, uruchamiany po zakończeniu treningu. W trybie walidacyjnym środowisko tworzone jest bez rejestrowania szeregu czasowego, model wczytywany jest z pliku, a akcje wyznaczane są w trybie deterministycznym. Po zakończeniu przebiegu odczytywany jest plik \texttt{tripinfo.xml}, z którego wyznaczana jest metryka wiodąca, a wynik dopisywany jest do zbiorczego pliku wraz z nazwą modelu i nazwą scenariusza. Ograniczenie zakresu zbieranych danych skraca czas oceny, co jest istotne przy kilkudziesięciu modelach ocenianych na czterech scenariuszach.
+
+Parametry środowiska przekazywane są w wywołaniu jawnie, to jest interwał decyzyjny 5~s, czas fazy żółtej 3~s oraz minimalny czas zielony 5~s. Zapewnia to zgodność warunków treningu, walidacji i oceny testowej, co jest warunkiem poprawności porównania kolejnych checkpointów.
+
+\subsubsection{Zasoby obliczeniowe}
+\label{subsubsec:zasoby}
+
+W konfiguracji pozostawiono automatyczny wybór urządzenia obliczeniowego. Kontenery uruchamiane były bez dostępu do procesora graficznego, więc obliczenia wykonywane były na procesorze. Nie stanowi to ograniczenia w rozpatrywanym zadaniu, ponieważ czas przebiegu zdominowany jest przez symulację ruchu, a sieć neuronowa wykorzystywana przez politykę \texttt{MlpPolicy} jest niewielka.
+
+Wąskim gardłem przy równoległym uruchamianiu wielu treningów okazała się pamięć operacyjna, a nie liczba rdzeni. Z tego powodu skrypt uruchamiający warianty konfiguracji działa jako kolejka zadań: przed startem kolejnego kontenera sprawdza liczbę działających treningów oraz łączne zużycie pamięci przez kontenery i czeka na zwolnienie zasobów. Rozwiązanie to pozwoliło prowadzić kilka treningów jednocześnie bez ryzyka przerwania przebiegu z powodu wyczerpania pamięci.
+
+\subsection{Konfiguracja bazowa algorytmu DQN}
+\label{subsec:konfiguracja-bazowa}
+
+Konfigurację bazową, stanowiącą punkt wyjścia dla wszystkich eksperymentów ze strojeniem, zestawiono w tabeli~\ref{tab:konfiguracja-bazowa}. Nazwy parametrów odpowiadają nazwom przyjmowanym przez implementację algorytmu w bibliotece Stable-Baselines3 \cite{raffin2021sb3}.
+
+\begin{table}[!htbp] \centering
+    \caption{Hiperparametry konfiguracji bazowej algorytmu DQN.}
+    \label{tab:konfiguracja-bazowa}
+    \small
+    \begin{tabular}{| l | r |} \hline
+        Parametr & Wartość \\ \hline\hline
+        \texttt{learning\_rate}            & 0,001 \\ \hline
+        \texttt{buffer\_size}              & 50\,000 \\ \hline
+        \texttt{learning\_starts}          & 1000 \\ \hline
+        \texttt{batch\_size}               & 64 \\ \hline
+        \texttt{gamma}                     & 0,99 \\ \hline
+        \texttt{train\_freq}               & 1 \\ \hline
+        \texttt{target\_update\_interval}  & 500 \\ \hline
+        \texttt{exploration\_fraction}     & 0,2 \\ \hline
+        \texttt{exploration\_initial\_eps} & 1,0 \\ \hline
+        \texttt{exploration\_final\_eps}   & 0,05 \\ \hline
+        \texttt{seed}                      & 42 \\ \hline
+        \texttt{total\_timesteps}          & 300\,000 \\ \hline
+    \end{tabular}
+\end{table}
+
+Znaczenie poszczególnych wartości w kontekście rozpatrywanego zadania omówiono poniżej.
+
+Współczynnik uczenia równy 0,001 oraz rozmiar batcha równy 64 to wartości domyślne biblioteki. Bufor doświadczeń o pojemności 50\,000 przejść odpowiada, przy interwale decyzyjnym 5~s i epizodzie trwającym 2100~s, około stu dwudziestu epizodom, obejmuje więc wielokrotnie więcej doświadczeń, niż liczy pełny obieg zbioru treningowego. Oznacza to, że w buforze przechowywane są jednocześnie przejścia pochodzące ze wszystkich trzech poziomów natężenia ruchu, co ogranicza ryzyko dopasowania polityki do ostatnio widzianego scenariusza.
+
+Próg rozpoczęcia uczenia równy 1000 krokom powoduje, że pierwsze aktualizacje sieci wykonywane są dopiero po zebraniu doświadczeń z około dwóch i pół epizodu. Aktualizacja sieci wykonywana jest po każdym kroku środowiska, a sieć docelowa synchronizowana jest co 500 kroków, czyli mniej więcej dwa razy na epizod. Współczynnik dyskontowania równy 0,99 odpowiada horyzontowi obejmującemu rząd stu decyzji, czyli około 500~s symulacji, a więc znacznie więcej niż długość jednego cyklu sygnalizacji.
+
+Harmonogram eksploracji przewiduje liniowe zmniejszanie współczynnika $\varepsilon$ od 1,0 do 0,05 w ciągu pierwszych dwudziestu procent zaplanowanych kroków treningu. Przy 300\,000 kroków oznacza to, że eksploracja maleje przez pierwsze 60\,000 kroków, a przez pozostałą część treningu agent działa niemal zachłannie, zachowując niewielki udział działań losowych.
+
+Ostatnia pozycja tabeli wymaga wyraźnego rozróżnienia. Wartość \texttt{total\_timesteps} określa długość całego przebiegu treningowego, a nie liczbę kroków modelu poddanego ocenie. Model wskazany przez walidację pochodzi z checkpointu zapisanego wcześniej niż koniec treningu, co szczegółowo omówiono w rozdziale poświęconym wynikom. Warianty strojenia mają natomiast wartość \texttt{total\_timesteps} ustawioną na liczbę kroków odpowiadającą wybranemu checkpointowi, dzięki czemu każdy wariant trenowany jest dokładnie tak długo jak model końcowy, a porównanie nie jest zaburzone różną długością treningu.
+
+\subsection{Zbieranie i przetwarzanie wyników}
+\label{subsec:przetwarzanie-wynikow}
+
+\subsubsection{Pliki wyjściowe pojedynczego przebiegu}
+\label{subsubsec:pliki-przebiegu}
+
+Każdy przebieg ewaluacyjny wytwarza cztery pliki. Symulator zapisuje \texttt{tripinfo.xml} z opisem każdej zakończonej podróży oraz \texttt{statistic.xml} z danymi zbiorczymi. Kod pomiarowy zapisuje \texttt{timeseries.csv} z szeregiem czasowym o rozdzielczości jednej sekundy oraz \texttt{summary.csv} z wielkościami wyznaczonymi z tego szeregu. Rozdzielenie tych dwóch źródeł jest celowe: pierwsze opisuje ruch z perspektywy pojedynczych podróży, drugie z perspektywy stanu skrzyżowania w czasie.
+
+Na podstawie obu źródeł tworzony jest jeden wiersz wyniku, opisujący cały przebieg. Wiersz zawiera identyfikację przebiegu, to jest nazwę metody, poziom natężenia oraz ziarno, a następnie wartości metryk zdefiniowanych w podrozdziale~\ref{subsec:metryki} wraz z wielkościami uzupełniającymi, obejmującymi kwantyl rzędu 0,95 oraz wartość maksymalną czasu oczekiwania, a także średnią i maksymalną długość kolejki w podziale na cztery wloty. Format wiersza jest wspólny dla wszystkich metod i tworzony przez ten sam kod, co stanowi podstawowy warunek porównywalności.
+
+Po zapisaniu wiersza komplet plików wyjściowych przenoszony jest do katalogu, którego nazwa zawiera poziom natężenia, ziarno oraz nazwę metody. Dzięki temu surowe dane każdego przebiegu pozostają dostępne, na przykład do powtórnej analizy szeregu czasowego, i nie są nadpisywane przez kolejne uruchomienie.
+
+\subsubsection{Organizacja plików wynikowych}
+\label{subsubsec:organizacja-wynikow}
+
+Każda metoda zapisuje wyniki do własnego pliku, którego nazwa zawiera nazwę metody. Rozwiązanie to przyjęto ze względu na równoległe uruchamianie przebiegów: dopisywanie wierszy do wspólnego pliku przez kilka procesów jednocześnie groziłoby przeplotem zapisów. Scalenie plików w jeden zbiór wynikowy jest osobnym, jawnym krokiem wykonywanym po zakończeniu wszystkich przebiegów.
+
+Wyniki walidacyjne przechowywane są w osobnych plikach o uproszczonej strukturze, obejmującej nazwę modelu, nazwę scenariusza oraz wartość metryki wiodącej. Rozdzielono przy tym pliki odpowiadające różnym etapom badania, to jest ocenie kolejnych checkpointów, jej powtórzeniu na pięciu ziarnach, ocenie wariantów hiperparametrów oraz jej powtórzeniu na pięciu ziarnach. Zestawienie plików wynikowych przedstawiono w tabeli~\ref{tab:pliki-wynikowe}, a przepływ danych od pojedynczego przebiegu do wykresu na rysunku~\ref{fig:przeplyw-wynikow}.
+
+\begin{table}[!htbp] \centering
+    \caption{Pliki wynikowe i ich przeznaczenie.}
+    \label{tab:pliki-wynikowe}
+    \small
+    \begin{tabular}{| l | l |} \hline
+        Plik & Zawartość \\ \hline\hline
+        \texttt{results\_<metoda>.csv} & wyniki testowe pojedynczej metody \\ \hline
+        \texttt{results.csv} & scalone wyniki testowe wszystkich metod \\ \hline
+        \texttt{validate\_steps.csv} & ocena kolejnych checkpointów \\ \hline
+        \texttt{validate\_steps\_check\_seed.csv} & ocena checkpointów na pięciu ziarnach \\ \hline
+        \texttt{validation\_params.csv} & ocena wariantów hiperparametrów \\ \hline
+        \texttt{validation\_params\_check\_seed.csv} & ocena wariantów na pięciu ziarnach \\ \hline
+    \end{tabular}
+\end{table}
+
+% \begin{figure}[!htbp] \centering
+%     \includegraphics[width=\linewidth]{przeplyw_wynikow.png}
+%     \caption{Przepływ danych od pojedynczego przebiegu symulacji do zestawień i wykresów.}
+%     \label{fig:przeplyw-wynikow}
+% \end{figure}
+
+\subsubsection{Agregacja i wizualizacja}
+\label{subsubsec:agregacja}
+
+Analizę wyników przeprowadzono w notatniku wykorzystującym biblioteki \texttt{pandas}, \texttt{matplotlib} oraz \texttt{seaborn}. Wiersze grupowane są według metody sterowania oraz poziomu natężenia ruchu, a dla każdej grupy wyznaczana jest wartość średnia metryki. Ponieważ każdej kombinacji metody i poziomu natężenia odpowiada pięć przebiegów różniących się ziarnem, średnia liczona jest z pięciu wartości, a jako miarę rozrzutu przyjęto odchylenie standardowe w obrębie grupy.
+
+Wykresy słupkowe przedstawiają wartości średnie wraz z przedziałem odpowiadającym odchyleniu standardowemu, dzięki czemu widoczna jest nie tylko różnica między metodami, ale też zmienność wyników w obrębie jednego poziomu natężenia. Uzupełniająco wykorzystano wykres pudełkowy dla metryki wiodącej, ukazujący pełny rozkład pięciu przebiegów. Zestawienia liczbowe wypisywane są w postaci tabel wartości średnich, wykorzystywanych następnie w opisie wyników.
+
+Rozdzielenie wyników według scenariusza i metody utrzymano konsekwentnie na wszystkich wykresach. Uśrednianie po wszystkich scenariuszach jest w tym eksperymencie mylące, ponieważ wartości metryk przy dużym natężeniu ruchu są kilkukrotnie większe niż przy małym i zdominowałyby średnią. Z tego samego powodu przy porównywaniu kolejnych checkpointów scenariusze o stabilnym obciążeniu przedstawiono na osobnym wykresie niż scenariusz o dużym natężeniu.
+
+Nazwy metod i scenariuszy tłumaczone są na etykiety polskie w jednym miejscu notatnika, wspólnym dla wszystkich wykresów, co zapobiega rozbieżnościom w oznaczeniach. Wykresy zapisywane są bezpośrednio do katalogu obrazów pracy, dzięki czemu ponowne uruchomienie notatnika aktualizuje rysunki bez ręcznego kopiowania plików.
+
+\subsection{Konteneryzacja i odtwarzalność eksperymentów}
+\label{subsec:impl-konteneryzacja}
+
+\subsubsection{Obraz kontenera}
+\label{subsubsec:obraz-kontenera}
+
+Środowisko uruchomieniowe agenta zbudowano na podstawie oficjalnego obrazu SUMO o ustalonym numerze wersji, do którego dołożono interpreter języka Python oraz zależności potrzebne do uczenia ze wzmocnieniem. Istotne fragmenty definicji obrazu przedstawiono na listingu~\ref{lst:dockerfile}.
+
+\begin{addmargin}[8mm]{0mm}
+\begin{lstlisting}[
+    language=bash,
+    numbers=left,
+    caption={Fragmenty definicji obrazu kontenera.},
+    label={lst:dockerfile},
+    basicstyle=\ttfamily\scriptsize,
+    breaklines=true,
+    aboveskip=10pt
+]
+FROM --platform=linux/amd64 ghcr.io/eclipse-sumo/sumo:v1_25_0
+ENV SUMO_HOME=/usr/share/sumo
+
+RUN python3 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:${PATH}"
+
+RUN pip install "pyyaml>=6.0,<7.0" \
+                "stable-baselines3>=2.3,<3.0" \
+    && git clone https://github.com/LucasAlegre/sumo-rl \
+    && cd sumo-rl && pip install -e .
+
+WORKDIR /workspace
+COPY . /workspace
+ENV PYTHONPATH=/workspace
+ENV LIBSUMO_AS_TRACI=0
+ENTRYPOINT ["python", "-m", "src.dqn.entrypoint"]
+\end{lstlisting}
+\end{addmargin}
+
+Wybór obrazu bazowego zapewnia zgodność wersji symulatora oraz biblioteki klienckiej TraCI, które w SUMO są ze sobą powiązane. Zakresy wersji pakietów języka Python są ograniczone od góry, dzięki czemu ponowne zbudowanie obrazu nie wprowadzi zmiany niezgodnej wstecznie. Zmienna \texttt{LIBSUMO\_AS\_TRACI} ustawiona na zero wymusza komunikację przez TraCI zamiast przez wariant wbudowany, który nie pozwala na jednoczesne prowadzenie wielu symulacji w jednym procesie. Punkt wejścia obrazu wskazuje moduł udostępniający dwa polecenia, to jest trening oraz ewaluację, więc uruchomienie kontenera sprowadza się do podania nazwy polecenia i jego parametrów \cite{docker_docs}.
+
+Metody referencyjne nie wymagają dodatkowych zależności, dlatego korzystają bezpośrednio z oficjalnego obrazu SUMO, uruchamianego z opcją otwierającą port interfejsu TraCI.
+
+\subsubsection{Montowanie danych i organizacja katalogów}
+\label{subsubsec:montowanie}
+
+Katalog projektu montowany jest w kontenerze jako wolumin, a wszystkie ścieżki przekazywane w wywołaniu odnoszą się do punktu montowania. Kod, dane wejściowe, modele oraz pliki wynikowe znajdują się zatem poza kontenerem, a kontener dostarcza jedynie środowisko uruchomieniowe. Zakończenie lub usunięcie kontenera nie powoduje utraty wyników, a modele zapisane podczas treningu są natychmiast dostępne dla procesu ewaluacji uruchamianego w osobnym kontenerze.
+
+Katalogi wyjściowe zorganizowano tak, aby równoległe przebiegi nie wpływały na siebie nawzajem. Modele rozdzielono na trzy katalogi, odpowiadające modelowi końcowemu, checkpointom oraz wariantom strojenia. Pliki pośrednie każdego przebiegu ewaluacyjnego trafiają do katalogu nazwanego nazwą metody, a po zakończeniu przebiegu do podkatalogu identyfikującego pojedyncze uruchomienie. Każda metoda pisze do własnego pliku wynikowego, a logi treningu zapisywane są w katalogu odpowiadającym wykorzystanemu zbiorowi treningowemu.
+
+Przy równoległym uruchamianiu metod referencyjnych każdemu kontenerowi przydzielany jest osobny port interfejsu TraCI, ponieważ symulator oczekuje połączenia na wskazanym porcie, a dwa procesy nie mogą korzystać z tego samego numeru.
+
+\subsubsection{Powtarzalność i ziarna losowe}
+\label{subsubsec:powtarzalnosc}
+
+W eksperymencie występują trzy niezależne źródła losowości, którymi zarządzano osobno.
+
+Pierwszym jest generowanie scenariuszy ruchu. Ziarno przekazane skryptowi generującemu podróże jednoznacznie wyznacza zawartość pliku tras, a wygenerowane pliki przechowywane są w repozytorium, więc scenariusze nie są tworzone ponownie przy każdym uruchomieniu.
+
+Drugim jest symulacja. Ziarno przekazywane symulatorowi wpływa między innymi na losowe elementy modelu zachowania kierowców. W przebiegach walidacyjnych i testowych jako ziarno symulacji przyjmowany jest numer odpowiadający scenariuszowi, ten sam dla wszystkich porównywanych metod, dzięki czemu każda metoda działa w identycznych warunkach. Podczas walidacji wielokrotnej ten sam model oceniany jest przy pięciu różnych ziarnach symulacji, co pozwala oddzielić rzeczywistą różnicę między modelami od zmienności pojedynczego przebiegu.
+
+Trzecim jest proces uczenia, obejmujący inicjalizację wag sieci, losowanie działań w ramach eksploracji oraz pobieranie podzbiorów z bufora doświadczeń. Ziarno algorytmu ustalono w pliku konfiguracyjnym i jest ono wspólne dla wszystkich badanych wariantów, dzięki czemu różnice między nimi wynikają ze zmienionego hiperparametru, a nie z odmiennej inicjalizacji.
+
+Podczas ewaluacji akcje wyznaczane są w trybie deterministycznym, więc przy ustalonym modelu, scenariuszu i ziarnie symulacji przebieg jest powtarzalny. Wraz z ustaloną wersją obrazu kontenera oraz zapisanymi w repozytorium plikami konfiguracyjnymi pozwala to odtworzyć dowolny pojedynczy wynik przedstawiony w dalszej części pracy.
