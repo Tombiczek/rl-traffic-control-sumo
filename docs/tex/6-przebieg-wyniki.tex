@@ -40,6 +40,7 @@ Eksperyment obejmował 18 przebiegów treningowych oraz 360 przebiegów ewaluacy
     \caption{Zestawienie przeprowadzonych przebiegów.}
     \label{tab:liczba-przebiegow}
     \footnotesize
+    \setlength{\tabcolsep}{3pt}
     \begin{tabular}{| l | l | r |} \hline
         Etap & Zakres & Liczba przebiegów \\ \hline\hline
         trening podstawowy   & 2 zbiory treningowe $\times$ 300\,000 kroków & 2 \\ \hline
@@ -72,6 +73,7 @@ Wyniki obu metod przedstawiono w tabeli~\ref{tab:wyniki-referencyjne} jako warto
     \caption{Wyniki metod referencyjnych na zbiorze testowym. Wartości uśrednione po pięciu scenariuszach, w nawiasie odchylenie standardowe.}
     \label{tab:wyniki-referencyjne}
     \scriptsize
+    \setlength{\tabcolsep}{5pt}
     \begin{tabular}{| l | l | r | r | r | r | r |} \hline
         Metoda & Scenariusz & Opóźnienie [s] & Oczekiwanie [s] & Kolejka [poj.] & Przepustowość [poj./h] & Przełączenia [1/h] \\ \hline\hline
         stałoczasowa & lekki   & 28,00 (0,81) & 17,43 (0,69) & 3,48 (0,13)  & 700,75 (4,54)    & 132,95 (0,38) \\ \hline
@@ -208,7 +210,7 @@ Odchylenia standardowe pokazują wyraźną różnicę między scenariuszami. Na 
 \subsubsection{Plan eksperymentu}
 \label{subsubsec:plan-strojenia}
 
-Strojenie prowadzono metodą zmiany jednego hiperparametru przy pozostałych wartościach niezmienionych. Punktem odniesienia była konfiguracja bazowa z tabeli~\ref{tab:konfiguracja-bazowa}. Każdy wariant trenowano na regularnym zbiorze treningowym przez 225\,000 kroków, czyli dokładnie tyle, ile liczy wybrany checkpoint modelu bazowego, dzięki czemu porównanie nie jest zaburzone różną długością treningu. Ziarno algorytmu oraz procedura walidacji pozostały niezmienione.
+Strojenie prowadzono metodą zmiany jednego hiperparametru. Pozostałe wartości pozostawiano bez zmian. Punktem odniesienia była konfiguracja bazowa z tabeli~\ref{tab:konfiguracja-bazowa}. Każdy wariant trenowano na regularnym zbiorze treningowym przez 225\,000 kroków, czyli dokładnie tyle, ile liczy wybrany checkpoint modelu bazowego, dzięki czemu porównanie nie jest zaburzone różną długością treningu. Ziarno algorytmu oraz procedura walidacji pozostały niezmienione.
 
 Przebadano dwanaście wariantów zmieniających pojedynczy hiperparametr, przy czym dla czterech z nich sprawdzono obie strony wartości bazowej, oraz cztery warianty dodatkowe, w tym dwa łączące zmiany kilku parametrów jednocześnie i jeden zmieniający architekturę sieci. Zakres zmian obejmował tempo uczenia, rozmiar batcha, pojemność bufora doświadczeń, współczynnik dyskontowania, długość fazy eksploracji, częstotliwość aktualizacji sieci docelowej, częstotliwość aktualizacji gradientowych, próg rozpoczęcia uczenia oraz układ warstw ukrytych.
 
@@ -221,6 +223,7 @@ Wyniki wszystkich wariantów zestawiono w tabeli~\ref{tab:strojenie}, uporządko
     \caption{Wyniki strojenia hiperparametrów na zbiorze walidacyjnym. Średnie opóźnienie w sekundach, pojedynczy przebieg na scenariusz.}
     \label{tab:strojenie}
     \footnotesize
+    \setlength{\tabcolsep}{4pt}
     \begin{tabular}{| l | l | r | r | r | r | r |} \hline
         Wariant & Zmiana względem konfiguracji bazowej & Lekki & Średni & Wysoki & Zmienny & Średnia \\ \hline\hline
         \textbf{bazowy} & \textbf{brak} & \textbf{13,87} & \textbf{19,48} & \textbf{51,35} & \textbf{36,63} & \textbf{30,33} \\ \hline
@@ -290,7 +293,7 @@ Ranking z tabeli~\ref{tab:strojenie} opiera się na pojedynczym przebiegu na sce
     \label{fig:strojenie-ziarna}
 \end{figure}
 
-Ocena wieloziarnowa potwierdziła przewagę konfiguracji bazowej. Uzyskuje ona najniższą średnią, równą 31,74 wobec 35,94, 36,46 oraz 37,31, oraz najniższe opóźnienie na scenariuszach lekkim i o wysokim natężeniu. Różnica na scenariuszu o wysokim natężeniu jest przy tym największa i wynosi od 14,16 do 20,21 sekundy na pojazd.
+Konfiguracja bazowa zachowała przewagę w ocenie wieloziarnowej. Jej średnia wyniosła 31,74, a dla pozostałych wariantów odpowiednio 35,94, 36,46 i 37,31. Uzyskała również najniższe opóźnienie na scenariuszach lekkim i o wysokim natężeniu. W drugim z nich różnica była największa i wyniosła od 14,16 do 20,21 sekundy na pojazd.
 
 Jedyną przewagą wariantu nad konfiguracją bazową, która utrzymała się po uśrednieniu po pięciu ziarnach, jest wynik wariantu ze zmniejszonym rozmiarem batcha na scenariuszu o zmiennym natężeniu, wynoszący 32,58 wobec 35,48, oraz nieznacznie niższy wynik tego samego wariantu na scenariuszu średnim. Wariant ten traci jednak 19,13 sekundy na scenariuszu o wysokim natężeniu.
 
@@ -319,6 +322,7 @@ Zjawisko to ma znaczenie dla odczytu wyników, ponieważ część metryk normowa
     \caption{Wpływ przebiegów zakończonych limitem czasu na wyniki agenta DQN.}
     \label{tab:blokady}
     \footnotesize
+    \setlength{\tabcolsep}{3pt}
     \begin{tabular}{| l | l | r | r |} \hline
         Metryka & Scenariusz & Wszystkie przebiegi & Bez przebiegów przerwanych limitem \\ \hline\hline
         średnie opóźnienie [s]      & wysoki  & 51,82   & 51,97 \\ \hline
@@ -464,7 +468,8 @@ Wartości częstotliwości przełączeń zestawiono w tabeli~\ref{tab:test-przel
 \begin{table}[!htbp] \centering
     \caption{Częstotliwość przełączeń na zbiorze testowym w przełączeniach na godzinę. W nawiasie odchylenie standardowe. Dla agenta DQN podano dodatkowo wartość wyznaczoną bez przebiegów przerwanych limitem czasu.}
     \label{tab:test-przelaczenia}
-    \small
+    \footnotesize
+    \setlength{\tabcolsep}{5pt}
     \begin{tabular}{| l | r | r | r | r |} \hline
         Metoda & Lekki & Średni & Wysoki & Zmienny \\ \hline\hline
         stałoczasowa & 132,95 (0,38) & 132,90 (0,31) & 133,04 (0,32) & 132,78 (0,33) \\ \hline
@@ -505,6 +510,7 @@ Porównanie obu modeli przedstawiono w tabeli~\ref{tab:kontrastowy} oraz na rysu
     \caption{Model końcowy i model kontrastowy na zbiorze testowym. W nawiasie odchylenie standardowe.}
     \label{tab:kontrastowy}
     \footnotesize
+    \setlength{\tabcolsep}{4pt}
     \begin{tabular}{| l | l | r | r | r | r |} \hline
         Metryka & Model & Lekki & Średni & Wysoki & Zmienny \\ \hline\hline
         opóźnienie [s]      & końcowy     & 13,90 (0,58) & 17,79 (0,42) & 51,82 (6,95)   & 34,23 (5,36) \\ \hline
@@ -547,7 +553,7 @@ Zbiorcze zestawienie wszystkich ocenionych metod przedstawiono w tabeli~\ref{tab
     \caption{Zbiorcze porównanie metod sterowania na zbiorze testowym. Wartości oznaczają średnie opóźnienie w sekundach na pojazd.}
     \label{tab:podsumowanie-wynikow}
     \footnotesize
-    \begin{tabular}{| l | r | r | r | r | p{4.4cm} |} \hline
+    \begin{tabular}{| l | r | r | r | r | >{\raggedright\arraybackslash}p{4.4cm} |} \hline
         Metoda & Lekki & Średni & Wysoki & Zmienny & Charakterystyka \\ \hline\hline
         stałoczasowa & 28,00 & 30,91 & 65,45 & 48,25 & Przewidywalna, najgorsza przy niskim i średnim obciążeniu, stabilna przy wysokim natężeniu. \\ \hline
         akomodacyjna & 15,22 & 18,02 & 78,07 & 39,76 & Bardzo dobra przy niskim i średnim obciążeniu, najsłabsza z trzech głównych metod przy wysokim natężeniu. \\ \hline
@@ -556,7 +562,7 @@ Zbiorcze zestawienie wszystkich ocenionych metod przedstawiono w tabeli~\ref{tab
     \end{tabular}
 \end{table}
 
-Najważniejsze obserwacje wynikające ze zbioru testowego można podsumować następująco:
+Najważniejsze obserwacje ze zbioru testowego są następujące:
 \begin{itemize}
     \item agent DQN uzyskał najniższe średnie opóźnienie oraz najniższy średni czas oczekiwania we wszystkich czterech scenariuszach natężenia ruchu;
     \item największa przewaga względem programu akomodacyjnego wystąpiła w scenariuszu o wysokim natężeniu, a najmniejsza w scenariuszu o średnim natężeniu, gdzie różnica opóźnienia wyniosła 1,3\%;
