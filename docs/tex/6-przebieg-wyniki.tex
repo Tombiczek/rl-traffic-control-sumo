@@ -2,9 +2,7 @@
 \section{Przebieg eksperymentów i wyniki}
 \label{sec:wyniki}
 
-Rozdział przedstawia wyniki w kolejności, w jakiej podejmowano decyzje badawcze. Najpierw ustalono punkt odniesienia w postaci metod referencyjnych, następnie wyznaczono długość treningu, porównano warianty zbioru treningowego, przeprowadzono strojenie hiperparametrów, a na końcu oceniono wybrany model na niezależnym zbiorze testowym. Wszystkie decyzje dotyczące konfiguracji podejmowano wyłącznie na podstawie zbioru walidacyjnego, zgodnie z zasadami przedstawionymi w podrozdziale~\ref{subsubsec:przenikanie-danych}. Interpretacja przyczyn zaobserwowanych różnic oraz odniesienie do hipotezy badawczej są przedmiotem rozdziału~\ref{sec:analiza}.
-
-W całym rozdziale scenariusze ruchu oznaczane są nazwami poziomów natężenia wprowadzonymi w podrozdziale~\ref{subsec:podzial-danych}, to jest lekki, średni, wysoki oraz zmienny. Wszystkie wartości opóźnienia i czasu oczekiwania podawane są w sekundach na pojazd, długości kolejek w pojazdach, przepustowość w pojazdach na godzinę, a częstotliwość przełączeń w przełączeniach na godzinę.
+Rozdział przedstawia wyniki kolejnych etapów eksperymentu: wyznaczenia metod referencyjnych, wyboru długości treningu, porównania zbiorów treningowych, strojenia hiperparametrów oraz końcowej oceny na zbiorze testowym. Parametry metod referencyjnych wyznaczono na zbiorze treningowym, natomiast decyzje dotyczące modelu DQN podejmowano na podstawie walidacji, zgodnie z zasadami przedstawionymi w podrozdziale~\ref{subsubsec:przenikanie-danych}. Zbiór testowy wykorzystano wyłącznie do oceny końcowej. Interpretację wyników w odniesieniu do hipotezy badawczej przedstawiono w rozdziale~\ref{sec:analiza}.
 
 \subsection{Środowisko uruchomieniowe i koszt obliczeniowy}
 \label{subsec:srodowisko-uruchomieniowe}
@@ -20,19 +18,14 @@ Wszystkie eksperymenty przeprowadzono na jednej maszynie, której konfigurację 
     \small
     \begin{tabular}{| l | l |} \hline
         Element & Wartość \\ \hline\hline
-        Komputer                & MacBook Pro \\ \hline
         Procesor                & Apple M1 Pro, 10 rdzeni \\ \hline
-        Pamięć operacyjna       & 16 GB \\ \hline
-        Procesor graficzny      & niewykorzystywany \\ \hline
-        System operacyjny hosta & macOS 26.6.1 \\ \hline
-        Architektura kontenerów & \texttt{linux/amd64} \\ \hline
         Pamięć dostępna dla kontenerów & około 7,6 GiB \\ \hline
+        Procesor graficzny      & niewykorzystywany \\ \hline
+        Architektura kontenerów & \texttt{linux/amd64} \\ \hline
         SUMO                    & 1.25.0 \\ \hline
-        Python                  & [DO UZUPEŁNIENIA] \\ \hline
-        Stable-Baselines3       & [DO UZUPEŁNIENIA] \\ \hline
-        \texttt{sumo-rl}        & [DO UZUPEŁNIENIA] \\ \hline
-        Gymnasium               & [DO UZUPEŁNIENIA] \\ \hline
-        PyTorch                 & [DO UZUPEŁNIENIA] \\ \hline
+        Python                  & 3.10.12 \\ \hline
+        Stable-Baselines3       & 2.8.0 \\ \hline
+        \texttt{sumo-rl}        & 1.4.5 \\ \hline
     \end{tabular}
 \end{table}
 
@@ -96,7 +89,7 @@ Program stałoczasowy realizuje się dokładnie tak, jak został zaprojektowany.
 
 Program akomodacyjny osiąga wyraźnie lepsze wyniki od stałoczasowego w scenariuszach o niższym obciążeniu: opóźnienie jest w ruchu lekkim mniejsze o 45,6\%, a w ruchu średnim o 41,7\%. Jednocześnie liczba przełączeń jest w tych warunkach około trzykrotnie większa, ponieważ fazy kończą się po wykryciu przerwy w strumieniu, zanim osiągną czas maksymalny.
 
-Relacja ta odwraca się w scenariuszu o wysokim natężeniu. Program akomodacyjny uzyskuje tam opóźnienie o 19,3\% większe niż program stałoczasowy oraz czas oczekiwania większy o 26,1\%, a jego częstotliwość przełączeń spada do 133,13, czyli do poziomu praktycznie identycznego z programem stałoczasowym. Oznacza to, że w warunkach nasycenia niemal każda faza kończy się osiągnięciem czasu maksymalnego, a mechanizm wykrywania przerw przestaje wpływać na sterowanie. Odchylenie standardowe jest w tym scenariuszu największe dla obu metod, co wskazuje na silniejszą zależność wyniku od konkretnego układu tras.
+Relacja ta odwraca się w scenariuszu o wysokim natężeniu. Program akomodacyjny uzyskuje tam opóźnienie o 19,3\% większe niż program stałoczasowy oraz czas oczekiwania większy o 26,1\%, a jego częstotliwość przełączeń spada do 133,13, czyli do poziomu praktycznie identycznego z programem stałoczasowym. Oznacza to, że przy wysokim natężeniu ruchu niemal każda faza kończy się osiągnięciem czasu maksymalnego, a mechanizm wykrywania przerw przestaje wpływać na sterowanie. Odchylenie standardowe jest w tym scenariuszu największe dla obu metod, co wskazuje na silniejszą zależność wyniku od konkretnego układu tras.
 
 W scenariuszu o zmiennym natężeniu program akomodacyjny pozostaje lepszy od stałoczasowego pod względem wszystkich metryk opisujących płynność ruchu, jednak rozrzut wyników jest znaczny: odchylenie standardowe opóźnienia wynosi 6,98 wobec 3,69 dla programu stałoczasowego.
 
@@ -146,7 +139,7 @@ Wyniki dla modeli trenowanych na regularnym zbiorze treningowym zestawiono w tab
 
 Przebieg wyników dzieli się na dwie wyraźne części. W pierwszych 100\,000 kroków opóźnienie maleje szybko i we wszystkich scenariuszach jednocześnie, przy czym checkpoint po 50\,000 krokach wypada gorzej niż poprzedni, co odpowiada okresowi intensywnej eksploracji, kończącemu się po 60\,000 kroków. Powyżej 125\,000 kroków wyniki na scenariuszach lekkim, średnim i zmiennym stabilizują się: ich średnia mieści się w przedziale od 23,15 do 27,30, a więc rozstęp wynosi 17\% wartości średniej.
 
-Scenariusz o wysokim natężeniu zachowuje się odmiennie. Nie osiąga on stabilnego poziomu, a wartości w fazie plateau wahają się od 51,35 do 77,94, co odpowiada rozstępowi rzędu 38\% wartości średniej. Ponieważ bezwzględne wartości opóźnienia są w tym scenariuszu kilkukrotnie wyższe niż w pozostałych, zdominowałyby one średnią z czterech scenariuszy. Z tego powodu na rysunku~\ref{fig:zbiory-treningowe} przedstawiono scenariusze stabilne oraz scenariusz o wysokim natężeniu na osobnych wykresach.
+Scenariusz o wysokim natężeniu zachowuje się odmiennie. Nie osiąga on stabilnego poziomu, a po przekroczeniu 125\,000 kroków wartości wahają się od 51,35 do 77,94, co odpowiada rozstępowi rzędu 38\% wartości średniej. Ponieważ bezwzględne wartości opóźnienia są w tym scenariuszu kilkukrotnie wyższe niż w pozostałych, zdominowałyby one średnią z czterech scenariuszy. Z tego powodu na rysunku~\ref{fig:zbiory-treningowe} przedstawiono scenariusze stabilne oraz scenariusz o wysokim natężeniu na osobnych wykresach.
 
 Najniższą średnią z czterech scenariuszy, równą 30,33, uzyskał checkpoint po 225\,000 kroków. Powyżej tej wartości nie zaobserwowano dalszej poprawy: średnia dla checkpointów po 250\,000, 275\,000 oraz 300\,000 kroków wynosi odpowiednio 37,37, 36,33 oraz 36,51, czyli wraca do poziomu sprzed 225\,000 kroków. Wynik na scenariuszu o wysokim natężeniu pogarsza się przy tym z 51,35 do wartości przekraczających 74. Obserwacja ta wskazuje na utratę stabilności procesu uczenia lub na nadmierne dopasowanie do scenariuszy treningowych, przy czym samo porównanie checkpointów nie pozwala rozstrzygnąć między tymi wyjaśnieniami.
 
@@ -176,7 +169,7 @@ Zestawienie obu wariantów przedstawiono w tabeli~\ref{tab:zbiory-treningowe}, a
     \label{fig:zbiory-treningowe}
 \end{figure}
 
-Model trenowany na regularnym zbiorze treningowym okazał się lepszy w każdym z czterech scenariuszy walidacyjnych. Największa różnica dotyczy scenariusza o wysokim natężeniu, gdzie średnia po wszystkich checkpointach wynosi 71,42 wobec 91,26, czyli o 27,8\% więcej dla wariantu nieregularnego. W fazie plateau, to jest powyżej 125\,000 kroków, rozstęp wyników na tym scenariuszu wynosi 38\% wartości średniej dla zbioru regularnego oraz 51\% dla nieregularnego. Także na scenariuszach stabilnych rozstęp jest ponad dwukrotnie większy dla wariantu nieregularnego, co odpowiada wyraźnie większym odchyleniom standardowym w tabeli~\ref{tab:zbiory-treningowe}.
+Model trenowany na regularnym zbiorze treningowym okazał się lepszy w każdym z czterech scenariuszy walidacyjnych. Największa różnica dotyczy scenariusza o wysokim natężeniu, gdzie średnia po wszystkich checkpointach wynosi 71,42 wobec 91,26, czyli o 27,8\% więcej dla wariantu nieregularnego. Po przekroczeniu 125\,000 kroków rozstęp wyników na tym scenariuszu wynosi 38\% wartości średniej dla zbioru regularnego oraz 51\% dla nieregularnego. Także na scenariuszach stabilnych rozstęp jest ponad dwukrotnie większy dla wariantu nieregularnego, co odpowiada wyraźnie większym odchyleniom standardowym w tabeli~\ref{tab:zbiory-treningowe}.
 
 Na uwagę zasługuje wynik na scenariuszu o zmiennym natężeniu, czyli tym, który sam został wygenerowany z nieregularnym rozmieszczeniem czasów wyjazdu. Również w nim lepszy okazał się model trenowany na danych regularnych: 42,55 wobec 53,23. Większa losowość danych treningowych nie przełożyła się zatem na lepsze działanie na scenariuszu o zbliżonej charakterystyce. Obserwacja ta dotyczy wyłącznie badanej konfiguracji i nie stanowi ogólnej zasady, a jej możliwe wyjaśnienia omówiono w rozdziale~\ref{sec:analiza}.
 
@@ -207,7 +200,7 @@ Ponieważ pojedynczy przebieg walidacyjny okazał się niewystarczającą podsta
 
 Powtórzenie oceny potwierdziło wybór, jednocześnie korygując skalę przewagi. Wynik checkpointu po 225\,000 kroków na scenariuszu o wysokim natężeniu wzrósł z 51,35 w pojedynczym przebiegu do 58,76 przy uśrednieniu po pięciu ziarnach, co potwierdza, że pojedyncza ocena była nadmiernie optymistyczna. Model ten pozostaje jednak najlepszy w trzech z czterech scenariuszy oraz w średniej z czterech scenariuszy, gdzie uzyskuje 31,74 wobec 35,31 i 35,81 dla pozostałych kandydatów.
 
-Odchylenia standardowe pokazują wyraźną różnicę między scenariuszami. Na scenariuszach lekkim i średnim wynoszą one poniżej 1,1, natomiast na scenariuszu o wysokim natężeniu sięgają 5,08. Zmienność wyniku między ziarnami symulacji jest zatem w warunkach nasycenia porównywalna z różnicami między porównywanymi modelami, co uzasadnia stosowanie oceny wieloziarnowej na dalszych etapach badania.
+Odchylenia standardowe pokazują wyraźną różnicę między scenariuszami. Na scenariuszach lekkim i średnim wynoszą one poniżej 1,1, natomiast na scenariuszu o wysokim natężeniu sięgają 5,08. Przy wysokim natężeniu ruchu różnice wynikające ze zmiany ziarna symulacji są podobnej wielkości jak różnice między modelami. Dlatego na dalszych etapach modele oceniano na wielu ziarnach.
 
 \subsection{Dobór hiperparametrów}
 \label{subsec:strojenie}
@@ -543,7 +536,7 @@ Rozrzut wyników jest przy tym wyraźnie większy niż dla modelu końcowego. Od
 
 Model kontrastowy osiągnął limit czasu symulacji w dziesięciu z dwudziestu przebiegów, obejmujących wszystkie scenariusze o wysokim oraz wszystkie o zmiennym natężeniu. Skala zjawiska jest tu nieporównywalnie większa niż dla modelu końcowego: w jednym z przebiegów o wysokim natężeniu obsłużonych zostało 2371 z 2880 podróży, czyli 17,7\% pojazdów nie opuściło sieci. Z tego samego powodu częstotliwość przełączeń modelu kontrastowego spada w tych scenariuszach do wartości rzędu 51 przełączeń na godzinę, co jest artefaktem długości przebiegu, a nie oznaką rzadkiego przełączania.
 
-Wyniki te pokazują, że słaba ocena walidacyjna przełożyła się na słabą generalizację, ale wyłącznie w scenariuszach o wysokim obciążeniu. Model, który w ruchu lekkim i średnim działałby akceptowalnie, załamuje się w warunkach nasycenia. Obserwacja ta uzasadnia włączenie do zbioru walidacyjnego scenariusza reprezentującego warunki najtrudniejsze, ponieważ ocena oparta wyłącznie na scenariuszach o umiarkowanym obciążeniu nie ujawniłaby tej różnicy.
+Wyniki te pokazują, że słaba ocena walidacyjna przełożyła się na słabą generalizację, ale wyłącznie w scenariuszach o wysokim obciążeniu. Model, który w ruchu lekkim i średnim działałby akceptowalnie, przestaje działać skutecznie przy wysokim natężeniu ruchu. Obserwacja ta uzasadnia włączenie do zbioru walidacyjnego scenariusza reprezentującego warunki najtrudniejsze, ponieważ ocena oparta wyłącznie na scenariuszach o umiarkowanym obciążeniu nie ujawniłaby tej różnicy.
 
 \subsection{Podsumowanie wyników}
 \label{subsec:podsumowanie-wynikow}
@@ -556,10 +549,10 @@ Zbiorcze zestawienie wszystkich ocenionych metod przedstawiono w tabeli~\ref{tab
     \footnotesize
     \begin{tabular}{| l | r | r | r | r | p{4.4cm} |} \hline
         Metoda & Lekki & Średni & Wysoki & Zmienny & Charakterystyka \\ \hline\hline
-        stałoczasowa & 28,00 & 30,91 & 65,45 & 48,25 & Przewidywalna, najgorsza przy niskim i średnim obciążeniu, odporna przy nasyceniu. \\ \hline
-        akomodacyjna & 15,22 & 18,02 & 78,07 & 39,76 & Bardzo dobra przy niskim i średnim obciążeniu, najgorsza ze wszystkich metod przy nasyceniu. \\ \hline
+        stałoczasowa & 28,00 & 30,91 & 65,45 & 48,25 & Przewidywalna, najgorsza przy niskim i średnim obciążeniu, stabilna przy wysokim natężeniu. \\ \hline
+        akomodacyjna & 15,22 & 18,02 & 78,07 & 39,76 & Bardzo dobra przy niskim i średnim obciążeniu, najsłabsza z trzech głównych metod przy wysokim natężeniu. \\ \hline
         DQN & \textbf{13,90} & \textbf{17,79} & \textbf{51,82} & \textbf{34,23} & Najlepsza w każdym scenariuszu pod względem opóźnienia i czasu oczekiwania, kosztem większego rozrzutu wyników. \\ \hline
-        DQN kontrastowy & 15,68 & 18,38 & 111,41 & 71,96 & Poprawna przy niskim i średnim obciążeniu, załamuje się przy nasyceniu. \\ \hline
+        DQN kontrastowy & 15,68 & 18,38 & 111,41 & 71,96 & Poprawna przy niskim i średnim obciążeniu, traci skuteczność przy wysokim natężeniu. \\ \hline
     \end{tabular}
 \end{table}
 
@@ -574,5 +567,3 @@ Najważniejsze obserwacje wynikające ze zbioru testowego można podsumować nas
     \item rozrzut wyników agenta w scenariuszach o wysokim i zmiennym natężeniu jest porównywalny z rozrzutem programu akomodacyjnego i większy niż programu stałoczasowego;
     \item w trzech z dwudziestu przebiegów agenta niewielka grupa pojazdów nie opuściła sieci w zakładanym czasie, co nie wpłynęło na metryki wyznaczane z zakończonych podróży, lecz zniekształciło metryki normowane czasem trwania symulacji.
 \end{itemize}
-
-Interpretacja tych obserwacji, ocena stopnia potwierdzenia hipotezy badawczej oraz omówienie ograniczeń wnioskowania stanowią treść rozdziału~\ref{sec:analiza}.
