@@ -74,7 +74,7 @@ Program sygnalizacji odwzorowuje organizację ruchu obowiązującą na skrzyżow
 
 Wydzielony sygnał skrętu w lewo występuje wyłącznie na alei KEN. Na ulicy Belgradzkiej skręt w lewo odbywa się w ramach fazy ogólnej, przy ustąpieniu pierwszeństwa.
 
-Sterowaniem objętych jest trzynaście pasów wlotowych na czterech wlotach. Wlot północny alei KEN ma cztery pasy, pozostałe trzy wloty po trzy pasy. Identyfikator sygnalizacji to `GS_cluster_300048112_300048176_300048179_32126015`.
+Sterowaniem objętych jest trzynaście pasów wlotowych na czterech wlotach. Wlot południowy alei KEN, z którego pojazdy poruszają się w kierunku północnym, ma cztery pasy, a pozostałe trzy wloty po trzy pasy. Nazwy wlotów odnoszą się do ich położenia względem środka skrzyżowania, nie do kierunku jazdy. Jeżeli w kodzie lub plikach wynikowych występują oznaczenia `N` i `S`, opisują one kierunek jazdy: `N` odpowiada fizycznie wlotowi południowemu, a `S` wlotowi północnemu. Identyfikator sygnalizacji to `GS_cluster_300048112_300048176_300048179_32126015`.
 
 Sieć występuje w dwóch plikach o identycznej geometrii i identycznym układzie faz:
 
@@ -228,7 +228,7 @@ W projekcie wykorzystano przede wszystkim:
 - pliki konfiguracyjne i trasy w formacie XML,
 - skrypty do treningu, ewaluacji, agregacji wyników i generowania wykresów.
 
-Docker służy przede wszystkim do zapewnienia powtarzalności środowiska i izolacji zależności. Nie jest głównym wkładem naukowym pracy.
+Docker służył przede wszystkim do izolacji zależności, uniknięcia instalowania środowiska treningowego bezpośrednio w macOS oraz utrzymywania symulatora, bibliotek i kodu w jednym środowisku. Pozwolił także ominąć problemy z działaniem SUMO obserwowane przy bezpośrednim uruchamianiu w systemie gospodarza. Kod i definicja obrazu nie są obecnie udostępniane wraz z pracą, dlatego nie należy przedstawiać konteneryzacji jako gwarancji możliwości niezależnego odtworzenia eksperymentu. Nie jest ona głównym wkładem naukowym pracy.
 
 ---
 

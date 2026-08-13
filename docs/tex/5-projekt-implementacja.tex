@@ -38,7 +38,7 @@ Indeks sygnału określa pozycję znaku w łańcuchu opisującym stan sygnalizac
     \end{tabular}
 \end{table}
 
-Wlot południowy alei Komisji Edukacji Narodowej jest jedynym, na którym każdej z czterech relacji odpowiada osobny pas ruchu. Na pozostałych wlotach skręt w lewo odbywa się z wydzielonego pasa, natomiast skręt w prawo i jazda na wprost dzielą pas skrajny.
+Wlot południowy alei Komisji Edukacji Narodowej, obsługujący ruch w kierunku północnym, jest jedynym, na którym każdej z czterech relacji odpowiada osobny pas ruchu. Na pozostałych wlotach skręt w lewo odbywa się z wydzielonego pasa, natomiast skręt w prawo i jazda na wprost dzielą pas skrajny.
 
 \subsubsection{Konfiguracja sygnalizacji}
 \label{subsubsec:konfiguracja-sygnalizacji}
@@ -361,7 +361,7 @@ environment:
 \end{lstlisting}
 \end{addmargin}
 
-Rozdzielenie konfiguracji od kodu pozwoliło prowadzić wszystkie eksperymenty ze strojeniem hiperparametrów przez dodawanie kolejnych plików konfiguracyjnych, bez modyfikowania kodu źródłowego. Ma to znaczenie dla powtarzalności, ponieważ konfiguracja każdego przebiegu jest zapisana w repozytorium jako osobny plik.
+Rozdzielenie konfiguracji od kodu pozwoliło prowadzić wszystkie eksperymenty ze strojeniem hiperparametrów przez dodawanie kolejnych plików konfiguracyjnych, bez modyfikowania kodu źródłowego. Ułatwiało to jednoznaczne przypisanie parametrów do poszczególnych przebiegów.
 
 Na podstawie wczytanej konfiguracji tworzone jest środowisko oraz obiekt algorytmu DQN z biblioteki Stable-Baselines3, z polityką \texttt{MlpPolicy}. Architektura sieci jest opcjonalna: pominięcie odpowiedniego pola pozostawia domyślną architekturę biblioteki, a jego podanie pozwala wskazać własny układ warstw ukrytych, co wykorzystano w jednym z badanych wariantów strojenia.
 
@@ -437,9 +437,9 @@ Po zapisaniu wiersza komplet plików wyjściowych przenoszony jest do katalogu, 
 
 Wyniki testowe analizowano oddzielnie dla każdej metody sterowania i każdego poziomu natężenia ruchu. Dla każdej kombinacji obliczono średnią oraz odchylenie standardowe z pięciu przebiegów różniących się ziarnem. Nie wyznaczano jednej średniej obejmującej wszystkie poziomy natężenia, ponieważ reprezentują one odmienne warunki obciążenia.
 
-\subsection{Środowisko uruchomieniowe i odtwarzalność eksperymentów}
+\subsection{Środowisko kontenerowe i kontrola warunków eksperymentu}
 \label{subsec:impl-konteneryzacja}
 
-Eksperymenty uruchamiano w kontenerach. Obraz bazowy przypina wersję SUMO do 1.25.0, a katalog projektu montowany jest jako wolumen, dzięki czemu konfiguracje, modele i wyniki pozostają poza kontenerem. Zastosowane zakresy wersji pakietów języka Python oraz instalowanie biblioteki \texttt{sumo-rl} bez wskazania rewizji nie gwarantują jednak odtworzenia identycznego zestawu zależności po ponownym zbudowaniu obrazu. Wersje faktycznie użyte w eksperymencie podano w rozdziale~\ref{sec:wyniki}.
+Eksperymenty uruchamiano w kontenerach Docker. Kontenery działały w architekturze \texttt{linux/amd64}. Konteneryzację zastosowano przede wszystkim w celu odizolowania zależności i uniknięcia instalowania środowiska treningowego bezpośrednio w systemie macOS. Pozwoliła ona również ominąć problemy z działaniem SUMO obserwowane przy bezpośrednim uruchamianiu na maszynie oraz utrzymywać symulator, biblioteki i kod w jednym środowisku. Katalog projektu montowano jako wolumen, dzięki czemu konfiguracje, modele i wyniki pozostawały poza kontenerem.
 
-Kontrolowano trzy źródła losowości. Wygenerowane pliki tras zapisano wraz z ziarnami generatora. W walidacji i testach ten sam scenariusz oraz ziarno symulacji stosowano dla porównywanych metod. Proces uczenia korzystał natomiast ze wspólnego dla wariantów ziarna algorytmu równego 42. Podczas ewaluacji akcje wyznaczano deterministycznie, co zapewnia powtarzalność przebiegu dla ustalonego modelu, scenariusza, ziarna i zestawu zależności.
+W przeprowadzonym badaniu kontrolowano trzy źródła losowości. Wygenerowane pliki tras zapisano wraz z ziarnami generatora. W walidacji i testach ten sam scenariusz oraz ziarno symulacji stosowano dla porównywanych metod. Proces uczenia korzystał natomiast ze wspólnego dla wariantów ziarna algorytmu równego 42. Podczas ewaluacji akcje wyznaczano deterministycznie. Zabiegi te służyły ograniczeniu niekontrolowanej zmienności i porównywaniu metod w możliwie zgodnych warunkach.

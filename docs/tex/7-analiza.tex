@@ -84,12 +84,12 @@ Funkcja nagrody nie zawierała bezpośredniej kary za zmianę fazy, maksymalny c
 
 Przed rozważeniem wdrożenia należałoby oddzielić decyzję optymalizacyjną agenta od warstwy bezpieczeństwa sterownika. Warstwa taka powinna co najmniej:
 \begin{itemize}
-    \item wymuszać dozwolone układy sygnałów, pełne czasy międzyzielone oraz minimalne i maksymalne czasy faz;
-    \item ograniczać maksymalny czas sygnału czerwonego i gwarantować obsługę każdego zgłoszonego strumienia, niezależnie od decyzji polityki;
-    \item wykrywać brak, opóźnienie lub niespójność danych z detektorów oraz przełączać sterowanie na zweryfikowany program rezerwowy;
-    \item zapewniać nadzór operatora, rejestrowanie decyzji, kontrolę poprawności działania i bezpieczne przejęcie sterowania po awarii.
+    \item wymuszać dozwolone układy sygnałów, pełne czasy międzyzielone oraz minimalne i maksymalne czasy faz \cite{NAP22097,brummond2018central_signal_systems};
+    \item ustalać maksymalny czas między kolejnymi wyświetleniami fazy przy obecnym popycie, tak aby żaden zgłoszony strumień nie był bezterminowo pomijany \cite{brummond2018central_signal_systems};
+    \item wykrywać brak, opóźnienie lub niespójność danych z detektorów oraz przełączać sterowanie na zweryfikowany program rezerwowy \cite{brummond2018central_signal_systems};
+    \item zapewniać nadzór operatora, rejestrowanie decyzji, kontrolę poprawności działania i bezpieczne przejęcie sterowania po awarii \cite{brummond2018central_signal_systems}.
 \end{itemize}
-Ograniczenia czasowe zaimplementowane w środowisku stanowią jedynie część takich zabezpieczeń. Ocena akceptowalności wymagałaby ponadto analizy rozkładu długości faz, maksymalnego czasu czerwonego, liczby zatrzymań, gwałtowności zmian prędkości i wyników poszczególnych relacji, a nie tylko metryk średnich \cite{NAP22097}.
+Wytyczne FHWA opisują w tym kontekście niezależny monitor nieprawidłowego działania, który wykrywa kolizyjne wskazania i wymusza stan bezpieczny \cite{fhwa2023traffic_signal_handbook}. Przywołane materiały zawierają wytyczne i przykładowe wymagania projektowe, a nie kompletną specyfikację wdrożeniową ani podstawę do oceny zgodności w Polsce. Ograniczenia czasowe zaimplementowane w środowisku stanowią jedynie część takich zabezpieczeń. Ocena akceptowalności wymagałaby ponadto analizy rozkładu długości faz, maksymalnego czasu czerwonego, liczby zatrzymań, gwałtowności zmian prędkości i wyników poszczególnych relacji, a nie tylko metryk średnich \cite{NAP22097}.
 
 \subsection{Ograniczenia wiarygodności eksperymentu}
 \label{subsec:ograniczenia-wiarygodnosci}
