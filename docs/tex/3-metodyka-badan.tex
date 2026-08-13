@@ -83,7 +83,7 @@ Warstwę pośredniczącą między symulatorem a algorytmem uczenia stanowi bibli
 Przestrzeń obserwacji jest ciągła i ma postać \texttt{Box(0.0, 1.0, (30,), float32)}, czyli wektora trzydziestu wartości rzeczywistych z przedziału od 0 do 1. Wykorzystano domyślną reprezentację stanu udostępnianą przez bibliotekę \texttt{sumo-rl} \cite{alegre2019sumorl}, na którą składają się cztery grupy cech:
 \begin{itemize}
     \item \emph{kodowanie aktywnej fazy} (3 wartości): wektor zero-jedynkowy typu one-hot wskazujący, która z trzech faz zielonych jest aktualnie realizowana;
-    \item \emph{znacznik minimalnego czasu zielonego} (1 wartość): zmienna binarna przyjmująca wartość 1, jeżeli od ostatniej zmiany fazy upłynął już minimalny czas zielony powiększony o czas trwania fazy żółtej, a w przeciwnym razie wartość 0;
+    \item \emph{znacznik minimalnego czasu zielonego} (1 wartość): zmienna binarna równa 1 po upływie minimalnego czasu zielonego powiększonego o czas fazy żółtej, a wcześniej równa 0;
     \item \emph{gęstość pasów} (13 wartości): dla każdego z trzynastu pasów wlotowych liczba pojazdów znajdujących się na pasie podzielona przez maksymalną liczbę pojazdów, które mogłyby się na nim zmieścić;
     \item \emph{zapełnienie kolejki} (13 wartości): dla każdego pasa wlotowego liczba pojazdów zatrzymanych, czyli poruszających się z prędkością poniżej 0,1~m/s, podzielona przez tę samą pojemność pasa.
 \end{itemize}
@@ -127,7 +127,7 @@ Wybór tej funkcji wynikał z jej bezpośredniego powiązania z jedną z podstaw
 \subsubsection{Interwał decyzyjny}
 \label{subsubsec:interwal}
 
-Agent podejmuje decyzje w stałych odstępach czasu symulacji wynoszących 5~s. Pomiędzy kolejnymi decyzjami symulator wykonuje kroki o długości jednej sekundy, w trakcie których egzekwowane są ograniczenia dotyczące faz oraz rejestrowany jest stan ruchu.
+Agent podejmuje decyzje co 5~s symulacji. Pomiędzy kolejnymi decyzjami symulator wykonuje kroki o długości jednej sekundy, w trakcie których egzekwowane są ograniczenia dotyczące faz oraz rejestrowany jest stan ruchu.
 
 Dobór interwału decyzyjnego stanowi kompromis między częstotliwością reagowania a stabilnością sterowania. Zbyt krótki interwał zwiększa liczbę decyzji przypadających na epizod oraz ryzyko częstych przełączeń sygnalizacji, natomiast zbyt długi ogranicza zdolność agenta do reagowania na zmiany sytuacji ruchowej. Wartość 5~s pozwala agentowi wielokrotnie ocenić sytuację w trakcie trwania jednej fazy, a jednocześnie nie prowadzi do przełączania sygnalizacji częściej, niż dopuszczają to ograniczenia minimalnego czasu zielonego oraz fazy żółtej.
 
@@ -198,7 +198,7 @@ Metryka wyrażana jest w pojazdach na godzinę i jest jedyną z rozpatrywanych, 
 
 Częstotliwość przełączeń opisuje, jak często zmienia się układ sygnałów na skrzyżowaniu. Za przełączenie uznawane jest przejście między dwiema różnymi konfiguracjami sygnału zielonego. Fazy żółte, stanowiące jedynie przejście między fazami zielonymi, nie są liczone jako osobne przełączenia, dzięki czemu jedna zmiana fazy nie jest zliczana dwukrotnie. Liczba przełączeń dzielona jest przez czas między pierwszym i ostatnim rekordem szeregu czasowego, a następnie przeliczana na godzinę.
 
-Metryka wyrażana jest w przełączeniach na godzinę. W jej przypadku nie można wskazać jednoznacznie pożądanego kierunku zmian. Zbyt rzadkie przełączanie oznacza wydłużone oczekiwanie na wlotach nieobsługiwanych, natomiast zbyt częste prowadzi do narastania czasów międzyzielonych, w których żaden strumień nie korzysta ze skrzyżowania, a także obniża komfort i przewidywalność jazdy. Metryka ta pełni zatem rolę kontrolną i pozwala ocenić, czy poprawa pozostałych wskaźników nie została osiągnięta kosztem niestabilnego sterowania.
+Metryka jest wyrażana w przełączeniach na godzinę i nie ma jednoznacznie pożądanego kierunku zmian. Zbyt rzadkie przełączanie oznacza wydłużone oczekiwanie na wlotach nieobsługiwanych, natomiast zbyt częste prowadzi do narastania czasów międzyzielonych, w których żaden strumień nie korzysta ze skrzyżowania, a także obniża komfort i przewidywalność jazdy. Metryka ta pełni zatem rolę kontrolną i pozwala ocenić, czy poprawa pozostałych wskaźników nie została osiągnięta kosztem niestabilnego sterowania.
 
 \subsection{Podział danych eksperymentalnych}
 \label{subsec:podzial-danych}

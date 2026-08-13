@@ -65,7 +65,6 @@
 \RequirePackage{multirow}      % Advanced table cells
 \RequirePackage{setspace}      % Set space between lines
 \RequirePackage{scrextend}     % Allows \addmargin environment
-\RequirePackage{tablefootnote} % Table footnotes
 \RequirePackage{tocloft}       % Custom ToC/LoF/LoT
 \RequirePackage{url}           % URL-sensitive line breaks
 \RequirePackage{xspace}        % Remove duplicated spaces

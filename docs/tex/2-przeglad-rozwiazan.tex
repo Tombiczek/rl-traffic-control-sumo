@@ -46,7 +46,7 @@ Sterowanie adaptacyjne obejmuje metody, które na bieżąco dostosowują paramet
 
 Różnice między omawianymi grupami metod można podsumować następująco:
 \begin{itemize}
-    \item \emph{sterowanie stałoczasowe} realizuje wcześniej ustalony program, niezależny od bieżącego ruchu;
+    \item \emph{sterowanie stałoczasowe} realizuje ustalony program niezależnie od bieżącego ruchu;
     \item \emph{sterowanie akomodacyjne} reaguje lokalnie na zgłoszenia z detektorów, przede wszystkim przez przedłużanie lub zakończenie bieżącej fazy;
     \item \emph{sterowanie adaptacyjne} dostosowuje parametry sterowania na podstawie szerszej, często sieciowej oceny stanu ruchu.
 \end{itemize}
@@ -80,7 +80,7 @@ Uczenie odbywa się zwykle w epizodach, czyli skończonych sekwencjach interakcj
 \subsection{Q-Learning}
 \label{subsec:qlearning}
 
-Q-Learning jest jednym z podstawowych algorytmów uczenia ze wzmocnieniem, należącym do metod uczenia różnicowego (ang. temporal-difference) i niewymagającym modelu środowiska \cite{watkins1992qlearning, sutton2018reinforcement}. Algorytm szacuje funkcję wartości akcji $Q(s,a)$, wyrażającą oczekiwany zdyskontowany zwrot możliwy do uzyskania po wykonaniu akcji $a$ w stanie $s$ i dalszym postępowaniu zgodnie z polityką.
+Q-Learning jest podstawowym algorytmem uczenia ze wzmocnieniem. Należy do metod uczenia różnicowego (ang. temporal-difference) i nie wymaga modelu środowiska \cite{watkins1992qlearning, sutton2018reinforcement}. Algorytm szacuje funkcję wartości akcji $Q(s,a)$, wyrażającą oczekiwany zdyskontowany zwrot możliwy do uzyskania po wykonaniu akcji $a$ w stanie $s$ i dalszym postępowaniu zgodnie z polityką.
 
 W klasycznej, tablicowej wersji wartości $Q(s,a)$ przechowuje się w tablicy indeksowanej stanami i akcjami. Po każdym przejściu ze stanu $s_t$ do stanu $s_{t+1}$ w wyniku akcji $a_t$ oraz otrzymaniu nagrody $r_{t+1}$ wartość aktualizuje się według reguły
 \begin{equation}
@@ -94,7 +94,7 @@ Podejście tablicowe jest skuteczne przy niewielkiej, dyskretnej przestrzeni sta
 \subsection{Deep Q-Network}
 \label{subsec:dqn}
 
-Algorytm Deep Q-Network (DQN) rozszerza Q-Learning przez zastąpienie tablicy wartości aproksymatorem w postaci sieci neuronowej \cite{mnih2013playing, sutton2018reinforcement}. Wartość akcji wyraża się jako $Q(s, a; \theta)$, gdzie $\theta$ oznacza parametry sieci. Dzięki temu możliwe jest oszacowanie wartości akcji dla stanów opisanych ciągłym, wielowymiarowym wektorem obserwacji bez konieczności jawnej dyskretyzacji przestrzeni stanów.
+W algorytmie Deep Q-Network (DQN) tablicę wartości Q-Learningu zastępuje aproksymator w postaci sieci neuronowej \cite{mnih2013playing, sutton2018reinforcement}. Wartość akcji wyraża się jako $Q(s, a; \theta)$, gdzie $\theta$ oznacza parametry sieci. Dzięki temu możliwe jest oszacowanie wartości akcji dla stanów opisanych ciągłym, wielowymiarowym wektorem obserwacji bez konieczności jawnej dyskretyzacji przestrzeni stanów.
 
 Sieć jest uczona przez minimalizację błędu różnicowego. W oryginalnym sformułowaniu funkcję straty dla parametrów $\theta$ zapisuje się jako
 \begin{equation}

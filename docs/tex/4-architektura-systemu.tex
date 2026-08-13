@@ -69,7 +69,7 @@ W przypadku metod referencyjnych TraCI wykorzystywany jest wyłącznie do odczyt
 \subsection{Biblioteka \texttt{sumo-rl}}
 \label{subsec:sumo-rl}
 
-Biblioteka \texttt{sumo-rl} stanowi warstwę pośredniczącą między symulacją SUMO a algorytmem uczenia ze wzmocnieniem \cite{alegre2019sumorl}. Jej podstawowym elementem jest klasa \texttt{SumoEnvironment}. Uruchamia ona proces symulacji, nawiązuje połączenie przez TraCI i udostępnia symulację jako środowisko zgodne z interfejsem Gymnasium \cite{towers2025gymnasium}. Interfejs ten definiuje niewielki, ustandaryzowany zbiór operacji, przede wszystkim rozpoczęcie epizodu oraz wykonanie kroku w odpowiedzi na akcję, wraz z deklaracją przestrzeni obserwacji oraz przestrzeni akcji.
+Biblioteka \texttt{sumo-rl} pośredniczy między symulacją SUMO a algorytmem uczenia ze wzmocnieniem \cite{alegre2019sumorl}. Jej podstawowym elementem jest klasa \texttt{SumoEnvironment}. Uruchamia ona symulację, nawiązuje połączenie przez TraCI i udostępnia środowisko zgodne z interfejsem Gymnasium \cite{towers2025gymnasium}. Interfejs ten definiuje rozpoczęcie epizodu i wykonanie kroku w odpowiedzi na akcję, a także deklaracje przestrzeni obserwacji i akcji.
 
 Biblioteka realizuje w systemie następujące zadania:
 \begin{itemize}
@@ -86,7 +86,7 @@ Wykorzystanie gotowej biblioteki było uzasadnione tym, że warstwa integracyjna
 
 Publiczna metoda kroku biblioteki ukrywa pośrednie sekundy okna decyzyjnego. Dlatego przygotowano własną warstwę integracyjną, która udostępnia je modułowi metryk i obsługuje wiele scenariuszy ruchu. Szczegóły zmian przedstawiono w podrozdziale~\ref{subsec:wrapper}.
 
-Biblioteka \texttt{sumo-rl} nie jest autorskim elementem pracy. Własny wkład obejmuje warstwę integracyjną, ujednolicenie procedury zbierania metryk oraz obudowanie całości procesem treningu, walidacji i oceny testowej.
+Biblioteka \texttt{sumo-rl} nie jest autorskim elementem pracy. Własny wkład obejmuje integrację, ujednolicenie zbierania metryk oraz przygotowanie treningu, walidacji i oceny testowej.
 
 \subsection{Biblioteka algorytmów uczenia ze wzmocnieniem}
 \label{subsec:sb3}
@@ -107,7 +107,7 @@ Pojedyncza decyzja agenta obejmuje sekwencję operacji przechodzącą przez wszy
     \item symulacja postępuje krokami o długości jednej sekundy aż do osiągnięcia następnej chwili decyzyjnej lub zakończenia epizodu;
     \item po każdej sekundzie moduł zbierania metryk odczytuje stan sygnalizacji oraz liczbę pojazdów zatrzymanych na pasach wlotowych i dopisuje rekord do szeregu czasowego;
     \item po osiągnięciu następnej chwili decyzyjnej wyznaczana jest nagroda jako różnica skumulowanego czasu oczekiwania względem poprzedniej chwili decyzyjnej;
-    \item wyznaczany jest nowy wektor obserwacji, który wraz z nagrodą i znacznikami zakończenia epizodu trafia do agenta, rozpoczynając kolejną iterację.
+    \item nowy wektor obserwacji wraz z nagrodą i znacznikami zakończenia epizodu trafia do agenta, rozpoczynając kolejną iterację.
 \end{enumerate}
 
 Podział na krok decyzyjny i kroki symulacji jest kluczowy dla spójności eksperymentu. Agent obserwuje środowisko i podejmuje decyzje w odstępach pięciosekundowych, natomiast dane do metryk zbierane są co sekundę, czyli z tą samą rozdzielczością co dla metod referencyjnych. Dzięki temu różnice w wynikach nie wynikają z odmiennego sposobu próbkowania stanu ruchu.

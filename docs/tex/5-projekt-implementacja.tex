@@ -10,7 +10,7 @@ Rozdział przedstawia szczegóły techniczne rozwiązania opisanego pod względe
 \subsubsection{Pozyskanie i korekta sieci}
 \label{subsubsec:pozyskanie-sieci}
 
-Punktem wyjścia były dane OpenStreetMap obejmujące otoczenie analizowanego skrzyżowania. Import do formatu sieci SUMO wykonano narzędziem \texttt{netconvert}, a następnie model skorygowano w edytorze graficznym \texttt{netedit}. Korekta obejmowała liczbę i przeznaczenie pasów na wlotach, zestaw dopuszczalnych relacji skrętnych oraz definicję programu sygnalizacji, ponieważ dane źródłowe nie zawierają pełnej informacji o organizacji ruchu na skrzyżowaniu.
+Punktem wyjścia były dane OpenStreetMap obejmujące otoczenie analizowanego skrzyżowania. Zaimportowano je do SUMO narzędziem \texttt{netconvert}. Następnie model skorygowano w edytorze graficznym \texttt{netedit}. Korekta obejmowała liczbę i przeznaczenie pasów na wlotach, zestaw dopuszczalnych relacji skrętnych oraz definicję programu sygnalizacji, ponieważ dane źródłowe nie zawierają pełnej informacji o organizacji ruchu na skrzyżowaniu.
 
 Istotne dla eksperymentu ustawienia zapisane w konfiguracji narzędzia to:
 \begin{itemize}
@@ -84,7 +84,7 @@ Znaczenie wykorzystanych opcji jest następujące \cite{sumo_randomtrips_docs}:
 \begin{itemize}
     \item \texttt{-n} wskazuje plik sieci, dla której generowane są podróże;
     \item \texttt{-e} określa koniec przedziału, w którym pojazdy wjeżdżają do sieci, przy domyślnym początku równym zeru;
-    \item \texttt{-{}-period} określa średni odstęp między kolejnymi wyjazdami, a więc pośrednio natężenie ruchu; liczba wygenerowanych podróży wynika z długości przedziału podzielonej przez wartość tej opcji;
+    \item \texttt{-{}-period} określa średni odstęp między wyjazdami, a pośrednio natężenie ruchu; liczba podróży wynika z ilorazu długości przedziału i wartości tej opcji;
     \item \texttt{-{}-seed} ustala ziarno generatora liczb pseudolosowych, dzięki czemu ten sam zestaw opcji zawsze daje ten sam plik wyjściowy;
     \item \texttt{-{}-random-depart} zmienia sposób rozmieszczenia czasów wyjazdu: zamiast równych odstępów czasy losowane są z rozkładu jednostajnego na całym przedziale, co prowadzi do wykładniczego rozkładu odstępów między kolejnymi pojazdami;
     \item \texttt{-{}-binomial} powoduje dodatkowe losowanie liczby wyjazdów przypadających na sekundę z rozkładu dwumianowego, w którym podana wartość jest maksymalną liczbą jednoczesnych wyjazdów.
@@ -122,9 +122,10 @@ W podstawowym wariancie scenariusze w obrębie jednego poziomu natężenia róż
 \subsubsection{Scenariusz o zmiennym natężeniu}
 \label{subsubsec:scenariusz-zmienny}
 
-Scenariusz o zmiennym natężeniu powstaje przez podanie trzech wartości opcji \texttt{-{}-period} jednocześnie. Skrypt dzieli wówczas przedział generowania na tyle równych podprzedziałów, ile podano wartości, i w każdym z nich stosuje odpowiedni okres napływu \cite{sumo_randomtrips_docs}. Dla przedziału o długości 3600~s oraz wartości 5,0, 2,5 i 1,25 otrzymuje się trzy podprzedziały po 1200~s, w których natężenie kolejno narasta od poziomu lekkiego, przez średni, do wysokiego.
+Scenariusz o zmiennym natężeniu powstaje przez jednoczesne podanie trzech wartości opcji \texttt{-{}-period}. Skrypt dzieli przedział generowania na równą liczbę części i w każdej stosuje odpowiedni okres napływu \cite{sumo_randomtrips_docs}. Dla przedziału o długości 3600~s oraz wartości 5,0, 2,5 i 1,25 otrzymuje się trzy podprzedziały po 1200~s, w których natężenie kolejno narasta od poziomu lekkiego, przez średni, do wysokiego.
 
-Scenariusz ten uzupełniono opcjami \texttt{-{}-random-depart} oraz \texttt{-{}-binomial 4}. Pierwsza z nich usuwa regularność odstępów między wyjazdami, druga wprowadza dodatkową zmienność liczby pojazdów wjeżdżających w kolejnych sekundach. Połączenie narastającego natężenia z nieregularnym napływem daje scenariusz, w którym sterowanie musi reagować zarówno na powolną zmianę obciążenia, jak i na krótkotrwałe skupiska pojazdów. Wariant ten występuje w zbiorze walidacyjnym oraz w zbiorze testowym, gdzie odpowiada mu grupa pięciu plików o ziarnach od 401 do 405.
+{\setlength{\emergencystretch}{1em}
+Scenariusz ten uzupełniono opcjami \texttt{-{}-random-depart} oraz \texttt{-{}-binomial 4}. Pierwsza usuwa regularność odstępów między wyjazdami, a druga różnicuje liczbę pojazdów wjeżdżających w kolejnych sekundach. Połączenie narastającego natężenia z nieregularnym napływem daje scenariusz, w którym sterowanie musi reagować zarówno na powolną zmianę obciążenia, jak i na krótkotrwałe skupiska pojazdów. Wariant ten występuje w zbiorze walidacyjnym oraz w zbiorze testowym, gdzie odpowiada mu grupa pięciu plików o ziarnach od 401 do 405.\par}
 
 \subsubsection{Wariant treningowy o nieregularnym napływie}
 \label{subsubsec:trening-nieregularny}
@@ -179,6 +180,7 @@ Pełny cykl trwa 81~s. Trzy fazy żółte po 3~s zajmują łącznie 9~s, dlatego
     \caption{Natężenia pasów krytycznych i wyznaczone czasy faz.}
     \label{tab:podzial-czasow}
     \small
+    \setlength{\tabcolsep}{3.5pt}
     \begin{tabular}{| l | r | r | r |} \hline
         Faza & Natężenie pasa krytycznego [poj./h] & Czas zielony [s] & \texttt{maxDur} [s] \\ \hline\hline
         A: al. KEN, wprost i w prawo & 229 & 14 & 21 \\ \hline
@@ -318,11 +320,11 @@ Liczba iteracji wykonywanych w jednym kroku jest ograniczona. Limit odpowiada su
 \subsubsection{Ujednolicenie pomiaru metryk}
 \label{subsubsec:ujednolicenie-metryk}
 
-Za rejestrowanie danych odpowiada klasa \texttt{EpisodeRecorder}, wykorzystywana wyłącznie w trybie ewaluacji testowej. Zapisuje ona te same wielkości i w tych samych chwilach co pętla pomiarowa metod referencyjnych, przedstawiona na listingu~\ref{lst:baseline-loop}. Struktura pliku szeregu czasowego jest zatem identyczna dla wszystkich porównywanych metod.
+Dane rejestruje klasa \texttt{EpisodeRecorder}, używana wyłącznie podczas ewaluacji testowej. Zapisuje ona te same wielkości i w tych samych chwilach co pętla pomiarowa metod referencyjnych, przedstawiona na listingu~\ref{lst:baseline-loop}. Struktura pliku szeregu czasowego jest zatem identyczna dla wszystkich porównywanych metod.
 
 Jedna różnica dotyczy sposobu wykrywania przełączeń. Biblioteka \texttt{sumo-rl} steruje sygnalizacją przez bezpośrednie ustawianie łańcucha stanu sygnałów, a nie przez wybór numeru fazy z programu zapisanego w pliku sieci. W konsekwencji numer fazy raportowany przez symulator pozostaje w przebiegach agenta stały. Z tego powodu w klasie \texttt{EpisodeRecorder} przełączenia wykrywane są przez porównywanie kolejnych łańcuchów stanu sygnałów, a nie numerów faz. Wynik jest poprawny dla obu rodzajów sterowania, ponieważ zmiana łańcucha stanu jest równoważna zmianie układu sygnałów na skrzyżowaniu.
 
-Warstwa integracyjna zleca symulatorowi generowanie dwóch plików. Plik \texttt{tripinfo.xml} stanowi źródło metryk podróży opisanych w podrozdziale~\ref{subsec:metryki}, natomiast \texttt{statistic.xml} zachowano jako dodatkowe podsumowanie diagnostyczne. Ten sam zestaw plików wyjściowych powstaje niezależnie od metody sterowania.
+Warstwa integracyjna zleca symulatorowi generowanie dwóch plików. Źródłem metryk podróży opisanych w podrozdziale~\ref{subsec:metryki} jest \texttt{tripinfo.xml}. Plik \texttt{statistic.xml} zachowano jako dodatkowe podsumowanie diagnostyczne. Ten sam zestaw plików wyjściowych powstaje niezależnie od metody sterowania.
 
 \subsubsection{Obsługa epizodów i plików tras}
 \label{subsubsec:obsluga-epizodow}
@@ -331,7 +333,7 @@ Warstwa integracyjna przyjmuje listę plików tras zamiast pojedynczego pliku. P
 
 Rozszerzono także warunki zakończenia epizodu. Biblioteka rozpoznaje jedynie przekroczenie zadanego czasu symulacji, co odpowiada zakończeniu przez ucięcie i jest właściwe podczas treningu, gdzie każdy epizod ma trwać ustaloną liczbę sekund. Podczas ewaluacji potrzebne jest natomiast doprowadzenie każdego pojazdu do celu, aby plik \texttt{tripinfo.xml} zawierał komplet podróży. Dodano zatem warunek kończący epizod w chwili, gdy w sieci nie pozostaje już żaden pojazd oczekujący na obsługę. Tryb ten włączany jest osobnym parametrem środowiska, dzięki czemu trening i ewaluacja korzystają z tego samego kodu.
 
-Informacje zwracane przez środowisko uzupełniono o dane diagnostyczne: nazwę pliku tras wybranego przy rozpoczynaniu epizodu oraz przyczynę jego zakończenia, rozróżniającą przekroczenie czasu symulacji i obsłużenie wszystkich pojazdów. Ułatwia to kontrolę przebiegu długich serii eksperymentów.
+Informacje zwracane przez środowisko uzupełniono o nazwę pliku tras wybranego na początku epizodu oraz przyczynę jego zakończenia. Rozróżnia ona przekroczenie czasu symulacji i obsłużenie wszystkich pojazdów. Dane te ułatwiają kontrolę długich serii eksperymentów.
 
 \subsection{Proces treningu}
 \label{subsec:proces-treningu}
