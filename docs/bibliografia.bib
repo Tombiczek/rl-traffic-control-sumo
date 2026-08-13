@@ -3,10 +3,10 @@ title = {Recent advances in traffic signal performance evaluation},
 journal = {Journal of Traffic and Transportation Engineering (English Edition)},
 volume = {9},
 number = {4},
-pages = {507-531},
+pages = {507--531},
 year = {2022},
 issn = {2095-7564},
-doi = {https://doi.org/10.1016/j.jtte.2022.06.002},
+doi = {10.1016/j.jtte.2022.06.002},
 url = {https://www.sciencedirect.com/science/article/pii/S2095756422000605},
 author = {Dallas Leitner and Piro Meleby and Lei Miao},
 keywords = {Intelligent transportation systems, Traffic signal performance evaluation, Traffic signal retiming, Traffic signals optimization, Intersection control evaluation},
@@ -125,12 +125,13 @@ abstract = {Signal retiming is a prominent way that transportation agencies use 
   biburl       = {https://dblp.org/rec/journals/corr/GendersR16.bib},
   bibsource    = {dblp computer science bibliography, https://dblp.org}
 }
-@phdthesis{vanderpol2016coordinated,
-author = {van der Pol, Elise},
-year = {2016},
-month = {08},
-pages = {},
-title = {Deep Reinforcement Learning for Coordination in Traffic Light Control (MSc thesis)}
+@inproceedings{vanderpol2016coordinated,
+  author    = {van der Pol, Elise and Oliehoek, Frans A.},
+  title     = {Coordinated Deep Reinforcement Learners for Traffic Light Control},
+  booktitle = {NIPS 2016 Workshop on Learning, Inference and Control of Multi-Agent Systems},
+  year      = {2016},
+  pages     = {1--8},
+  url       = {https://hdl.handle.net/11245.1/a3c70502-98ed-4651-bb3d-536fb489f95d}
 }
 @article{chu2020multiagent,
   author={Chu, Tianshu and Wang, Jie and Codecà, Lara and Li, Zhaojian},
@@ -139,7 +140,7 @@ title = {Deep Reinforcement Learning for Coordination in Traffic Light Control (
   year={2020},
   volume={21},
   number={3},
-  pages={1086-1095},
+  pages={1086--1095},
   keywords={Reinforcement learning;Scalability;Heuristic algorithms;Mathematical model;Codecs;Neural networks;Convergence;Adaptive traffic signal control;reinforcement learning;multi-agent reinforcement learning;deep reinforcement learning;actor-critic},
   doi={10.1109/TITS.2019.2901791}}
 
@@ -162,7 +163,7 @@ title = {Deep Reinforcement Learning for Coordination in Traffic Light Control (
   year={2018},
   volume={},
   number={},
-  pages={2575-2582},
+  pages={2575--2582},
   keywords={Tools;Microscopy;Roads;Data models;Urban areas;Vehicle dynamics;Mathematical model},
   doi={10.1109/ITSC.2018.8569938}
 }
@@ -178,14 +179,14 @@ title = {Deep Reinforcement Learning for Coordination in Traffic Light Control (
   url     = {http://jmlr.org/papers/v22/20-1364.html}
 }
 
-@misc{towers2024gymnasium,
-      title={Gymnasium: A Standard Interface for Reinforcement Learning Environments}, 
-      author={Mark Towers and Ariel Kwiatkowski and Jordan Terry and John U. Balis and Gianluca De Cola and Tristan Deleu and Manuel Goulão and Andreas Kallinteris and Markus Krimmel and Arjun KG and Rodrigo Perez-Vicente and Andrea Pierré and Sander Schulhoff and Jun Jet Tai and Hannah Tan and Omar G. Younis},
-      year={2025},
-      eprint={2407.17032},
-      archivePrefix={arXiv},
-      primaryClass={cs.LG},
-      url={https://arxiv.org/abs/2407.17032}, 
+@inproceedings{towers2025gymnasium,
+  title     = {Gymnasium: A Standard Interface for Reinforcement Learning Environments},
+  author    = {Mark Towers and Ariel Kwiatkowski and Jordan Terry and John U. Balis and Gianluca De Cola and Tristan Deleu and Manuel Goulão and Andreas Kallinteris and Markus Krimmel and Arjun KG and Rodrigo Perez-Vicente and Andrea Pierré and Sander Schulhoff and Jun Jet Tai and Hannah Tan and Omar G. Younis},
+  booktitle = {Advances in Neural Information Processing Systems},
+  volume    = {38},
+  year      = {2025},
+  note      = {Datasets and Benchmarks Track},
+  doi       = {10.52202/085713-4916}
 }
 
 @software{alegre2019sumorl,
@@ -205,18 +206,26 @@ title = {Deep Reinforcement Learning for Coordination in Traffic Light Control (
   urldate = {2026-08-09}
 }
 
-@online{sumo_output_docs,
+@online{sumo_tripinfo_docs,
   author  = {{Eclipse SUMO Project}},
-  title   = {Simulation Output -- SUMO Documentation},
+  title   = {TripInfo -- SUMO Documentation},
   year    = {2026},
-  url     = {https://sumo.dlr.de/docs/Simulation/Output/index.html},
-  urldate = {2026-08-09}
+  url     = {https://sumo.dlr.de/docs/Simulation/Output/TripInfo.html},
+  urldate = {2026-08-13}
 }
 
-@online{docker_docs,
-  author  = {{Docker, Inc.}},
-  title   = {Docker Documentation},
+@online{sumo_lane_docs,
+  author  = {{Eclipse SUMO Project}},
+  title   = {Lane Value Retrieval -- SUMO Documentation},
   year    = {2026},
-  url     = {https://docs.docker.com/},
-  urldate = {2026-08-09}
+  url     = {https://sumo.dlr.de/docs/TraCI/Lane_Value_Retrieval.html},
+  urldate = {2026-08-13}
+}
+
+@online{sb3_dqn_docs,
+  author  = {{Stable-Baselines3 Contributors}},
+  title   = {{DQN} -- Stable-Baselines3 2.8.0 Documentation},
+  year    = {2026},
+  url     = {https://stable-baselines3.readthedocs.io/en/v2.8.0/modules/dqn.html},
+  urldate = {2026-08-13}
 }

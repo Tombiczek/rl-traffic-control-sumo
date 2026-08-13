@@ -7,7 +7,7 @@ Rozdział przedstawia system od strony komponentów, ich odpowiedzialności oraz
 \subsection{Ogólna architektura rozwiązania}
 \label{subsec:ogolna-architektura}
 
-System zbudowano warstwowo. Każda warstwa odpowiada za wyraźnie wyodrębniony zakres zadań i komunikuje się wyłącznie z warstwami sąsiednimi. Ogólny układ komponentów oraz przepływ pojedynczej decyzji przedstawiono na rysunku~\ref{fig:architektura} w podrozdziale~\ref{subsubsec:agent-srodowisko}.
+System zbudowano warstwowo. Każda warstwa odpowiada za wyraźnie wyodrębniony zakres zadań i komunikuje się wyłącznie z warstwami sąsiednimi. Ogólny układ komponentów oraz przepływ pojedynczej decyzji przedstawiono na rysunku~\ref{fig:architektura}.
 
 Wyróżnić można następujące elementy:
 \begin{itemize}
@@ -22,9 +22,14 @@ Wyróżnić można następujące elementy:
     \item \emph{moduł ewaluacyjny}, uruchamiający zapisany model na zadanym scenariuszu i zapisujący wynik w ujednoliconym formacie.
 \end{itemize}
 
-Uproszczony przepływ danych między warstwami można przedstawić następująco: pliki sieci i tras stanowią wejście symulatora SUMO, komunikacja z symulatorem odbywa się przez interfejs TraCI, na którym opiera się środowisko biblioteki \texttt{sumo-rl}, obudowane własną warstwą integracyjną, ta zaś współpracuje z agentem DQN, a wyniki jej działania trafiają do modułów zapisu metryk, logów i modeli.
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=\linewidth]{architektura_systemu.png}
+    \caption{Architektura systemu oraz przepływ pojedynczej decyzji agenta.}
+    \label{fig:architektura}
+\end{figure}
 
-Podział ten realizuje dwa cele. Po pierwsze, oddziela model ruchu od algorytmu uczenia, dzięki czemu zmiana scenariusza ruchu lub programu sygnalizacji nie wymaga modyfikacji kodu agenta. Po drugie, umieszcza zbieranie metryk w jednym miejscu, wspólnym dla agenta i metod referencyjnych, co jest warunkiem porównywalności wyników opisanej w podrozdziale~\ref{subsec:metryki}.
+Podział ten oddziela model ruchu od algorytmu uczenia, dzięki czemu zmiana scenariusza lub programu sygnalizacji nie wymaga modyfikacji kodu agenta. Pozwala również stosować spójną procedurę zbierania i agregacji metryk dla wszystkich metod.
 
 Metody referencyjne, przedstawione w podrozdziale~\ref{subsec:metody-referencyjne}, korzystają z tej samej infrastruktury z pominięciem warstw uczenia ze wzmocnieniem. Ich logika działania realizowana jest wewnątrz SUMO, a kod w języku Python pełni jedynie rolę obserwatora, który wykonuje kolejne kroki symulacji przez TraCI i rejestruje te same wielkości co w przypadku agenta.
 
@@ -44,7 +49,7 @@ Konfigurację eksperymentu opisują pliki w formacie XML:
 
 W eksperymencie wykorzystano dwa pliki sieci o identycznej geometrii i identycznym układzie faz, różniące się wyłącznie typem logiki sygnalizacji. Plik z logiką statyczną obsługuje sterowanie stałoczasowe, natomiast plik z logiką akomodacyjną obsługuje metodę referencyjną typu gap-based. Każdej z trzech porównywanych metod odpowiada osobny plik konfiguracyjny, dzięki czemu wybór metody sterowania sprowadza się do wskazania innej konfiguracji, bez modyfikowania danych wejściowych. Plik tras podawany jest natomiast z wiersza poleceń, ponieważ ta sama konfiguracja wykorzystywana jest dla wielu scenariuszy różniących się ziarnem generatora.
 
-Po zakończeniu symulacji SUMO zapisuje pliki wyjściowe podsumowujące jej przebieg \cite{sumo_output_docs}. W systemie wykorzystano plik \texttt{tripinfo.xml}, zawierający opis każdej zakończonej podróży, oraz plik \texttt{statistic.xml} z danymi zbiorczymi. Pliki te stanowią jedno z dwóch źródeł metryk opisanych w podrozdziale~\ref{subsec:metryki}.
+Po zakończeniu symulacji SUMO zapisuje plik \texttt{tripinfo.xml}, zawierający opis każdej zakończonej podróży \cite{sumo_tripinfo_docs}. Stanowi on jedno z dwóch źródeł metryk opisanych w podrozdziale~\ref{subsec:metryki}; drugim są dane odczytywane podczas symulacji przez TraCI.
 
 \subsection{Interfejs TraCI}
 \label{subsec:traci}
@@ -59,14 +64,12 @@ W systemie TraCI stanowi jedyną granicę między symulatorem a kodem w języku 
     \item \emph{zmiana sygnalizacji}: ustawienie nowego układu sygnałów, dzięki czemu decyzja agenta zostaje wprowadzona do symulacji.
 \end{itemize}
 
-Warto zaznaczyć, że sterowanie sygnalizacją przez ustawienie łańcucha stanu sygnałów pomija numer fazy zapisany w pliku sieci. W konsekwencji w przebiegach agenta DQN numer fazy raportowany przez symulator pozostaje stały. Zliczanie przełączeń zaimplementowano zatem na podstawie porównywania kolejnych łańcuchów stanu sygnałów, a nie numerów faz, co daje poprawny wynik zarówno dla agenta, jak i dla metod referencyjnych.
-
 W przypadku metod referencyjnych TraCI wykorzystywany jest wyłącznie do odczytu stanu oraz do wykonywania kolejnych kroków symulacji. Logika sterowania pozostaje po stronie SUMO, dzięki czemu metody klasyczne działają dokładnie tak, jak zdefiniowano je w pliku sieci.
 
 \subsection{Biblioteka \texttt{sumo-rl}}
 \label{subsec:sumo-rl}
 
-Biblioteka \texttt{sumo-rl} stanowi warstwę pośredniczącą między symulacją SUMO a algorytmem uczenia ze wzmocnieniem \cite{alegre2019sumorl}. Jej podstawowym elementem jest klasa \\ \texttt{SumoEnvironment}, która uruchamia proces symulacji, nawiązuje połączenie przez TraCI i udostępnia symulację jako środowisko zgodne z interfejsem Gymnasium \cite{towers2024gymnasium}. Interfejs ten definiuje niewielki, ustandaryzowany zbiór operacji, przede wszystkim rozpoczęcie epizodu oraz wykonanie kroku w odpowiedzi na akcję, wraz z deklaracją przestrzeni obserwacji oraz przestrzeni akcji.
+Biblioteka \texttt{sumo-rl} stanowi warstwę pośredniczącą między symulacją SUMO a algorytmem uczenia ze wzmocnieniem \cite{alegre2019sumorl}. Jej podstawowym elementem jest klasa \texttt{SumoEnvironment}. Uruchamia ona proces symulacji, nawiązuje połączenie przez TraCI i udostępnia symulację jako środowisko zgodne z interfejsem Gymnasium \cite{towers2025gymnasium}. Interfejs ten definiuje niewielki, ustandaryzowany zbiór operacji, przede wszystkim rozpoczęcie epizodu oraz wykonanie kroku w odpowiedzi na akcję, wraz z deklaracją przestrzeni obserwacji oraz przestrzeni akcji.
 
 Biblioteka realizuje w systemie następujące zadania:
 \begin{itemize}
@@ -79,40 +82,18 @@ Biblioteka realizuje w systemie następujące zadania:
 
 Istotną konsekwencją drugiego z wymienionych zadań jest to, że czasy trwania faz zapisane w pliku sieci nie wpływają na działanie agenta. Biblioteka odbudowuje program sygnalizacji na podstawie samego zbioru stanów faz zielonych, a o momencie zmiany decyduje agent w granicach narzuconych ograniczeń. Dzięki temu agent może korzystać z tego samego pliku sieci co metoda stałoczasowa, mimo że zapisany w nim podział czasów zielonych dotyczy wyłącznie metody referencyjnej.
 
-Wykorzystanie gotowej biblioteki było uzasadnione tym, że warstwa integracyjna między symulatorem a algorytmem uczenia jest elementem technicznym, a nie przedmiotem badania. Samodzielna implementacja maszyny stanów sygnalizacji, obsługi cyklu życia symulacji oraz wyznaczania obserwacji zwiększyłaby ryzyko błędów, nie wnosząc wartości merytorycznej. Ponadto zastosowanie rozwiązania szeroko wykorzystywanego w literaturze ułatwia odniesienie wyników do innych prac.
+Wykorzystanie gotowej biblioteki było uzasadnione tym, że warstwa integracyjna między symulatorem a algorytmem uczenia jest elementem technicznym, a nie przedmiotem badania. Samodzielna implementacja maszyny stanów sygnalizacji, obsługi cyklu życia symulacji oraz wyznaczania obserwacji zwiększyłaby ryzyko błędów, nie wnosząc wartości merytorycznej.
 
-Biblioteka nie była jednak wystarczająca bez zmian. Jej publiczna metoda kroku realizuje całe okno decyzyjne jednym wywołaniem, przez co pośrednie sekundy symulacji pozostają niedostępne dla kodu wywołującego. Uniemożliwiałoby to rejestrowanie stanu ruchu z rozdzielczością jednej sekundy, a tym samym wyznaczenie średniej długości kolejki w sposób identyczny jak dla metod referencyjnych. Z tego powodu przygotowano własną warstwę integracyjną w postaci klasy zgodnej z interfejsem środowiska Gymnasium, korzystającej wewnętrznie z \texttt{SumoEnvironment}.
+Publiczna metoda kroku biblioteki ukrywa pośrednie sekundy okna decyzyjnego. Dlatego przygotowano własną warstwę integracyjną, która udostępnia je modułowi metryk i obsługuje wiele scenariuszy ruchu. Szczegóły zmian przedstawiono w podrozdziale~\ref{subsec:wrapper}.
 
-Zakres wprowadzonych zmian obejmuje:
-\begin{itemize}
-    \item przebudowę pojedynczego kroku środowiska tak, aby symulacja postępowała sekunda po sekundzie aż do następnej chwili decyzyjnej, przy zachowaniu sposobu obsługi decyzji stosowanego w bibliotece źródłowej;
-    \item wywoływanie modułu zbierania metryk po każdej sekundzie symulacji;
-    \item obsługę wielu plików tras w obrębie jednego obiektu środowiska, wraz z ich cyklicznym przełączaniem między epizodami treningowymi oraz możliwością wskazania konkretnego pliku przy rozpoczynaniu epizodu;
-    \item rozszerzenie warunków zakończenia epizodu o obsłużenie wszystkich pojazdów, wykorzystywane podczas ewaluacji, obok warunku przekroczenia zadanego czasu symulacji, stosowanego podczas treningu;
-    \item przekazanie do symulatora opcji generujących pliki wyjściowe wykorzystywane przy wyznaczaniu metryk;
-    \item uzupełnienie informacji zwracanych przez środowisko o dane diagnostyczne, w tym nazwę pliku tras przy rozpoczynaniu epizodu oraz przyczynę jego zakończenia w wynikach kolejnych kroków;
-\end{itemize}
-
-Należy podkreślić, że biblioteka \texttt{sumo-rl} nie jest autorskim elementem pracy. Własny wkład implementacyjny obejmuje warstwę integracyjną, ujednolicenie sposobu zbierania metryk oraz obudowanie całości procesem treningu, walidacji i oceny testowej.
+Biblioteka \texttt{sumo-rl} nie jest autorskim elementem pracy. Własny wkład obejmuje warstwę integracyjną, ujednolicenie procedury zbierania metryk oraz obudowanie całości procesem treningu, walidacji i oceny testowej.
 
 \subsection{Biblioteka algorytmów uczenia ze wzmocnieniem}
 \label{subsec:sb3}
 
 Algorytm DQN wykorzystano w implementacji dostępnej w bibliotece Stable-Baselines3 \cite{raffin2021sb3}. Biblioteka dostarcza implementacje popularnych algorytmów uczenia ze wzmocnieniem w języku Python, oparte na bibliotece PyTorch i przystosowane do współpracy ze środowiskami zgodnymi z interfejsem Gymnasium. Dzięki temu połączenie algorytmu z przygotowaną warstwą integracyjną nie wymagało dodatkowego kodu adaptacyjnego, a algorytm otrzymuje informację o przestrzeni obserwacji i przestrzeni akcji bezpośrednio ze środowiska.
 
-Implementacja obejmuje mechanizmy opisane w podrozdziale~\ref{subsec:dqn}, to jest bufor doświadczeń, sieć docelową aktualizowaną co zadaną liczbę kroków oraz epsilon-zachłanną strategię wyboru akcji z liniowo malejącą wartością współczynnika eksploracji. Hiperparametry, których dobór opisano w rozdziale~\ref{sec:metodyka}, są parametrami tworzonego obiektu algorytmu, co pozwoliło prowadzić eksperymenty przez zmianę pliku konfiguracyjnego, bez ingerencji w kod.
-
-Sieć aproksymującą funkcję wartości akcji tworzy polityka \texttt{MlpPolicy}, czyli perceptron wielowarstwowy. W konfiguracji końcowej wykorzystano domyślną architekturę biblioteki, przy czym kod pozwala opcjonalnie wskazać własny układ warstw ukrytych, co wykorzystano w jednym z badanych wariantów strojenia.
-
-Biblioteka udostępnia również obsługę trwałego zapisu modeli. Model zapisywany jest do pojedynczego archiwum zawierającego wagi sieci oraz konfigurację algorytmu, a odczyt przywraca obiekt gotowy do wyznaczania akcji. Mechanizm ten wykorzystano w dwóch miejscach:
-\begin{itemize}
-    \item \emph{checkpointy}: podczas treningu, co zadaną liczbę kroków, zapisywany jest pośredni stan modelu, dzięki czemu ten sam przebieg treningowy dostarcza wielu modeli różniących się liczbą kroków uczenia i możliwych do niezależnej oceny na zbiorze walidacyjnym;
-    \item \emph{model końcowy}: po zakończeniu treningu zapisywany jest stan z ostatniego kroku, natomiast model przekazywany do oceny testowej jest kopią checkpointu wskazanego przez walidację.
-\end{itemize}
-
-Rozdzielenie tych dwóch mechanizmów jest istotne, ponieważ model poddany ocenie testowej nie musi pochodzić z końca przebiegu treningowego. Wyboru dokonuje się na podstawie wyników walidacyjnych, zgodnie z zasadami przedstawionymi w podrozdziale~\ref{subsubsec:przenikanie-danych}.
-
-Podczas ewaluacji akcje wyznaczane są w trybie deterministycznym, to jest przez wybór akcji o najwyższej oszacowanej wartości, bez składnika losowego. Zapewnia to powtarzalność wyników przy ustalonym ziarnie symulacji i odpowiada sposobowi, w jaki wytrenowana polityka działałaby w zastosowaniu docelowym.
+Sieć aproksymującą funkcję wartości akcji tworzy polityka \texttt{MlpPolicy}. Biblioteka obsługuje również konfigurację hiperparametrów, zapis checkpointów i modeli oraz deterministyczny wybór akcji podczas ewaluacji. Sposób wykorzystania tych mechanizmów opisano w rozdziałach~\ref{sec:implementacja} i~\ref{sec:wyniki}.
 
 \subsection{Przepływ pojedynczej decyzji}
 \label{subsec:przeplyw-decyzji}
@@ -130,39 +111,3 @@ Pojedyncza decyzja agenta obejmuje sekwencję operacji przechodzącą przez wszy
 \end{enumerate}
 
 Podział na krok decyzyjny i kroki symulacji jest kluczowy dla spójności eksperymentu. Agent obserwuje środowisko i podejmuje decyzje w odstępach pięciosekundowych, natomiast dane do metryk zbierane są co sekundę, czyli z tą samą rozdzielczością co dla metod referencyjnych. Dzięki temu różnice w wynikach nie wynikają z odmiennego sposobu próbkowania stanu ruchu.
-
-Pętla wykonująca sekundowe kroki symulacji powinna zakończyć się po osiągnięciu kolejnej chwili decyzyjnej albo końca epizodu. Aby w przypadku błędu nie działała bez końca, określono maksymalną liczbę jej powtórzeń. Limit uwzględnia interwał decyzyjny, czas fazy żółtej oraz minimalny czas zielony. Jeżeli pętla nie zakończy się w tym limicie, program zgłasza błąd i przerywa przebieg, dzięki czemu nie zapisuje nieprawidłowych wyników.
-
-\subsection{Przepływ procesu treningowego}
-\label{subsec:przeplyw-treningu}
-
-Proces treningowy łączy warstwę środowiska z algorytmem uczenia i obejmuje wielokrotne powtarzanie epizodów na kolejnych scenariuszach ruchu. Przebiega on następująco:
-\begin{enumerate}
-    \item na podstawie wzorca ścieżki wyznaczany jest uporządkowany zbiór plików tras stanowiących zbiór treningowy, a z pliku konfiguracyjnego wczytywane są parametry środowiska oraz hiperparametry algorytmu;
-    \item tworzone jest środowisko oraz obiekt algorytmu DQN wraz z siecią wartości akcji i siecią docelową;
-    \item rozpoczęcie epizodu powoduje wybranie kolejnego pliku tras z listy i ponowne uruchomienie symulacji z tym scenariuszem;
-    \item w każdej chwili decyzyjnej agent wybiera akcję, a powstałe przejście, złożone z obserwacji, akcji, nagrody, obserwacji następnej oraz znacznika zakończenia, zapisywane jest w buforze doświadczeń;
-    \item po przekroczeniu progu początkowego napełnienia bufora wykonywane są aktualizacje sieci na losowo pobieranych podzbiorach przejść, a sieć docelowa jest okresowo synchronizowana z siecią główną;
-    \item osiągnięcie zadanego czasu symulacji kończy epizod, po czym proces wraca do punktu trzeciego i przechodzi do następnego scenariusza, a po wyczerpaniu listy plików tras jest ona przeglądana ponownie od początku;
-    \item co zadaną liczbę kroków zapisywany jest checkpoint modelu;
-    \item po osiągnięciu zadanej łącznej liczby kroków trening kończy się zapisem modelu końcowego, a środowisko oraz proces symulacji są zamykane.
-\end{enumerate}
-
-Cykliczne przełączanie plików tras między epizodami sprawia, że agent nie uczy się na jednym, powtarzanym scenariuszu, lecz styka się kolejno z różnymi układami tras oraz różnymi poziomami natężenia ruchu. Odpowiada to konstrukcji zbioru treningowego opisanej w podrozdziale~\ref{subsubsec:zbior-treningowy}.
-
-Walidacja stanowi osobny proces, uruchamiany po zakończeniu treningu i korzystający z tego samego kodu środowiska. Wczytuje ona zapisany model, uruchamia go w trybie deterministycznym na wskazanym scenariuszu walidacyjnym i dopisuje wynik do zbiorczego pliku wynikowego. Rozdzielenie treningu i oceny na dwa niezależne uruchomienia ma tę zaletę, że każdy zapisany checkpoint może zostać oceniony wielokrotnie, na wielu scenariuszach oraz przy wielu ziarnach symulacji, bez powtarzania kosztownego treningu.
-
-Ewaluacja testowa przebiega analogicznie do walidacji, różni się jednak zakresem zbieranych danych. W trybie walidacyjnym rejestrowana jest jedynie metryka wiodąca, co skraca czas oceny dużej liczby wariantów. W trybie testowym zapisywany jest pełny szereg czasowy oraz komplet plików wyjściowych symulatora, na podstawie których wyznaczany jest wiersz wyników w formacie wspólnym dla wszystkich porównywanych metod.
-
-\subsection{Konteneryzacja}
-\label{subsec:konteneryzacja}
-
-Cały system uruchamiany jest w kontenerze zbudowanym na podstawie oficjalnego obrazu SUMO \cite{docker_docs}. Rozwiązanie to przyjęto z trzech powodów.
-
-Po pierwsze, zapewnia ono izolację zależności. Symulator, jego biblioteki systemowe, interpreter języka Python oraz pakiety wykorzystywane do uczenia ze wzmocnieniem instalowane są w jednym, opisanym deklaratywnie środowisku, niezależnym od konfiguracji komputera, na którym prowadzone są obliczenia.
-
-Po drugie, zwiększa powtarzalność eksperymentu. Wersje symulatora i bibliotek są ustalone w definicji obrazu, dzięki czemu kolejne uruchomienia, także po dłuższej przerwie lub na innej maszynie, odbywają się w tej samej konfiguracji. Ma to znaczenie w eksperymencie obejmującym wiele przebiegów treningowych i ewaluacyjnych, których wyniki są ze sobą porównywane.
-
-Po trzecie, ułatwia zrównoleglenie obliczeń. Poszczególne warianty konfiguracji uruchamiane są jako niezależne kontenery, a katalog projektu jest do nich podłączany, dzięki czemu modele, checkpointy oraz pliki wynikowe zapisywane są bezpośrednio w strukturze katalogów projektu.
-
-Konteneryzacja jest elementem technicznym, służącym powtarzalności i wygodzie prowadzenia eksperymentów, a nie samodzielnym wkładem badawczym pracy. Szczegóły definicji obrazu, sposób podłączania katalogów oraz polecenia uruchomieniowe przedstawiono w kolejnym rozdziale.

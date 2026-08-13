@@ -2,7 +2,7 @@
 \section{Przebieg eksperymentów i wyniki}
 \label{sec:wyniki}
 
-Rozdział przedstawia wyniki kolejnych etapów eksperymentu: wyznaczenia metod referencyjnych, wyboru długości treningu, porównania zbiorów treningowych, strojenia hiperparametrów oraz końcowej oceny na zbiorze testowym. Parametry metod referencyjnych wyznaczono na zbiorze treningowym, natomiast decyzje dotyczące modelu DQN podejmowano na podstawie walidacji, zgodnie z zasadami przedstawionymi w podrozdziale~\ref{subsubsec:przenikanie-danych}. Zbiór testowy wykorzystano wyłącznie do oceny końcowej. Interpretację wyników w odniesieniu do hipotezy badawczej przedstawiono w rozdziale~\ref{sec:analiza}.
+Rozdział przedstawia wyniki kolejnych etapów eksperymentu: wyznaczenia metod referencyjnych, wyboru długości treningu, porównania zbiorów treningowych, strojenia hiperparametrów oraz końcowej oceny na zbiorze testowym. Parametry metod referencyjnych wyznaczono na zbiorze treningowym, natomiast decyzje dotyczące modelu DQN podejmowano na podstawie walidacji, zgodnie z zasadami przedstawionymi w podrozdziale~\ref{subsubsec:przenikanie-danych}. Wyniki testowe nie stanowiły formalnego kryterium wyboru modelu. Interpretację wyników w odniesieniu do hipotezy badawczej przedstawiono w rozdziale~\ref{sec:analiza}.
 
 \subsection{Środowisko uruchomieniowe i koszt obliczeniowy}
 \label{subsec:srodowisko-uruchomieniowe}
@@ -29,7 +29,7 @@ Wszystkie eksperymenty przeprowadzono na jednej maszynie, której konfigurację 
     \end{tabular}
 \end{table}
 
-Wersja symulatora jest ustalona przez znacznik obrazu bazowego, natomiast pakiety języka Python instalowane są w obrazie z ograniczeniem zakresu wersji, a biblioteka \texttt{sumo-rl} z repozytorium źródłowego, co opisano w podrozdziale~\ref{subsubsec:obraz-kontenera}.
+Wersja symulatora jest ustalona przez znacznik obrazu bazowego, natomiast pakiety języka Python instalowane są w obrazie z ograniczeniem zakresu wersji, a biblioteka \texttt{sumo-rl} z repozytorium źródłowego, co opisano w podrozdziale~\ref{subsec:impl-konteneryzacja}.
 
 \subsubsection{Liczba przeprowadzonych przebiegów}
 \label{subsubsec:liczba-przebiegow}
@@ -58,46 +58,9 @@ Eksperyment obejmował 18 przebiegów treningowych oraz 360 przebiegów ewaluacy
 
 Epizod treningowy obejmuje 2100~s symulacji przy interwale decyzyjnym 5~s, co daje 420 decyzji agenta na epizod. Trening liczący 225\,000 kroków odpowiada zatem około 535 epizodom, czyli prawie osiemnastu pełnym obiegom trzydziestoelementowego zbioru treningowego.
 
-Czas trwania treningów wariantów, odczytany z logów biblioteki Stable-Baselines3, mieścił się w przedziale od 1706 do 2733~s, przy tempie rzędu 110 kroków na sekundę. Wyjątkiem był wariant zmieniający częstotliwość aktualizacji gradientowych, dla którego trening zajął 723~s, ponieważ przy tej samej liczbie kroków środowiska wykonywanych jest czterokrotnie mniej aktualizacji sieci. Podane czasy dotyczą przebiegów uruchamianych po cztery jednocześnie i obejmują konkurowanie o zasoby, o którym mowa w podrozdziale~\ref{subsubsec:zasoby}.
+Czas trwania treningów wariantów, odczytany z logów biblioteki Stable-Baselines3, mieścił się w przedziale od 1706 do 2733~s, przy tempie rzędu 110 kroków na sekundę. Wyjątkiem był wariant zmieniający częstotliwość aktualizacji gradientowych, dla którego trening zajął 723~s, ponieważ przy tej samej liczbie kroków środowiska wykonywanych jest czterokrotnie mniej aktualizacji sieci. Podane czasy dotyczą przebiegów uruchamianych po cztery jednocześnie i obejmują konkurowanie o zasoby maszyny.
 
 Czas pojedynczego przebiegu ewaluacyjnego jest zdominowany przez symulację ruchu, a nie przez wyznaczanie akcji przez sieć neuronową, dlatego rośnie wraz z natężeniem ruchu w scenariuszu.
-
-\subsection{Wyniki metod referencyjnych}
-\label{subsec:wyniki-referencyjne}
-
-Metody referencyjne oceniono jako pierwsze, przed rozpoczęciem treningu agenta, na pełnym zbiorze testowym, to jest na dwudziestu scenariuszach opisanych w podrozdziale~\ref{subsubsec:zbior-testowy}. Ich parametry czasowe, wyznaczone wyłącznie na podstawie zbioru treningowego, zostały wcześniej zamrożone i nie były modyfikowane po zapoznaniu się z wynikami agenta.
-
-Wyniki obu metod przedstawiono w tabeli~\ref{tab:wyniki-referencyjne} jako wartość średnią z pięciu scenariuszy danego poziomu natężenia wraz z odchyleniem standardowym.
-
-\begin{table}[!htbp] \centering
-    \caption{Wyniki metod referencyjnych na zbiorze testowym. Wartości uśrednione po pięciu scenariuszach, w nawiasie odchylenie standardowe.}
-    \label{tab:wyniki-referencyjne}
-    \scriptsize
-    \setlength{\tabcolsep}{5pt}
-    \begin{tabular}{| l | l | r | r | r | r | r |} \hline
-        Metoda & Scenariusz & Opóźnienie [s] & Oczekiwanie [s] & Kolejka [poj.] & Przepustowość [poj./h] & Przełączenia [1/h] \\ \hline\hline
-        stałoczasowa & lekki   & 28,00 (0,81) & 17,43 (0,69) & 3,48 (0,13)  & 700,75 (4,54)    & 132,95 (0,38) \\ \hline
-        stałoczasowa & średni  & 30,91 (0,56) & 18,77 (0,34) & 7,37 (0,12)  & 1399,00 (7,70)   & 132,90 (0,31) \\ \hline
-        stałoczasowa & wysoki  & 65,45 (3,83) & 42,76 (2,76) & 27,17 (1,40) & 2569,91 (75,56)  & 133,04 (0,32) \\ \hline
-        stałoczasowa & zmienny & 48,25 (3,69) & 30,74 (2,60) & 12,37 (1,01) & 1556,97 (24,82)  & 132,78 (0,33) \\ \hline
-        akomodacyjna & lekki   & 15,22 (0,46) & 5,21 (0,32)  & 1,13 (0,06)  & 705,48 (4,03)    & 405,63 (2,24) \\ \hline
-        akomodacyjna & średni  & 18,02 (0,47) & 6,99 (0,36)  & 2,90 (0,15)  & 1405,34 (3,06)   & 335,33 (8,14) \\ \hline
-        akomodacyjna & wysoki  & 78,07 (6,87) & 53,92 (5,40) & 25,88 (1,38) & 2507,31 (119,38) & 133,13 (9,50) \\ \hline
-        akomodacyjna & zmienny & 39,76 (6,98) & 23,35 (4,76) & 8,88 (0,91)  & 1567,39 (35,73)  & 286,82 (6,24) \\ \hline
-    \end{tabular}
-\end{table}
-
-Program stałoczasowy realizuje się dokładnie tak, jak został zaprojektowany. Częstotliwość przełączeń jest w każdym scenariuszu bliska 133~przełączeń na godzinę, co odpowiada trzem zmianom fazy zielonej w cyklu o długości 81~s. Wartość ta nie zależy od natężenia ruchu, a odchylenie standardowe nie przekracza 0,4, co potwierdza brak reakcji programu na sytuację ruchową.
-
-Program akomodacyjny osiąga wyraźnie lepsze wyniki od stałoczasowego w scenariuszach o niższym obciążeniu: opóźnienie jest w ruchu lekkim mniejsze o 45,6\%, a w ruchu średnim o 41,7\%. Jednocześnie liczba przełączeń jest w tych warunkach około trzykrotnie większa, ponieważ fazy kończą się po wykryciu przerwy w strumieniu, zanim osiągną czas maksymalny.
-
-Relacja ta odwraca się w scenariuszu o wysokim natężeniu. Program akomodacyjny uzyskuje tam opóźnienie o 19,3\% większe niż program stałoczasowy oraz czas oczekiwania większy o 26,1\%, a jego częstotliwość przełączeń spada do 133,13, czyli do poziomu praktycznie identycznego z programem stałoczasowym. Oznacza to, że przy wysokim natężeniu ruchu niemal każda faza kończy się osiągnięciem czasu maksymalnego, a mechanizm wykrywania przerw przestaje wpływać na sterowanie. Odchylenie standardowe jest w tym scenariuszu największe dla obu metod, co wskazuje na silniejszą zależność wyniku od konkretnego układu tras.
-
-W scenariuszu o zmiennym natężeniu program akomodacyjny pozostaje lepszy od stałoczasowego pod względem wszystkich metryk opisujących płynność ruchu, jednak rozrzut wyników jest znaczny: odchylenie standardowe opóźnienia wynosi 6,98 wobec 3,69 dla programu stałoczasowego.
-
-Przepustowość obu metod jest we wszystkich scenariuszach zbliżona i odpowiada zgłoszonemu popytowi. Jedynym scenariuszem, w którym pojawia się zauważalna różnica, jest ruch wysoki, gdzie program akomodacyjny obsługuje o 2,4\% mniej pojazdów na godzinę niż stałoczasowy.
-
-Wyniki te wyznaczają punkt odniesienia dla agenta DQN. Istotne jest przy tym, że żadna z metod klasycznych nie jest lepsza we wszystkich scenariuszach, dlatego porównanie musi obejmować każdy poziom natężenia osobno.
 
 \subsection{Wyznaczenie długości treningu}
 \label{subsec:dlugosc-treningu}
@@ -202,7 +165,7 @@ Ponieważ pojedynczy przebieg walidacyjny okazał się niewystarczającą podsta
 
 Powtórzenie oceny potwierdziło wybór, jednocześnie korygując skalę przewagi. Wynik checkpointu po 225\,000 kroków na scenariuszu o wysokim natężeniu wzrósł z 51,35 w pojedynczym przebiegu do 58,76 przy uśrednieniu po pięciu ziarnach, co potwierdza, że pojedyncza ocena była nadmiernie optymistyczna. Model ten pozostaje jednak najlepszy w trzech z czterech scenariuszy oraz w średniej z czterech scenariuszy, gdzie uzyskuje 31,74 wobec 35,31 i 35,81 dla pozostałych kandydatów.
 
-Odchylenia standardowe pokazują wyraźną różnicę między scenariuszami. Na scenariuszach lekkim i średnim wynoszą one poniżej 1,1, natomiast na scenariuszu o wysokim natężeniu sięgają 5,08. Przy wysokim natężeniu ruchu różnice wynikające ze zmiany ziarna symulacji są podobnej wielkości jak różnice między modelami. Dlatego na dalszych etapach modele oceniano na wielu ziarnach.
+Odchylenia standardowe pokazują wyraźną różnicę między scenariuszami. Na scenariuszach lekkim i średnim wynoszą one poniżej 1,1, natomiast na scenariuszu o wysokim natężeniu sięgają 5,08. Przy wysokim natężeniu ruchu różnice wynikające ze zmiany ziarna symulacji są podobnej wielkości jak różnice między modelami. Dlatego na dalszych etapach wybranych kandydatów oceniano na wielu ziarnach.
 
 \subsection{Dobór hiperparametrów}
 \label{subsec:strojenie}
@@ -212,7 +175,7 @@ Odchylenia standardowe pokazują wyraźną różnicę między scenariuszami. Na 
 
 Strojenie prowadzono metodą zmiany jednego hiperparametru. Pozostałe wartości pozostawiano bez zmian. Punktem odniesienia była konfiguracja bazowa z tabeli~\ref{tab:konfiguracja-bazowa}. Każdy wariant trenowano na regularnym zbiorze treningowym przez 225\,000 kroków, czyli dokładnie tyle, ile liczy wybrany checkpoint modelu bazowego, dzięki czemu porównanie nie jest zaburzone różną długością treningu. Ziarno algorytmu oraz procedura walidacji pozostały niezmienione.
 
-Przebadano dwanaście wariantów zmieniających pojedynczy hiperparametr, przy czym dla czterech z nich sprawdzono obie strony wartości bazowej, oraz cztery warianty dodatkowe, w tym dwa łączące zmiany kilku parametrów jednocześnie i jeden zmieniający architekturę sieci. Zakres zmian obejmował tempo uczenia, rozmiar batcha, pojemność bufora doświadczeń, współczynnik dyskontowania, długość fazy eksploracji, częstotliwość aktualizacji sieci docelowej, częstotliwość aktualizacji gradientowych, próg rozpoczęcia uczenia oraz układ warstw ukrytych.
+Przebadano trzynaście wariantów zmieniających pojedynczy hiperparametr, jeden wariant zmieniający architekturę sieci oraz dwa warianty łączące zmiany dwóch parametrów. Dla czterech hiperparametrów sprawdzono wartości po obu stronach wartości bazowej. Zakres zmian obejmował tempo uczenia, rozmiar batcha, pojemność bufora doświadczeń, współczynnik dyskontowania, długość fazy eksploracji, częstotliwość aktualizacji sieci docelowej, częstotliwość aktualizacji gradientowych, próg rozpoczęcia uczenia oraz układ warstw ukrytych.
 
 \subsubsection{Wyniki poszczególnych wariantów}
 \label{subsubsec:wyniki-strojenia}
@@ -304,7 +267,7 @@ Na podstawie wyników walidacyjnych jako model końcowy przyjęto konfigurację 
 
 Za wyborem przemawiały trzy przesłanki wynikające z wcześniejszych podrozdziałów. Po pierwsze, regularny zbiór treningowy dał lepsze wyniki niż nieregularny we wszystkich czterech scenariuszach walidacyjnych. Po drugie, punkt po 225\,000 kroków uzyskał najniższe średnie opóźnienie zarówno w ocenie kolejnych checkpointów, jak i w powtórzonej ocenie na pięciu ziarnach, a dalsze wydłużanie treningu nie przynosiło poprawy. Po trzecie, żaden z szesnastu badanych wariantów hiperparametrów nie poprawił wyniku, a trzy najlepsze z nich pozostały gorsze także po ocenie wieloziarnowej.
 
-Konfigurację modelu końcowego zamrożono przed pierwszym uruchomieniem ewaluacji testowej i nie zmieniano jej po zapoznaniu się z wynikami.
+Konfigurację modelu końcowego zamrożono przed jego pierwszą ewaluacją testową i nie zmieniano jej po zapoznaniu się z wynikami.
 
 \subsection{Końcowe porównanie metod na zbiorze testowym}
 \label{subsec:wyniki-testowe}
@@ -312,11 +275,11 @@ Konfigurację modelu końcowego zamrożono przed pierwszym uruchomieniem ewaluac
 \subsubsection{Przebieg oceny}
 \label{subsubsec:przebieg-oceny-testowej}
 
-Model końcowy oceniono na wszystkich dwudziestu scenariuszach testowych, przy tych samych plikach tras i tych samych ziarnach symulacji, których użyto wcześniej dla metod referencyjnych. Wyniki przedstawiane są jako średnia z pięciu scenariuszy danego poziomu natężenia wraz z odchyleniem standardowym.
+Metody referencyjne oceniono na zbiorze testowym przed rozpoczęciem treningu agenta, po zamrożeniu ich parametrów czasowych. Model końcowy oceniono dopiero po jego wyborze na podstawie walidacji. We wszystkich przypadkach wykorzystano te same dwadzieścia plików tras i ziarna symulacji. Wyniki przedstawiane są jako średnia z pięciu scenariuszy danego poziomu natężenia wraz z odchyleniem standardowym.
 
 Podczas oceny ujawniła się różnica w sposobie kończenia przebiegu. Przebiegi metod referencyjnych kończyły się naturalnie, po obsłużeniu wszystkich pojazdów, w czasie od 3646 do 4454~s symulacji. Trzy z dwudziestu przebiegów agenta DQN osiągnęły natomiast zabezpieczający limit czasu symulacji, wynoszący 20\,000~s, ponieważ pozostała w sieci niewielka grupa pojazdów, która nie opuściła skrzyżowania. Dotyczy to jednego scenariusza o wysokim natężeniu, w którym obsłużonych zostało 2872 z 2880 podróży, oraz dwóch scenariuszy o zmiennym natężeniu, w których obsłużono odpowiednio 1693 z 1705 oraz 1608 z 1623 podróży. Udział pojazdów nieobsłużonych nie przekracza zatem 1\% w żadnym z tych przebiegów.
 
-Zjawisko to ma znaczenie dla odczytu wyników, ponieważ część metryk normowana jest czasem trwania symulacji. Wpływ ten oszacowano przez porównanie wartości wyznaczonych ze wszystkich przebiegów z wartościami wyznaczonymi wyłącznie z przebiegów zakończonych naturalnie, co zestawiono w tabeli~\ref{tab:blokady}.
+Zjawisko to ma znaczenie dla odczytu wyników, ponieważ część metryk normowana jest czasem trwania symulacji. Wrażliwość agregatów na obecność przebiegów przerwanych limitem sprawdzono przez porównanie wartości ze wszystkich przebiegów z wartościami wyznaczonymi wyłącznie z przebiegów zakończonych naturalnie, co zestawiono w tabeli~\ref{tab:blokady}.
 
 \begin{table}[!htbp] \centering
     \caption{Wpływ przebiegów zakończonych limitem czasu na wyniki agenta DQN.}
@@ -338,7 +301,7 @@ Zjawisko to ma znaczenie dla odczytu wyników, ponieważ część metryk normowa
     \end{tabular}
 \end{table}
 
-Metryki wyznaczane z pliku \texttt{tripinfo.xml}, to jest średnie opóźnienie oraz średni czas oczekiwania, pozostają praktycznie niezmienione, ponieważ dotyczą zakończonych podróży, a udział podróży niezakończonych jest znikomy. Wyraźnie zmieniają się natomiast metryki normowane czasem, przede wszystkim częstotliwość przełączeń. W dalszej części podrozdziału podawane są wartości wyznaczone ze wszystkich przebiegów, a przy metrykach wrażliwych na to zjawisko przywoływana jest dodatkowo wartość skorygowana.
+W przeprowadzonej analizie wrażliwości średnie opóźnienie i czas oczekiwania zmieniły się nieznacznie. Metryki te są jednak wyznaczane wyłącznie dla podróży zakończonych i nie uwzględniają pojazdów pozostałych w sieci. Porównanie po usunięciu całych przebiegów nie pozwala odtworzyć brakujących wartości ani oszacować kierunku tego obciążenia. Wyraźnie zmieniają się natomiast metryki normowane czasem, przede wszystkim częstotliwość przełączeń. W dalszej części podrozdziału podawane są wartości ze wszystkich przebiegów, a przy metrykach wrażliwych na limit czasu przywoływana jest także wartość obliczona bez przebiegów zakończonych limitem.
 
 \subsubsection{Średnie opóźnienie}
 \label{subsubsec:test-opoznienie}
@@ -543,33 +506,3 @@ Rozrzut wyników jest przy tym wyraźnie większy niż dla modelu końcowego. Od
 Model kontrastowy osiągnął limit czasu symulacji w dziesięciu z dwudziestu przebiegów, obejmujących wszystkie scenariusze o wysokim oraz wszystkie o zmiennym natężeniu. Skala zjawiska jest tu nieporównywalnie większa niż dla modelu końcowego: w jednym z przebiegów o wysokim natężeniu obsłużonych zostało 2371 z 2880 podróży, czyli 17,7\% pojazdów nie opuściło sieci. Z tego samego powodu częstotliwość przełączeń modelu kontrastowego spada w tych scenariuszach do wartości rzędu 51 przełączeń na godzinę, co jest artefaktem długości przebiegu, a nie oznaką rzadkiego przełączania.
 
 Wyniki te pokazują, że słaba ocena walidacyjna przełożyła się na słabą generalizację, ale wyłącznie w scenariuszach o wysokim obciążeniu. Model, który w ruchu lekkim i średnim działałby akceptowalnie, przestaje działać skutecznie przy wysokim natężeniu ruchu. Obserwacja ta uzasadnia włączenie do zbioru walidacyjnego scenariusza reprezentującego warunki najtrudniejsze, ponieważ ocena oparta wyłącznie na scenariuszach o umiarkowanym obciążeniu nie ujawniłaby tej różnicy.
-
-\subsection{Podsumowanie wyników}
-\label{subsec:podsumowanie-wynikow}
-
-Zbiorcze zestawienie wszystkich ocenionych metod przedstawiono w tabeli~\ref{tab:podsumowanie-wynikow}. Podano w niej średnie opóźnienie jako metrykę wiodącą oraz krótką charakterystykę zachowania każdej metody.
-
-\begin{table}[!htbp] \centering
-    \caption{Zbiorcze porównanie metod sterowania na zbiorze testowym. Wartości oznaczają średnie opóźnienie w sekundach na pojazd.}
-    \label{tab:podsumowanie-wynikow}
-    \footnotesize
-    \begin{tabular}{| l | r | r | r | r | >{\raggedright\arraybackslash}p{4.4cm} |} \hline
-        Metoda & Lekki & Średni & Wysoki & Zmienny & Charakterystyka \\ \hline\hline
-        stałoczasowa & 28,00 & 30,91 & 65,45 & 48,25 & Przewidywalna, najgorsza przy niskim i średnim obciążeniu, stabilna przy wysokim natężeniu. \\ \hline
-        akomodacyjna & 15,22 & 18,02 & 78,07 & 39,76 & Bardzo dobra przy niskim i średnim obciążeniu, najsłabsza z trzech głównych metod przy wysokim natężeniu. \\ \hline
-        DQN & \textbf{13,90} & \textbf{17,79} & \textbf{51,82} & \textbf{34,23} & Najlepsza w każdym scenariuszu pod względem opóźnienia i czasu oczekiwania, kosztem większego rozrzutu wyników. \\ \hline
-        DQN kontrastowy & 15,68 & 18,38 & 111,41 & 71,96 & Poprawna przy niskim i średnim obciążeniu, traci skuteczność przy wysokim natężeniu. \\ \hline
-    \end{tabular}
-\end{table}
-
-Najważniejsze obserwacje ze zbioru testowego są następujące:
-\begin{itemize}
-    \item agent DQN uzyskał najniższe średnie opóźnienie oraz najniższy średni czas oczekiwania we wszystkich czterech scenariuszach natężenia ruchu;
-    \item największa przewaga względem programu akomodacyjnego wystąpiła w scenariuszu o wysokim natężeniu, a najmniejsza w scenariuszu o średnim natężeniu, gdzie różnica opóźnienia wyniosła 1,3\%;
-    \item średnia długość kolejki jest najniższa dla agenta w trzech z czterech scenariuszy, przy czym w scenariuszu o zmiennym natężeniu lepszy okazał się program akomodacyjny;
-    \item przepustowość różnicuje metody wyłącznie w scenariuszu o wysokim natężeniu, gdzie agent obsłużył o 5,1\% oraz 7,7\% pojazdów więcej niż metody referencyjne;
-    \item częstotliwość przełączeń agenta jest pośrednia między obiema metodami klasycznymi i zmienia się wraz z natężeniem ruchu inaczej niż w programie akomodacyjnym;
-    \item żadna z metod klasycznych nie była lepsza we wszystkich scenariuszach, co potwierdza konieczność oceny na kilku poziomach obciążenia;
-    \item rozrzut wyników agenta w scenariuszach o wysokim i zmiennym natężeniu jest porównywalny z rozrzutem programu akomodacyjnego i większy niż programu stałoczasowego;
-    \item w trzech z dwudziestu przebiegów agenta niewielka grupa pojazdów nie opuściła sieci w zakładanym czasie, co nie wpłynęło na metryki wyznaczane z zakończonych podróży, lecz zniekształciło metryki normowane czasem trwania symulacji.
-\end{itemize}

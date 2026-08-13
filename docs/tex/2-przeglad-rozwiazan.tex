@@ -101,9 +101,9 @@ Sieć jest uczona przez minimalizację błędu różnicowego. W oryginalnym sfor
     L(\theta) = \mathbb{E}\left[ \left( r + \gamma \max_{a'} Q(s', a'; \theta^{-}) - Q(s, a; \theta) \right)^{2} \right],
     \label{eq:dqnloss}
 \end{equation}
-gdzie $\theta^{-}$ oznacza parametry osobnej sieci docelowej \cite{sutton2018reinforcement}.
+gdzie $\theta^{-}$ oznacza parametry osobnej sieci docelowej \cite{mnih2013playing}.
 
-Stabilne uczenie sieci zapewniają dwa kluczowe mechanizmy charakterystyczne dla algorytmu DQN \cite{sutton2018reinforcement}:
+Stabilne uczenie sieci zapewniają dwa kluczowe mechanizmy charakterystyczne dla algorytmu DQN \cite{mnih2013playing}:
 \begin{itemize}
     \item \emph{bufor doświadczeń} (ang. experience replay): przejścia postaci $(s, a, r, s')$ są zapisywane w pamięci, a aktualizacje wykonuje się na losowo pobieranych podzbiorach przejść (ang. minibatch), co ogranicza korelacje między kolejnymi próbkami;
     \item \emph{sieć docelowa} (ang. target network): druga sieć o parametrach $\theta^{-}$, aktualizowanych okresowo na podstawie sieci głównej, dostarcza stabilniejszych wartości docelowych i zmniejsza ryzyko rozbieżności uczenia.
@@ -122,13 +122,7 @@ Osobny nurt badań dotyczy sterowania wieloma skrzyżowaniami, w którym pojawia
 
 Przywołane prace pokazują, że w sterowaniu sygnalizacją stosuje się zarówno metody oparte na funkcji wartości, takie jak DQN, jak i metody typu aktor-krytyk oraz inne algorytmy gradientu polityki, na przykład A2C. Wybór algorytmu zależy przede wszystkim od sformułowania problemu, w szczególności od charakteru przestrzeni akcji oraz od tego, czy sterowanie dotyczy pojedynczego skrzyżowania, czy sieci. Dla dyskretnej przestrzeni akcji i pojedynczego skrzyżowania DQN pozostaje jednym z częściej stosowanych i dobrze udokumentowanych rozwiązań \cite{wei2019survey, genders2016using}.
 
-\subsection{Podsumowanie przeglądu i pozycjonowanie własnego rozwiązania}
+\subsection{Pozycjonowanie własnego rozwiązania}
 \label{subsec:pozycjonowanie}
-
-Przedstawiony przegląd pozwala uporządkować metody sterowania sygnalizacją oraz wskazać miejsce rozwiązania rozwijanego w niniejszej pracy. Sterowanie stałoczasowe jest proste i przewidywalne, lecz nie reaguje na zmieniające się natężenie ruchu. Sterowanie akomodacyjne wykorzystuje bieżącą detekcję, jednak działa lokalnie i na podstawie ustalonych reguł oraz parametrów. Klasyczne systemy adaptacyjne są bardziej elastyczne, ale wymagają modeli ruchu, reguł lub zaawansowanej optymalizacji. Uczenie ze wzmocnieniem umożliwia natomiast wypracowanie polityki sterowania na podstawie interakcji ze środowiskiem, bez konieczności jawnego zaprogramowania reguł decyzyjnych \cite{wei2019survey}.
-
-W obrębie metod uczenia ze wzmocnieniem tablicowy Q-Learning jest trudny do zastosowania przy wielowymiarowej, ciągłej obserwacji, ponieważ wymagałby dyskretyzacji prowadzącej do ogromnej liczby stanów \cite{sutton2018reinforcement}. DQN usuwa to ograniczenie, aproksymując funkcję wartości akcji za pomocą sieci neuronowej, przy zachowaniu prostej obsługi dyskretnej przestrzeni akcji \cite{mnih2013playing}.
-
-Wybór algorytmu DQN jest w rozpatrywanym przypadku uzasadniony charakterem problemu. Sterowanie dotyczy pojedynczego skrzyżowania, przestrzeń akcji jest dyskretna i odpowiada wyborowi jednej z trzech faz (\texttt{Discrete(3)}), natomiast obserwacja ma postać ciągłego, 30-wymiarowego wektora (\texttt{Box(0, 1, (30,), float32)}). Tablicowy Q-Learning wymagałby sztucznej dyskretyzacji tej obserwacji, co prowadziłoby do niepraktycznie dużej liczby kombinacji stanów, podczas gdy DQN pozwala bezpośrednio aproksymować wartości trzech działań na podstawie wektora obserwacji.
 
 W odróżnieniu od części omawianych prac, koncentrujących się na koordynacji wielu skrzyżowań lub na rozwiązaniach wieloagentowych, niniejsza praca dotyczy pojedynczego skrzyżowania i skupia się na porównaniu agenta DQN z klasycznymi metodami referencyjnymi, to jest sterowaniem stałoczasowym oraz akomodacyjnym, w kontrolowanych warunkach symulacyjnych. Celem nie jest zaproponowanie nowego algorytmu uczenia ze wzmocnieniem, lecz ocena skuteczności i stabilności typowego agenta DQN w tym zadaniu oraz rzetelne porównanie go z metodami klasycznymi. Szczegółowy opis środowiska, przestrzeni obserwacji i akcji, funkcji nagrody oraz konfiguracji eksperymentu przedstawiono w dalszej części pracy.
