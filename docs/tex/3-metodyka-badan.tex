@@ -5,7 +5,7 @@
 \subsection{Koncepcja eksperymentu}
 \label{subsec:koncepcja}
 
-Badanie zaprojektowano jako kontrolowany eksperyment porównawczy, w którym agent uczony metodą uczenia ze wzmocnieniem oraz dwie klasyczne metody referencyjne sterują tą samą siecią drogową i są oceniane na tych samych scenariuszach ruchu. Nadrzędnym założeniem metodycznym było oddzielenie danych wykorzystywanych do uczenia i strojenia modelu od danych służących do końcowej oceny.
+Badanie miało formę kontrolowanego eksperymentu porównawczego. Agent uczony metodą uczenia ze wzmocnieniem oraz dwie klasyczne metody referencyjne sterowały w nim tą samą siecią drogową i były oceniane na tych samych scenariuszach ruchu. Głównym założeniem było oddzielenie danych używanych do uczenia i strojenia modelu od danych przeznaczonych do końcowej oceny.
 
 Procedurę badawczą podzielono na następujące etapy:
 \begin{enumerate}
@@ -21,11 +21,11 @@ Procedurę badawczą podzielono na następujące etapy:
     \item porównanie wyników agenta DQN z wynikami metod klasycznych.
 \end{enumerate}
 
-Wybór i strojenie modelu DQN oraz dobór parametrów metod referencyjnych realizowano wyłącznie na danych treningowych i walidacyjnych. Zbiór testowy służył do porównania zamrożonych konfiguracji metod i nie stanowił formalnego kryterium wyboru DQN. Chronologię jego wykorzystania oraz wynikające z niej ograniczenie omówiono w podrozdziale~\ref{subsec:ograniczenia-wiarygodnosci}. Schemat całego procesu badawczego przedstawiono na rysunku~\ref{fig:proces-badawczy}.
+Wybór i strojenie modelu DQN oraz dobór parametrów metod referencyjnych oparto wyłącznie na danych treningowych i walidacyjnych. Zbiór testowy służył do porównania zamrożonych konfiguracji metod i nie był formalnym kryterium wyboru DQN. Kolejność jego wykorzystania i związane z nią ograniczenie omówiono w podrozdziale~\ref{subsec:ograniczenia-wiarygodnosci}. Cały proces badawczy przedstawiono na rysunku~\ref{fig:proces-badawczy}.
 
 \begin{figure}[!htbp]
     \centering
-    \includegraphics[width=0.65\textwidth]{proces_badawczy.png}
+    \includegraphics[width=0.8\textwidth]{proces_badawczy.png}
     \caption{Schemat procedury badawczej z rozdzieleniem danych treningowych, walidacyjnych i testowych.}
     \label{fig:proces-badawczy}
 \end{figure}
@@ -33,7 +33,7 @@ Wybór i strojenie modelu DQN oraz dobór parametrów metod referencyjnych reali
 \subsection{Charakterystyka analizowanego skrzyżowania}
 \label{subsec:skrzyzowanie}
 
-Do badania wybrano skrzyżowanie ulicy Belgradzkiej z aleją Komisji Edukacji Narodowej, położone w dzielnicy Ursynów w Warszawie. Skrzyżowanie wybrano jako stosunkowo prosty pod względem geometrii, lecz istotnie obciążony układ drogowy, w którym aleja Komisji Edukacji Narodowej stanowi kierunek główny. Położenie skrzyżowania w skali dzielnicy przedstawiono na rysunku~\ref{fig:mapa-ursynow}, a jego bezpośrednie otoczenie na rysunkach~\ref{fig:mapa-osm} oraz~\ref{fig:satelita}.
+Do badania wybrano skrzyżowanie ulicy Belgradzkiej z aleją Komisji Edukacji Narodowej, położone na warszawskim Ursynowie. Ma ono stosunkowo prostą geometrię, ale jest znacznie obciążone ruchem, a aleja Komisji Edukacji Narodowej jest kierunkiem głównym. Położenie skrzyżowania w dzielnicy przedstawiono na rysunku~\ref{fig:mapa-ursynow}, a jego bezpośrednie otoczenie na rysunkach~\ref{fig:mapa-osm} oraz~\ref{fig:satelita}.
 
 \begin{figure}[!htbp] \centering
     \includegraphics[width=0.75\linewidth]{map-2.png}
@@ -53,9 +53,9 @@ Do badania wybrano skrzyżowanie ulicy Belgradzkiej z aleją Komisji Edukacji Na
     \label{fig:satelita}
 \end{figure}
 
-Skrzyżowanie ma cztery wloty, oznaczane w dalszej części pracy jako północny, południowy, wschodni oraz zachodni. Nazwy te odnoszą się do położenia wlotu względem środka skrzyżowania, a nie do kierunku jazdy. Model dopuszcza ruch z każdego wlotu we wszystkich dostępnych kierunkach, z wyłączeniem zawracania. Liczba pasów na poszczególnych wlotach jest zróżnicowana: wlot południowy, z którego pojazdy poruszają się w kierunku północnym, obejmuje cztery pasy, natomiast pozostałe trzy wloty po trzy pasy, co daje łącznie trzynaście pasów wlotowych objętych sterowaniem.
+Skrzyżowanie ma cztery wloty, nazywane dalej północnym, południowym, wschodnim i zachodnim. Nazwy wskazują położenie wlotu względem środka skrzyżowania, a nie kierunek jazdy. Model dopuszcza ruch z każdego wlotu we wszystkich dostępnych kierunkach poza zawracaniem. Wlot południowy, z którego pojazdy jadą na północ, ma cztery pasy, a każdy z pozostałych wlotów po trzy. Sterowanie obejmuje więc łącznie trzynaście pasów wlotowych.
 
-Program sygnalizacji obejmuje trzy fazy z sygnałem zielonym, rozdzielone fazami żółtymi. Pierwsza faza obsługuje jazdę na wprost oraz skręt w prawo na alei Komisji Edukacji Narodowej, jednocześnie z obu kierunków tej osi. Druga faza realizuje skręt w lewo z alei Komisji Edukacji Narodowej, chroniony osobnym sygnałem i rozdzielony w czasie od kolizyjnego strumienia jadącego na wprost z kierunku przeciwnego. Trzecia faza obsługuje ulicę Belgradzką, obejmując jazdę na wprost, skręt w prawo oraz skręt w lewo realizowany warunkowo, to jest przy ustąpieniu pierwszeństwa pojazdom nadjeżdżającym z przeciwka. Różnica w sposobie obsługi lewoskrętów wpływa na przepustowość tych relacji i dlatego jest istotna dla interpretacji wyników.
+Program sygnalizacji ma trzy fazy zielone rozdzielone fazami żółtymi. Pierwsza faza jednocześnie obsługuje jazdę na wprost i skręt w prawo z obu kierunków alei Komisji Edukacji Narodowej. Druga obsługuje chroniony skręt w lewo z tej alei, oddzielony w czasie od kolizyjnego strumienia jadącego na wprost z przeciwka. Trzecia obsługuje jazdę na wprost oraz skręty w prawo i w lewo z ulicy Belgradzkiej. Skręt w lewo jest w tej fazie warunkowy i wymaga ustąpienia pierwszeństwa pojazdom nadjeżdżającym z przeciwka. Różny sposób obsługi lewoskrętów wpływa na ich przepustowość, dlatego ma znaczenie przy interpretacji wyników.
 
 W modelu odwzorowano geometrię skrzyżowania, liczbę i przeznaczenie pasów ruchu, relacje kolizyjne oraz program sygnalizacji świetlnej. Model zbudowano na podstawie danych OpenStreetMap, a następnie skorygowano na potrzeby eksperymentu. Odwzorowane skrzyżowanie w środowisku SUMO przedstawiono na rysunku~\ref{fig:symulacja}.
 
@@ -65,7 +65,7 @@ W modelu odwzorowano geometrię skrzyżowania, liczbę i przeznaczenie pasów ru
     \label{fig:symulacja}
 \end{figure}
 
-Zgodnie z ograniczeniami zakresu przedstawionymi w podrozdziale~\ref{subsec:zalozenia-ograniczenia}, model nie obejmuje faz ani ograniczeń czasowych związanych z obsługą przejść dla pieszych.
+Model nie obejmuje faz ani ograniczeń czasowych związanych z obsługą przejść dla pieszych, zgodnie z zakresem opisanym w podrozdziale~\ref{subsec:zalozenia-ograniczenia}.
 
 \subsection{Sformułowanie problemu jako zadania uczenia ze wzmocnieniem}
 \label{subsec:sformulowanie-rl}
@@ -73,14 +73,14 @@ Zgodnie z ograniczeniami zakresu przedstawionymi w podrozdziale~\ref{subsec:zalo
 \subsubsection{Agent i środowisko}
 \label{subsubsec:agent-srodowisko}
 
-Problem sterowania sygnalizacją sformułowano jako zadanie uczenia ze wzmocnieniem. Agent odpowiada za wybór fazy sygnalizacji świetlnej, natomiast środowisko stanowi symulacja ruchu drogowego realizowana w SUMO. Komunikację między agentem a symulatorem zapewnia interfejs TraCI, który umożliwia wykonywanie kolejnych kroków symulacji, odczyt stanu ruchu oraz zmianę sygnalizacji.
+Problem sterowania sygnalizacją sformułowano jako zadanie uczenia ze wzmocnieniem. Agent wybiera fazę sygnalizacji świetlnej, a środowiskiem jest symulacja ruchu drogowego w SUMO. Interfejs TraCI łączy agenta z symulatorem oraz pozwala wykonywać kolejne kroki symulacji, odczytywać stan ruchu i zmieniać sygnalizację.
 
-Warstwę pośredniczącą między symulatorem a algorytmem uczenia stanowi biblioteka \texttt{sumo-rl}, udostępniająca symulację jako środowisko zgodne z interfejsem Gymnasium \cite{alegre2019sumorl}. Na jej podstawie przygotowano własną warstwę integracyjną. Jej architekturę i implementację opisano w rozdziałach~\ref{sec:architektura} oraz~\ref{sec:implementacja}.
+Biblioteka \texttt{sumo-rl} pośredniczy między symulatorem a algorytmem uczenia i udostępnia symulację jako środowisko zgodne z interfejsem Gymnasium \cite{alegre2019sumorl}. Na jej podstawie przygotowano własną warstwę integracyjną, opisaną w rozdziałach~\ref{sec:architektura} oraz~\ref{sec:implementacja}.
 
 \subsubsection{Przestrzeń obserwacji}
 \label{subsubsec:obserwacja}
 
-Przestrzeń obserwacji jest ciągła i ma postać \texttt{Box(0.0, 1.0, (30,), float32)}, czyli wektora trzydziestu wartości rzeczywistych z przedziału od 0 do 1. Wykorzystano domyślną reprezentację stanu udostępnianą przez bibliotekę \texttt{sumo-rl} \cite{alegre2019sumorl}, na którą składają się cztery grupy cech:
+Przestrzeń obserwacji jest ciągła i ma postać \texttt{Box(0.0, 1.0, (30,), float32)}, czyli wektora trzydziestu wartości rzeczywistych z przedziału od 0 do 1. Wykorzystano domyślną reprezentację stanu z biblioteki \texttt{sumo-rl} \cite{alegre2019sumorl}. Składa się ona z czterech grup cech:
 \begin{itemize}
     \item \emph{kodowanie aktywnej fazy} (3 wartości): wektor zero-jedynkowy typu one-hot wskazujący, która z trzech faz zielonych jest aktualnie realizowana;
     \item \emph{znacznik minimalnego czasu zielonego} (1 wartość): zmienna binarna równa 1 po upływie minimalnego czasu zielonego powiększonego o czas fazy żółtej, a wcześniej równa 0;
@@ -88,122 +88,122 @@ Przestrzeń obserwacji jest ciągła i ma postać \texttt{Box(0.0, 1.0, (30,), f
     \item \emph{zapełnienie kolejki} (13 wartości): dla każdego pasa wlotowego liczba pojazdów zatrzymanych, czyli poruszających się z prędkością poniżej 0,1~m/s, podzielona przez tę samą pojemność pasa.
 \end{itemize}
 
-Pojemność pasa wyznaczana jest jako jego długość podzielona przez sumę minimalnego odstępu między pojazdami oraz średniej długości pojazdu na tym pasie. Obie ostatnie grupy cech są ograniczone od góry wartością 1, co zapewnia normalizację całego wektora obserwacji do wspólnego zakresu i ułatwia uczenie sieci neuronowej.
+Pojemność pasa oblicza się, dzieląc jego długość przez sumę minimalnego odstępu między pojazdami i średniej długości pojazdu na tym pasie. Wartości dwóch ostatnich grup cech są ograniczone do 1. Dzięki temu cały wektor obserwacji ma wspólny zakres, co ułatwia uczenie sieci neuronowej.
 
-Przyjęta reprezentacja opisuje zatem jednocześnie stan sygnalizacji, dopuszczalność zmiany fazy oraz rozkład obciążenia ruchem na poszczególnych pasach wlotowych. Rozdzielenie gęstości i zapełnienia kolejki pozwala odróżnić sytuację, w której pojazdy znajdują się na pasie i płynnie przejeżdżają, od sytuacji, w której pojazdy stoją w kolejce.
+Przyjęta reprezentacja opisuje stan sygnalizacji, możliwość zmiany fazy oraz obciążenie poszczególnych pasów wlotowych. Osobne wartości gęstości i zapełnienia kolejki pozwalają odróżnić płynnie jadące pojazdy od pojazdów stojących w kolejce.
 
 \subsubsection{Przestrzeń akcji}
 \label{subsubsec:akcje}
 
-Przestrzeń akcji jest dyskretna i ma postać \texttt{Discrete(3)}. Każda akcja odpowiada wskazaniu fazy zielonej, która ma obowiązywać w kolejnym oknie decyzyjnym \cite{alegre2019sumorl}. Trzy dostępne akcje odpowiadają trzem fazom zielonym zdefiniowanym w programie sygnalizacji, opisanym w podrozdziale~\ref{subsec:skrzyzowanie}.
+Przestrzeń akcji jest dyskretna i ma postać \texttt{Discrete(3)}. Każda akcja wskazuje fazę zieloną, która ma obowiązywać w kolejnym oknie decyzyjnym \cite{alegre2019sumorl}. Trzy akcje odpowiadają trzem fazom zielonym programu opisanego w podrozdziale~\ref{subsec:skrzyzowanie}.
 
-Agent nie steruje bezpośrednio sygnałami na poszczególnych pasach ani nie ustala długości fazy w sposób dowolny. Wskazuje jedynie fazę docelową, natomiast egzekwowanie ograniczeń bezpieczeństwa pozostaje po stronie środowiska. Obowiązują przy tym następujące reguły:
+Agent nie steruje bezpośrednio sygnałami na poszczególnych pasach ani nie może dowolnie ustalać długości fazy. Wybiera jedynie fazę docelową, a środowisko egzekwuje ograniczenia bezpieczeństwa według następujących reguł:
 \begin{itemize}
-    \item jeżeli agent wskaże fazę identyczną z aktualnie realizowaną, sygnalizacja kontynuuje bieżącą fazę bez żadnej zmiany;
-    \item jeżeli agent wskaże fazę inną niż aktualna, lecz od ostatniej zmiany nie upłynął jeszcze minimalny czas zielony powiększony o czas fazy żółtej, żądanie zmiany jest ignorowane i bieżąca faza jest kontynuowana;
-    \item jeżeli agent wskaże fazę inną niż aktualna, a warunek czasowy jest spełniony, środowisko wprowadza fazę żółtą jako przejście, a dopiero po jej zakończeniu włącza wskazaną fazę zieloną.
+    \item po wskazaniu bieżącej fazy sygnalizacja kontynuuje ją bez zmiany;
+    \item po wskazaniu innej fazy przed upływem minimalnego czasu zielonego powiększonego o czas fazy żółtej środowisko ignoruje żądanie i kontynuuje bieżącą fazę;
+    \item po wskazaniu innej fazy i spełnieniu warunku czasowego środowisko wprowadza fazę żółtą, a po jej zakończeniu włącza wskazaną fazę zieloną.
 \end{itemize}
 
-Faza żółta jest generowana automatycznie na podstawie porównania stanu sygnałów fazy bieżącej i docelowej, co zapewnia wygaszanie tylko tych relacji, które tracą prawo przejazdu. Mechanizm ten sprawia, że agent nie może przełączać sygnałów natychmiastowo ani z pominięciem czasu międzyzielonego. W eksperymencie przyjęto czas trwania fazy żółtej równy 3~s oraz minimalny czas zielony równy 5~s. Te same wartości obowiązywały podczas treningu, walidacji oraz końcowej oceny na zbiorze testowym, dzięki czemu warunki działania agenta były identyczne na wszystkich etapach eksperymentu.
+Środowisko automatycznie generuje fazę żółtą przez porównanie stanu sygnałów fazy bieżącej i docelowej. Wygasza dzięki temu tylko te relacje, które tracą prawo przejazdu. Agent nie może więc przełączać sygnałów natychmiast ani pomijać czasu międzyzielonego. Faza żółta trwa 3~s, a minimalny czas zielony 5~s. Wartości te były takie same podczas treningu, walidacji i oceny testowej, więc agent działał na każdym etapie w tych samych warunkach.
 
 \subsubsection{Funkcja nagrody}
 \label{subsubsec:nagroda}
 
-Wykorzystano funkcję nagrody opartą na zmianie skumulowanego czasu oczekiwania pojazdów \cite{alegre2019sumorl}. W konfiguracji nosi ona nazwę \texttt{diff-waiting-time}. W chwili decyzyjnej $t$ wyznaczana jest wielkość
+Wykorzystano funkcję nagrody opartą na zmianie skumulowanego czasu oczekiwania pojazdów \cite{alegre2019sumorl}. W konfiguracji nosi ona nazwę \texttt{diff-waiting-time}. W chwili decyzyjnej $t$ obliczana jest wartość
 \begin{equation}
     W_t = \frac{1}{100} \sum_{l \in L} w_{l,t},
     \label{eq:waiting-total}
 \end{equation}
-gdzie $L$ oznacza zbiór pasów wlotowych sterowanych przez sygnalizację, a $w_{l,t}$ część skumulowanego czasu oczekiwania pojazdów znajdujących się na pasie $l$, przypisaną temu pasowi. Skumulowany czas oczekiwania pojedynczego pojazdu raportowany jest przez SUMO i obejmuje czas, w którym pojazd poruszał się z prędkością poniżej progu zatrzymania. Jeżeli pojazd zmienił pas w obrębie sterowanego obszaru, wykorzystana biblioteka rozdziela tę wielkość między kolejno zajmowane pasy, dzięki czemu ten sam czas oczekiwania nie jest uwzględniany wielokrotnie. Czynnik $\frac{1}{100}$ skaluje sumę do mniejszego zakresu liczbowego. Nagroda przekazywana agentowi jest różnicą między wartością z poprzedniej i bieżącej chwili decyzyjnej:
+gdzie $L$ oznacza zbiór pasów wlotowych sterowanych przez sygnalizację, a $w_{l,t}$ część skumulowanego czasu oczekiwania pojazdów na pasie $l$, przypisaną temu pasowi. SUMO raportuje skumulowany czas oczekiwania pojazdu, czyli czas jazdy z prędkością poniżej progu zatrzymania. Gdy pojazd zmienia pas w sterowanym obszarze, biblioteka rozdziela tę wartość między kolejno zajmowane pasy. Zapobiega to wielokrotnemu uwzględnianiu tego samego czasu oczekiwania. Czynnik $\frac{1}{100}$ zmniejsza zakres liczbowy sumy. Nagroda jest różnicą między wartością z poprzedniej i bieżącej chwili decyzyjnej:
 \begin{equation}
     r_t = W_{t-1} - W_t.
     \label{eq:reward}
 \end{equation}
 
-Nagroda jest zatem dodatnia, gdy łączny czas oczekiwania na skrzyżowaniu maleje, a ujemna, gdy rośnie. Agent nie jest uczony bezpośrednio minimalizacji wartości bezwzględnej czasu oczekiwania, lecz podejmowania decyzji prowadzących do jego redukcji względem stanu poprzedniego. Taka konstrukcja daje gęsty sygnał uczący, dostępny po każdej decyzji, co jest korzystne w zadaniu o długim horyzoncie czasowym.
+Nagroda jest dodatnia, gdy łączny czas oczekiwania na skrzyżowaniu maleje, a ujemna, gdy rośnie. Agent nie uczy się więc bezpośrednio minimalizować łącznego czasu oczekiwania. Uczy się wybierać decyzje, które zmniejszają go względem poprzedniego stanu. Otrzymuje ocenę po każdej decyzji, co ułatwia uczenie w zadaniu o długim horyzoncie czasowym.
 
-Wybór tej funkcji wynikał z jej bezpośredniego powiązania z jedną z podstawowych metryk oceny jakości sterowania oraz z dostępności sprawdzonej implementacji w wykorzystanej bibliotece. Należy jednak podkreślić, że funkcja nagrody reprezentuje tylko jeden z możliwych sposobów zdefiniowania celu sterowania. Nie uwzględnia ona wprost długości kolejek, przepustowości ani częstotliwości przełączeń sygnalizacji, co należy brać pod uwagę przy interpretacji wyników w pozostałych metrykach.
+Wybrano tę funkcję, ponieważ jest bezpośrednio związana z jedną z podstawowych metryk oceny sterowania i ma sprawdzoną implementację w użytej bibliotece. Jest to jednak tylko jeden z możliwych sposobów określenia celu sterowania. Funkcja nie uwzględnia bezpośrednio długości kolejek, przepustowości ani częstotliwości przełączeń sygnalizacji. Trzeba to uwzględnić przy interpretacji pozostałych metryk.
 
 \subsubsection{Interwał decyzyjny}
 \label{subsubsec:interwal}
 
 Agent podejmuje decyzje co 5~s symulacji. Pomiędzy kolejnymi decyzjami symulator wykonuje kroki o długości jednej sekundy, w trakcie których egzekwowane są ograniczenia dotyczące faz oraz rejestrowany jest stan ruchu.
 
-Dobór interwału decyzyjnego stanowi kompromis między częstotliwością reagowania a stabilnością sterowania. Zbyt krótki interwał zwiększa liczbę decyzji przypadających na epizod oraz ryzyko częstych przełączeń sygnalizacji, natomiast zbyt długi ogranicza zdolność agenta do reagowania na zmiany sytuacji ruchowej. Wartość 5~s pozwala agentowi wielokrotnie ocenić sytuację w trakcie trwania jednej fazy, a jednocześnie nie prowadzi do przełączania sygnalizacji częściej, niż dopuszczają to ograniczenia minimalnego czasu zielonego oraz fazy żółtej.
+Interwał decyzyjny jest kompromisem między szybkością reakcji a stabilnością sterowania. Zbyt krótki zwiększa liczbę decyzji w epizodzie i ryzyko częstych przełączeń, a zbyt długi ogranicza reakcję agenta na zmiany ruchu. Interwał 5~s pozwala kilkakrotnie ocenić sytuację podczas jednej fazy, ale nie pozwala przełączać sygnalizacji częściej, niż dopuszczają minimalny czas zielony i faza żółta.
 
 \subsection{Wybór algorytmu}
 \label{subsec:wybor-algorytmu}
 
-Punktem wyjścia był klasyczny, tablicowy Q-Learning, opisany w podrozdziale~\ref{subsec:qlearning}. Podejście to odrzucono, ponieważ zastosowanie go do ciągłej, 30-wymiarowej obserwacji wymagałoby dyskretyzacji prowadzącej do niepraktycznie dużej liczby potencjalnych stanów.
+Początkowo rozważano klasyczny, tablicowy Q-Learning, opisany w podrozdziale~\ref{subsec:qlearning}. Odrzucono go, ponieważ ciągła, 30-wymiarowa obserwacja wymagałaby dyskretyzacji i utworzenia niepraktycznie dużej liczby potencjalnych stanów.
 
-Wybrano algorytm Deep Q-Network, który aproksymuje funkcję wartości akcji za pomocą sieci neuronowej \cite{mnih2013playing}. Odpowiada on przyjętemu sformułowaniu zadania, obejmującemu ciągłą obserwację i trzy dyskretne akcje. Wykorzystano implementację ze Stable-Baselines3 oraz politykę \texttt{MlpPolicy}, odpowiednią dla wektorowej reprezentacji obserwacji.
+Wybrano algorytm Deep Q-Network, który aproksymuje funkcję wartości akcji za pomocą sieci neuronowej \cite{mnih2013playing}. Jest odpowiedni dla zadania z ciągłą obserwacją i trzema dyskretnymi akcjami. Wykorzystano implementację ze Stable-Baselines3 oraz politykę \texttt{MlpPolicy}, przeznaczoną do wektorowej reprezentacji obserwacji.
 
-Należy zaznaczyć, że wybór algorytmu DQN nie oznacza, iż jest on rozwiązaniem obiektywnie najlepszym dla rozpatrywanego problemu. Stanowi on natomiast naturalny i uzasadniony wybór przy przyjętym sformułowaniu zadania oraz zakresie pracy.
+Wybór DQN nie oznacza, że jest to obiektywnie najlepszy algorytm dla badanego problemu. Jest jednak naturalnym i uzasadnionym rozwiązaniem dla przyjętego zadania i zakresu pracy.
 
 \subsection{Metody referencyjne}
 \label{subsec:metody-referencyjne}
 
-Aby ocena agenta DQN była osadzona w realnym punkcie odniesienia, przygotowano dwie klasyczne metody sterowania. Obie realizują ten sam zbiór faz sygnalizacji co agent, dzięki czemu różnice w wynikach wynikają ze sposobu podejmowania decyzji, a nie z odmiennej organizacji ruchu na skrzyżowaniu.
+Do porównania z agentem DQN przygotowano dwie klasyczne metody sterowania. Obie korzystają z tego samego zbioru faz co agent, dlatego na różnice w wynikach wpływa sposób podejmowania decyzji, a nie inna organizacja ruchu na skrzyżowaniu.
 
 \subsubsection{Sterowanie stałoczasowe}
 \label{subsubsec:ref-staloczasowe}
 
-Sterowanie stałoczasowe stanowi podstawowy punkt odniesienia i w SUMO jest realizowane jako statyczna logika sygnalizacji \cite{sumoTrafficLights}. Czasy faz zielonych wyznaczono proporcjonalnie do natężenia na pasie krytycznym każdej fazy, oszacowanego na podstawie zbioru treningowego. Wynoszą one 14~s, 29~s oraz 29~s, a rozdzielające je fazy żółte trwają po 3~s, co daje cykl o długości 81~s.
+Sterowanie stałoczasowe jest podstawowym punktem odniesienia. W SUMO obsługuje je statyczna logika sygnalizacji \cite{sumoTrafficLights}. Czasy faz zielonych wyznaczono proporcjonalnie do natężenia na pasie krytycznym każdej fazy, oszacowanego na podstawie zbioru treningowego. Wynoszą one 14~s, 29~s oraz 29~s, a rozdzielające je fazy żółte trwają po 3~s. Pełny cykl trwa 81~s.
 
 \subsubsection{Sterowanie akomodacyjne}
 \label{subsubsec:ref-akomodacyjne}
 
-Sterowanie akomodacyjne typu gap-based stanowi bardziej wymagający punkt odniesienia. Może wydłużać aktywną fazę, dopóki detektory rejestrują napływ pojazdów, w granicach minimalnego i maksymalnego czasu zielonego \cite{sumoTrafficLights, NAP22097}. Przyjęto minimum równe 5~s, takie samo jak dla agenta, oraz maksima odpowiadające około półtorakrotności czasów zielonych programu stałoczasowego. Metoda reaguje na ruch według ustalonych reguł, lecz nie uczy się polityki na podstawie doświadczenia.
+Sterowanie akomodacyjne typu gap-based jest bardziej wymagającym punktem odniesienia. Może wydłużać aktywną fazę, dopóki detektory rejestrują napływ pojazdów, w granicach minimalnego i maksymalnego czasu zielonego \cite{sumoTrafficLights, NAP22097}. Minimalny czas ustawiono na 5~s, tak samo jak dla agenta. Czasy maksymalne odpowiadają około półtorakrotności czasów zielonych programu stałoczasowego. Metoda reaguje na ruch według ustalonych reguł, lecz nie uczy się polityki na podstawie doświadczenia.
 
 \subsection{Metryki oceny}
 \label{subsec:metryki}
 
-Metody porównywane są według kilku metryk, ponieważ pojedyncza wielkość nie opisuje wszystkich aspektów jakości sterowania. Dane pochodzą z dwóch źródeł: z pliku \texttt{tripinfo.xml} generowanego przez SUMO po zakończeniu symulacji, zawierającego podsumowanie każdej zrealizowanej podróży, oraz z danych rejestrowanych przez interfejs TraCI w każdej sekundzie symulacji. Dla wszystkich metod zastosowano ten sam sposób zbierania i agregacji danych.
+Jedna metryka nie opisuje wszystkich aspektów jakości sterowania, dlatego zastosowano ich kilka. Dane pochodzą z pliku \texttt{tripinfo.xml}, który SUMO tworzy po zakończeniu symulacji i który zawiera podsumowanie każdej podróży, oraz z odczytów TraCI wykonywanych co sekundę. Dla wszystkich metod dane zbierano i agregowano w ten sam sposób.
 
 \subsubsection{Średnie opóźnienie}
 \label{subsubsec:metryka-opoznienie}
 
-Średnie opóźnienie wyznaczane jest jako średnia arytmetyczna wartości \texttt{timeLoss} ze wszystkich zakończonych podróży \cite{sumo_tripinfo_docs}. Wielkość ta określa czas utracony przez pojazd wskutek poruszania się z prędkością niższą od prędkości, z jaką mógłby jechać w warunkach swobodnych. Obejmuje zatem zarówno pełne zatrzymania, jak i zwolnienia wynikające z hamowania oraz przyspieszania.
+Średnie opóźnienie jest średnią arytmetyczną wartości \texttt{timeLoss} ze wszystkich zakończonych podróży \cite{sumo_tripinfo_docs}. Wartość ta określa czas utracony przez pojazd wskutek jazdy wolniejszej niż w warunkach swobodnych. Obejmuje pełne zatrzymania oraz zwolnienia związane z hamowaniem i przyspieszaniem.
 
-Metryka wyrażana jest w sekundach na pojazd, a wartości niższe są korzystniejsze. Ze względu na szerokie ujęcie strat czasu metryka ta pełniła wiodącą rolę przy porównywaniu modeli na etapie walidacji.
+Metrykę podaje się w sekundach na pojazd, a niższa wartość jest korzystniejsza. Ponieważ obejmuje różne źródła strat czasu, była główną metryką używaną do porównywania modeli podczas walidacji.
 
 \subsubsection{Średni czas oczekiwania}
 \label{subsubsec:metryka-oczekiwanie}
 
-Wartość \texttt{waitingTime} oznacza czas, w którym pojazd poruszał się poniżej progu uznawanego przez SUMO za zatrzymanie \cite{sumo_tripinfo_docs}. Średni czas oczekiwania jest średnią arytmetyczną tej wartości ze wszystkich zakończonych podróży.
+Wartość \texttt{waitingTime} oznacza czas jazdy poniżej prędkości uznawanej przez SUMO za zatrzymanie \cite{sumo_tripinfo_docs}. Średni czas oczekiwania jest średnią arytmetyczną tej wartości ze wszystkich zakończonych podróży.
 
-Metryki tej nie należy utożsamiać z opóźnieniem. Opóźnienie obejmuje wszystkie straty czasu, w tym te wynikające ze zwolnienia bez zatrzymania, natomiast czas oczekiwania dotyczy jedynie postoju. Pojazd, który wielokrotnie zwalnia, lecz nigdy się nie zatrzymuje, wykazuje niezerowe opóźnienie przy zerowym czasie oczekiwania. Metryka wyrażana jest w sekundach na pojazd, a wartości niższe są korzystniejsze. Dodatkowo rejestrowano wartość maksymalną oraz kwantyl rzędu 0,95 czasu oczekiwania, opisujące sytuację pojazdów obsłużonych najgorzej.
+Czas oczekiwania nie jest tym samym co opóźnienie. Opóźnienie obejmuje wszystkie straty czasu, także zwolnienie bez zatrzymania, natomiast czas oczekiwania dotyczy tylko postoju. Pojazd, który wielokrotnie zwalnia, ale się nie zatrzymuje, ma niezerowe opóźnienie i zerowy czas oczekiwania. Metrykę podaje się w sekundach na pojazd, a niższa wartość jest korzystniejsza. Rejestrowano również maksymalny czas oczekiwania i jego kwantyl rzędu 0,95, które opisują pojazdy obsłużone najgorzej.
 
 \subsubsection{Średnia długość kolejki}
 \label{subsubsec:metryka-kolejka}
 
-Długość kolejki wyznaczana jest na podstawie danych rejestrowanych w każdej sekundzie symulacji. W każdym kroku zliczana jest liczba pojazdów zatrzymanych na trzynastu pasach wlotowych, przy czym za pojazd należący do kolejki uznawany jest pojazd poruszający się z prędkością poniżej progu zatrzymania stosowanego przez SUMO \cite{sumo_lane_docs}. Wartości sumowane są w obrębie czterech wlotów, a następnie uśredniane po wszystkich krokach symulacji.
+Długość kolejki oblicza się z danych rejestrowanych co sekundę. W każdym kroku zliczane są pojazdy zatrzymane na trzynastu pasach wlotowych. Do kolejki zalicza się pojazd jadący wolniej niż próg zatrzymania stosowany przez SUMO \cite{sumo_lane_docs}. Wartości sumuje się dla czterech wlotów, a następnie uśrednia po wszystkich krokach symulacji.
 
-Metryka wyrażana jest w pojazdach, a wartości niższe są korzystniejsze. Poza wartością średnią rejestrowano również wartość maksymalną oraz wartości w podziale na poszczególne wloty, co pozwala ocenić, czy sterowanie nie poprawia sytuacji na jednym wlocie kosztem pozostałych.
+Metrykę podaje się w pojazdach, a niższa wartość jest korzystniejsza. Rejestrowano też wartość maksymalną oraz wyniki dla poszczególnych wlotów. Pozwala to sprawdzić, czy sterowanie nie poprawia sytuacji na jednym wlocie kosztem pozostałych.
 
 \subsubsection{Przepustowość}
 \label{subsubsec:metryka-przepustowosc}
 
-Przepustowość wyznaczana jest na podstawie liczby podróży zakończonych w trakcie symulacji, czyli pojazdów, które opuściły sieć drogową. Liczba ta jest dzielona przez czas od najwcześniejszego wyjazdu do najpóźniejszego przyjazdu wśród zakończonych podróży, a następnie przeliczana na godzinę zgodnie z zależnością
+Przepustowość oblicza się na podstawie liczby podróży zakończonych podczas symulacji, czyli pojazdów, które opuściły sieć drogową. Liczbę tę dzieli się przez czas od najwcześniejszego wyjazdu do najpóźniejszego przyjazdu wśród zakończonych podróży, a następnie przelicza na godzinę:
 \begin{equation}
     Q = \frac{N}{t_{\max} - t_{\min}} \cdot 3600,
     \label{eq:throughput}
 \end{equation}
 gdzie $N$ oznacza liczbę zakończonych podróży, $t_{\min}$ najwcześniejszy czas wyjazdu w tym zbiorze, a $t_{\max}$ najpóźniejszy czas przyjazdu.
 
-Metryka wyrażana jest w pojazdach na godzinę i jest jedyną z rozpatrywanych, dla której wartości wyższe są korzystniejsze. Należy zaznaczyć, że przy zadanym z góry napływie pojazdów metryka ta służy przede wszystkim do wykrycia sytuacji, w której sterowanie nie jest w stanie obsłużyć zgłaszanego popytu.
+Metrykę podaje się w pojazdach na godzinę. Jako jedyna z analizowanych jest korzystniejsza przy wyższych wartościach. Przy ustalonym napływie pojazdów pozwala przede wszystkim wykryć, że sterowanie nie może obsłużyć zgłaszanego popytu.
 
 \subsubsection{Częstotliwość przełączeń}
 \label{subsubsec:metryka-przelaczenia}
 
-Częstotliwość przełączeń opisuje, jak często zmienia się układ sygnałów na skrzyżowaniu. Za przełączenie uznawane jest przejście między dwiema różnymi konfiguracjami sygnału zielonego. Fazy żółte, stanowiące jedynie przejście między fazami zielonymi, nie są liczone jako osobne przełączenia, dzięki czemu jedna zmiana fazy nie jest zliczana dwukrotnie. Liczba przełączeń dzielona jest przez czas między pierwszym i ostatnim rekordem szeregu czasowego, a następnie przeliczana na godzinę.
+Częstotliwość przełączeń wskazuje, jak często zmienia się układ sygnałów na skrzyżowaniu. Przełączeniem jest przejście między dwiema różnymi konfiguracjami sygnału zielonego. Faz żółtych nie liczy się osobno, ponieważ są tylko przejściem między fazami zielonymi. Dzięki temu jedna zmiana fazy nie jest zliczana dwukrotnie. Liczbę przełączeń dzieli się przez czas między pierwszym i ostatnim rekordem szeregu czasowego, a następnie przelicza na godzinę.
 
-Metryka jest wyrażana w przełączeniach na godzinę i nie ma jednoznacznie pożądanego kierunku zmian. Zbyt rzadkie przełączanie oznacza wydłużone oczekiwanie na wlotach nieobsługiwanych, natomiast zbyt częste prowadzi do narastania czasów międzyzielonych, w których żaden strumień nie korzysta ze skrzyżowania, a także obniża komfort i przewidywalność jazdy. Metryka ta pełni zatem rolę kontrolną i pozwala ocenić, czy poprawa pozostałych wskaźników nie została osiągnięta kosztem niestabilnego sterowania.
+Metrykę podaje się w przełączeniach na godzinę i nie ma ona jednoznacznie korzystnego kierunku zmian. Zbyt rzadkie przełączanie wydłuża oczekiwanie na nieobsługiwanych wlotach. Zbyt częste zwiększa udział czasu międzyzielonego, gdy żaden strumień nie korzysta ze skrzyżowania, oraz obniża komfort i przewidywalność jazdy. Metryka pełni więc funkcję kontrolną: pokazuje, czy pozostałe wskaźniki nie poprawiły się kosztem niestabilnego sterowania.
 
 \subsection{Podział danych eksperymentalnych}
 \label{subsec:podzial-danych}
 
-Scenariusze ruchu wygenerowano przy użyciu skryptu \texttt{randomTrips.py}, dostarczanego wraz z SUMO \cite{sumo_randomtrips_docs}. Natężenie ruchu regulowano parametrem określającym średni odstęp między kolejnymi wyjazdami pojazdów, a zróżnicowanie układu tras zapewniono przez zmianę ziarna generatora liczb losowych. Wygenerowane podróże przekształcano następnie na poprawne trasy w analizowanej sieci.
+Scenariusze ruchu wygenerowano skryptem \texttt{randomTrips.py} dostarczanym z SUMO \cite{sumo_randomtrips_docs}. Natężenie regulowano parametrem określającym średni odstęp między wyjazdami pojazdów, a układ tras różnicowano przez zmianę ziarna generatora liczb losowych. Wygenerowane podróże przekształcano następnie w poprawne trasy w analizowanej sieci.
 
 Dane podzielono na trzy rozłączne zbiory: treningowy, walidacyjny i testowy. Podział ten przedstawiono na rysunku~\ref{fig:podzial-danych}.
 
@@ -216,18 +216,18 @@ Dane podzielono na trzy rozłączne zbiory: treningowy, walidacyjny i testowy. P
 \subsubsection{Zbiór treningowy}
 \label{subsubsec:zbior-treningowy}
 
-Przygotowano dwa warianty zbioru treningowego, różniące się sposobem rozmieszczenia czasów wyjazdu pojazdów. Celem było sprawdzenie, czy większa nieregularność napływu pojazdów w danych treningowych poprawia zdolność modelu do generalizacji.
+Przygotowano dwa warianty zbioru treningowego o różnym rozmieszczeniu czasów wyjazdu pojazdów. Sprawdzono w ten sposób, czy bardziej nieregularny napływ w danych treningowych poprawia generalizację modelu.
 
-Pierwszy wariant obejmuje scenariusze o regularnych odstępach między wyjazdami, generowane dla zadanego okresu napływu. Drugi wariant obejmuje scenariusze o zbliżonych poziomach natężenia, lecz z nieregularnymi czasami wyjazdu, uzyskanymi przez zastosowanie opcji \texttt{--random-depart} oraz dodatkowego różnicowania napływu pojazdów.
+Pierwszy wariant zawiera scenariusze o regularnych odstępach między wyjazdami, wygenerowane dla zadanego okresu napływu. Drugi zawiera scenariusze o zbliżonych poziomach natężenia, ale nieregularnych czasach wyjazdu. Uzyskano je za pomocą opcji \texttt{--random-depart} oraz dodatkowego różnicowania napływu pojazdów.
 
-Każdy z wariantów zawiera 30 plików tras, po 10 plików dla każdego z trzech poziomów natężenia ruchu: lekkiego, średniego oraz wysokiego. Każdy scenariusz treningowy obejmuje 1800~s napływu pojazdów, natomiast epizod trwa 2100~s, aby umożliwić opróżnienie sieci. Poszczególne pliki różnią się ziarnem generatora liczb losowych. Podczas treningu kolejne epizody wykorzystują kolejne pliki tras, dzięki czemu agent styka się z różnymi układami tras oraz różnymi poziomami obciążenia.
+Każdy wariant zawiera 30 plików tras, po 10 dla lekkiego, średniego i wysokiego natężenia ruchu. Napływ pojazdów w każdym scenariuszu treningowym trwa 1800~s, a epizod 2100~s, co pozwala opróżnić sieć. Pliki różnią się ziarnem generatora liczb losowych. W kolejnych epizodach agent korzysta z kolejnych plików tras, dlatego obserwuje różne układy tras i poziomy obciążenia.
 
 \subsubsection{Zbiór walidacyjny}
 \label{subsubsec:zbior-walidacyjny}
 
-Zbiór walidacyjny obejmuje cztery scenariusze: trzy odpowiadające stałym poziomom natężenia ruchu, to jest lekkiemu, średniemu i wysokiemu, oraz jeden scenariusz dynamiczny, w którym poziom obciążenia zmienia się w trakcie symulacji. Każdy scenariusz walidacyjny obejmuje 3600~s napływu pojazdów.
+Zbiór walidacyjny obejmuje cztery scenariusze: lekki, średni i wysoki o stałym natężeniu oraz zmienny, w którym obciążenie zmienia się podczas symulacji. W każdym scenariuszu walidacyjnym napływ pojazdów trwa 3600~s.
 
-Zbiór ten wykorzystano do podejmowania wszystkich decyzji dotyczących konfiguracji modelu, a w szczególności do:
+Zbiór ten służył do:
 \begin{itemize}
     \item wyboru odpowiedniej liczby kroków treningowych na podstawie oceny kolejnych checkpointów;
     \item porównania obu wariantów zbioru treningowego;
@@ -241,12 +241,12 @@ Zbiór ten wykorzystano do podejmowania wszystkich decyzji dotyczących konfigur
 
 Zbiór testowy obejmuje cztery grupy scenariuszy, odpowiadające trzem stałym poziomom natężenia ruchu oraz scenariuszowi o zmiennym natężeniu. W każdej grupie przygotowano pięć wariantów różniących się ziarnem generatora liczb losowych, co daje łącznie 20 plików tras. Każdy scenariusz testowy obejmuje 3600~s napływu pojazdów.
 
-Zastosowanie pięciu wariantów w obrębie każdej grupy pozwala ograniczyć wpływ pojedynczego, korzystnego lub niekorzystnego układu tras na wnioski. Wyniki przedstawiane są zatem jako wartości uśrednione wraz z miarą rozrzutu, a nie jako pojedyncze przebiegi. Te same pliki tras wykorzystano do oceny wszystkich trzech porównywanych metod sterowania.
+Pięć wariantów w każdej grupie ogranicza wpływ pojedynczego korzystnego lub niekorzystnego układu tras na wnioski. Dlatego wyniki przedstawiono jako średnie z miarą rozrzutu, a nie jako pojedyncze przebiegi. Wszystkie trzy metody oceniono na tych samych plikach tras.
 
 \subsubsection{Zapobieganie przenikaniu danych}
 \label{subsubsec:przenikanie-danych}
 
-Rozdzielenie zbiorów jest istotnym elementem metodyki, ponieważ wielokrotne korzystanie z tych samych danych na etapie strojenia i oceny prowadziłoby do zawyżenia wyników i utraty wiarygodności wniosków. W eksperymencie przyjęto następujące zasady:
+Zbiory rozdzielono, ponieważ użycie tych samych danych do strojenia i oceny zawyżyłoby wyniki oraz osłabiło wiarygodność wniosków. Przyjęto następujące zasady:
 \begin{itemize}
     \item wszystkie decyzje dotyczące liczby kroków treningowych, wyboru zbioru treningowego oraz wartości hiperparametrów podejmowano wyłącznie na podstawie wyników na zbiorze walidacyjnym;
     \item parametry czasowe metod referencyjnych, to jest czasy trwania faz programu stałoczasowego oraz ograniczenia czasowe sterowania akomodacyjnego, wyznaczono wyłącznie na podstawie scenariuszy ze zbioru treningowego;

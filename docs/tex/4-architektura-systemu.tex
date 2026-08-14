@@ -2,24 +2,24 @@
 \section{Architektura systemu}
 \label{sec:architektura}
 
-Rozdział przedstawia system od strony komponentów, ich odpowiedzialności oraz zależności między nimi. Szczególną uwagę poświęcono rozmieszczeniu poszczególnych elementów w warstwach systemu oraz przepływowi danych między nimi.
+W rozdziale opisano komponenty systemu, ich zadania i wzajemne zależności. Przedstawiono też podział na warstwy oraz przepływ danych między nimi.
 
 \subsection{Ogólna architektura rozwiązania}
 \label{subsec:ogolna-architektura}
 
-System zbudowano warstwowo. Każda warstwa odpowiada za wyraźnie wyodrębniony zakres zadań i komunikuje się wyłącznie z warstwami sąsiednimi. Ogólny układ komponentów oraz przepływ pojedynczej decyzji przedstawiono na rysunku~\ref{fig:architektura}.
+System ma budowę warstwową. Każda warstwa ma określone zadania i komunikuje się tylko z warstwami sąsiednimi. Układ komponentów i przepływ pojedynczej decyzji przedstawiono na rysunku~\ref{fig:architektura}.
 
 Wyróżnić można następujące elementy:
 \begin{itemize}
     \item \emph{dane wejściowe}, czyli pliki opisujące sieć drogową, scenariusze ruchu oraz konfigurację symulacji;
-    \item \emph{symulator SUMO}, odpowiedzialny za mikroskopowy model ruchu oraz wykonywanie kolejnych kroków symulacji;
-    \item \emph{interfejs TraCI}, zapewniający dwukierunkową komunikację między procesem symulacji a kodem w języku Python;
-    \item \emph{bibliotekę \texttt{sumo-rl}}, udostępniającą symulację jako środowisko uczenia ze wzmocnieniem oraz realizującą maszynę stanów sygnalizacji;
-    \item \emph{własną warstwę integracyjną}, dostosowującą przebieg pojedynczego kroku środowiska oraz sposób zbierania danych;
-    \item \emph{algorytm DQN} z biblioteki Stable-Baselines3, realizujący uczenie oraz wybór akcji;
-    \item \emph{moduł zbierania metryk}, rejestrujący stan ruchu w każdej sekundzie symulacji i wyznaczający wielkości podsumowujące;
+    \item \emph{symulator SUMO}, który modeluje ruch i wykonuje kolejne kroki symulacji;
+    \item \emph{interfejs TraCI}, który zapewnia dwukierunkową komunikację między symulatorem a kodem w języku Python;
+    \item \emph{bibliotekę \texttt{sumo-rl}}, która udostępnia symulację jako środowisko uczenia ze wzmocnieniem i obsługuje maszynę stanów sygnalizacji;
+    \item \emph{własną warstwę integracyjną}, która dostosowuje przebieg kroku środowiska i sposób zbierania danych;
+    \item \emph{algorytm DQN} z biblioteki Stable-Baselines3, który odpowiada za uczenie i wybór akcji;
+    \item \emph{moduł zbierania metryk}, który co sekundę rejestruje stan ruchu i oblicza wartości podsumowujące;
     \item \emph{moduł zapisu modeli i wyników}, obsługujący checkpointy, modele końcowe oraz pliki wynikowe;
-    \item \emph{moduł ewaluacyjny}, uruchamiający zapisany model na zadanym scenariuszu i zapisujący wynik w ujednoliconym formacie.
+    \item \emph{moduł ewaluacyjny}, który uruchamia zapisany model na zadanym scenariuszu i zapisuje wynik we wspólnym formacie.
 \end{itemize}
 
 \begin{figure}[!htbp]
@@ -29,16 +29,16 @@ Wyróżnić można następujące elementy:
     \label{fig:architektura}
 \end{figure}
 
-Podział ten oddziela model ruchu od algorytmu uczenia, dzięki czemu zmiana scenariusza lub programu sygnalizacji nie wymaga modyfikacji kodu agenta. Pozwala również stosować spójną procedurę zbierania i agregacji metryk dla wszystkich metod.
+Taki podział oddziela model ruchu od algorytmu uczenia. Zmiana scenariusza lub programu sygnalizacji nie wymaga więc modyfikacji kodu agenta. Dla wszystkich metod można też stosować tę samą procedurę zbierania i agregacji metryk.
 
-Metody referencyjne, przedstawione w podrozdziale~\ref{subsec:metody-referencyjne}, korzystają z tej samej infrastruktury z pominięciem warstw uczenia ze wzmocnieniem. Ich logika działania realizowana jest wewnątrz SUMO, a kod w języku Python pełni jedynie rolę obserwatora, który wykonuje kolejne kroki symulacji przez TraCI i rejestruje te same wielkości co w przypadku agenta.
+Metody referencyjne z podrozdziału~\ref{subsec:metody-referencyjne} korzystają z tej samej infrastruktury, ale pomijają warstwy uczenia ze wzmocnieniem. Ich logikę obsługuje SUMO, a kod w języku Python tylko wykonuje przez TraCI kolejne kroki symulacji i rejestruje te same wartości co dla agenta.
 
 \subsection{Środowisko symulacyjne SUMO}
 \label{subsec:sumo}
 
-SUMO (ang. Simulation of Urban MObility) jest otwartym pakietem do mikroskopowej symulacji ruchu drogowego \cite{lopez2018sumo}. Symulacja mikroskopowa oznacza, że każdy pojazd modelowany jest indywidualnie, wraz z własną trasą, parametrami dynamiki oraz decyzjami dotyczącymi przyspieszania, hamowania i zmiany pasa. W odróżnieniu od modeli makroskopowych, opisujących ruch wielkościami zagregowanymi, takimi jak natężenie czy gęstość potoku, podejście mikroskopowe pozwala wyznaczyć wielkości dotyczące pojedynczych podróży, na przykład czas utracony lub czas postoju konkretnego pojazdu. Jest to warunek konieczny do wyznaczenia metryk przyjętych w pracy.
+SUMO (ang. Simulation of Urban MObility) jest otwartym pakietem do mikroskopowej symulacji ruchu drogowego \cite{lopez2018sumo}. W symulacji mikroskopowej każdy pojazd jest modelowany osobno, wraz z trasą, parametrami dynamiki oraz decyzjami o przyspieszaniu, hamowaniu i zmianie pasa. Modele makroskopowe opisują natomiast ruch za pomocą wartości zbiorczych, takich jak natężenie i gęstość potoku. Podejście mikroskopowe pozwala obliczać wartości dla pojedynczych podróży, na przykład czas utracony lub czas postoju konkretnego pojazdu. Jest to potrzebne do wyznaczenia metryk użytych w pracy.
 
-W systemie SUMO pełni rolę modelu środowiska. Odpowiada za geometrię sieci drogowej, ruch i dynamikę pojazdów, realizację wyznaczonych tras, wykonanie logiki sygnalizacji świetlnej oraz udostępnienie danych potrzebnych do wyznaczenia obserwacji, nagrody i metryk. Sam symulator nie zawiera żadnych elementów uczenia maszynowego, a jego stan zmienia się wyłącznie w wyniku kolejnych kroków symulacji.
+SUMO modeluje środowisko. Odpowiada za geometrię sieci drogowej, ruch i dynamikę pojazdów, przejazd wyznaczonymi trasami, logikę sygnalizacji świetlnej oraz dane potrzebne do obliczenia obserwacji, nagrody i metryk. Symulator nie zawiera elementów uczenia maszynowego. Jego stan zmienia się w kolejnych krokach symulacji.
 
 Konfigurację eksperymentu opisują pliki w formacie XML:
 \begin{itemize}
@@ -47,31 +47,31 @@ Konfigurację eksperymentu opisują pliki w formacie XML:
     \item pliki konfiguracyjne z rozszerzeniem \texttt{.sumocfg}, wiążące sieć z plikami tras oraz ustawiające opcje przetwarzania i raportowania;
 \end{itemize}
 
-W eksperymencie wykorzystano dwa pliki sieci o identycznej geometrii i identycznym układzie faz, różniące się wyłącznie typem logiki sygnalizacji. Plik z logiką statyczną obsługuje sterowanie stałoczasowe, natomiast plik z logiką akomodacyjną obsługuje metodę referencyjną typu gap-based. Każdej z trzech porównywanych metod odpowiada osobny plik konfiguracyjny, dzięki czemu wybór metody sterowania sprowadza się do wskazania innej konfiguracji, bez modyfikowania danych wejściowych. Plik tras podawany jest natomiast z wiersza poleceń, ponieważ ta sama konfiguracja wykorzystywana jest dla wielu scenariuszy różniących się ziarnem generatora.
+W eksperymencie wykorzystano dwa pliki sieci o tej samej geometrii i układzie faz, ale różnych typach logiki sygnalizacji. Plik z logiką statyczną obsługuje sterowanie stałoczasowe, a plik z logiką akomodacyjną metodę referencyjną typu gap-based. Każda z trzech metod ma osobny plik konfiguracyjny. Aby zmienić metodę sterowania, wystarczy więc wskazać inną konfigurację bez modyfikowania danych wejściowych. Plik tras podaje się w wierszu poleceń, ponieważ ta sama konfiguracja obsługuje wiele scenariuszy o różnych ziarnach generatora.
 
-Po zakończeniu symulacji SUMO zapisuje plik \texttt{tripinfo.xml}, zawierający opis każdej zakończonej podróży \cite{sumo_tripinfo_docs}. Stanowi on jedno z dwóch źródeł metryk opisanych w podrozdziale~\ref{subsec:metryki}; drugim są dane odczytywane podczas symulacji przez TraCI.
+Po zakończeniu symulacji SUMO zapisuje w pliku \texttt{tripinfo.xml} opis każdej zakończonej podróży \cite{sumo_tripinfo_docs}. Jest to jedno z dwóch źródeł metryk opisanych w podrozdziale~\ref{subsec:metryki}. Drugim są dane odczytywane podczas symulacji przez TraCI.
 
 \subsection{Interfejs TraCI}
 \label{subsec:traci}
 
-TraCI (ang. Traffic Control Interface) jest interfejsem umożliwiającym sterowanie działającą symulacją SUMO z poziomu zewnętrznego programu \cite{sumo_traci_docs}. Symulator działa wówczas jako serwer, a program sterujący jako klient łączący się z nim przez gniazdo sieciowe. Rozwiązanie to pozwala zatrzymać symulację po każdym kroku, odczytać jej stan oraz zmienić parametry przed wykonaniem kroku następnego.
+TraCI (ang. Traffic Control Interface) pozwala sterować działającą symulacją SUMO z zewnętrznego programu \cite{sumo_traci_docs}. Symulator działa jako serwer, a program sterujący jako klient połączony z nim przez gniazdo sieciowe. Po każdym kroku program może odczytać stan symulacji i zmienić jej parametry przed następnym krokiem.
 
-W systemie TraCI stanowi jedyną granicę między symulatorem a kodem w języku Python. Realizowane są przez niego cztery grupy operacji:
+TraCI jest jedynym połączeniem między symulatorem a kodem w języku Python. Obsługuje cztery grupy operacji:
 \begin{itemize}
-    \item \emph{wykonywanie kroków symulacji}: sterowanie postępem czasu symulacji krokami o długości jednej sekundy oraz sprawdzanie, czy w sieci pozostały jeszcze pojazdy oczekujące na obsługę, co pozwala wykryć naturalne zakończenie scenariusza;
-    \item \emph{odczyt stanu ruchu}: pobranie dla wskazanych pasów wlotowych liczby pojazdów, liczby pojazdów zatrzymanych oraz skumulowanych czasów oczekiwania, czyli wielkości, na podstawie których wyznaczane są obserwacja, nagroda oraz długość kolejki;
-    \item \emph{odczyt stanu sygnalizacji}: pobranie łańcucha znaków opisującego bieżący sygnał dla każdej relacji sterowanej przez sygnalizator, wykorzystywanego przy zliczaniu przełączeń;
-    \item \emph{zmiana sygnalizacji}: ustawienie nowego układu sygnałów, dzięki czemu decyzja agenta zostaje wprowadzona do symulacji.
+    \item \emph{wykonywanie kroków symulacji}: przesuwanie czasu o jedną sekundę i sprawdzanie, czy w sieci pozostały pojazdy oczekujące na obsługę, co pozwala wykryć naturalny koniec scenariusza;
+    \item \emph{odczyt stanu ruchu}: pobieranie dla pasów wlotowych liczby wszystkich i zatrzymanych pojazdów oraz skumulowanych czasów oczekiwania, używanych do obliczania obserwacji, nagrody i długości kolejki;
+    \item \emph{odczyt stanu sygnalizacji}: pobieranie łańcucha znaków opisującego bieżący sygnał każdej sterowanej relacji, używanego do zliczania przełączeń;
+    \item \emph{zmiana sygnalizacji}: ustawianie nowego układu sygnałów zgodnie z decyzją agenta.
 \end{itemize}
 
-W przypadku metod referencyjnych TraCI wykorzystywany jest wyłącznie do odczytu stanu oraz do wykonywania kolejnych kroków symulacji. Logika sterowania pozostaje po stronie SUMO, dzięki czemu metody klasyczne działają dokładnie tak, jak zdefiniowano je w pliku sieci.
+W metodach referencyjnych TraCI służy tylko do odczytu stanu i wykonywania kolejnych kroków symulacji. Sterowaniem zajmuje się SUMO, dlatego metody klasyczne działają zgodnie z definicją w pliku sieci.
 
 \subsection{Biblioteka \texttt{sumo-rl}}
 \label{subsec:sumo-rl}
 
-Biblioteka \texttt{sumo-rl} pośredniczy między symulacją SUMO a algorytmem uczenia ze wzmocnieniem \cite{alegre2019sumorl}. Jej podstawowym elementem jest klasa \texttt{SumoEnvironment}. Uruchamia ona symulację, nawiązuje połączenie przez TraCI i udostępnia środowisko zgodne z interfejsem Gymnasium \cite{towers2025gymnasium}. Interfejs ten definiuje rozpoczęcie epizodu i wykonanie kroku w odpowiedzi na akcję, a także deklaracje przestrzeni obserwacji i akcji.
+Biblioteka \texttt{sumo-rl} pośredniczy między SUMO a algorytmem uczenia ze wzmocnieniem \cite{alegre2019sumorl}. Jej głównym elementem jest klasa \texttt{SumoEnvironment}, która uruchamia symulację, łączy się przez TraCI i udostępnia środowisko zgodne z interfejsem Gymnasium \cite{towers2025gymnasium}. Interfejs określa sposób rozpoczynania epizodu i wykonywania kroku w odpowiedzi na akcję oraz opisuje przestrzenie obserwacji i akcji.
 
-Biblioteka realizuje w systemie następujące zadania:
+Biblioteka wykonuje następujące zadania:
 \begin{itemize}
     \item uruchamianie i zamykanie procesu symulacji wraz z przekazaniem opcji wiersza poleceń, w tym ziarna generatora oraz ścieżek plików wyjściowych;
     \item odczytanie z pliku sieci zbioru faz zielonych sterowanego sygnalizatora i zbudowanie na tej podstawie własnej maszyny stanów, wraz z automatycznym generowaniem faz żółtych;
@@ -80,34 +80,34 @@ Biblioteka realizuje w systemie następujące zadania:
     \item udostępnienie przestrzeni obserwacji i przestrzeni akcji w postaci wymaganej przez biblioteki algorytmów uczenia ze wzmocnieniem.
 \end{itemize}
 
-Istotną konsekwencją drugiego z wymienionych zadań jest to, że czasy trwania faz zapisane w pliku sieci nie wpływają na działanie agenta. Biblioteka odbudowuje program sygnalizacji na podstawie samego zbioru stanów faz zielonych, a o momencie zmiany decyduje agent w granicach narzuconych ograniczeń. Dzięki temu agent może korzystać z tego samego pliku sieci co metoda stałoczasowa, mimo że zapisany w nim podział czasów zielonych dotyczy wyłącznie metody referencyjnej.
+W rezultacie czasy faz zapisane w pliku sieci nie wpływają na działanie agenta. Biblioteka odbudowuje program sygnalizacji wyłącznie ze zbioru stanów faz zielonych, a moment zmiany wybiera agent w granicach narzuconych ograniczeń. Agent może więc korzystać z tego samego pliku sieci co metoda stałoczasowa, chociaż zapisany w nim podział czasów zielonych dotyczy tylko metody referencyjnej.
 
-Wykorzystanie gotowej biblioteki było uzasadnione tym, że warstwa integracyjna między symulatorem a algorytmem uczenia jest elementem technicznym, a nie przedmiotem badania. Samodzielna implementacja maszyny stanów sygnalizacji, obsługi cyklu życia symulacji oraz wyznaczania obserwacji zwiększyłaby ryzyko błędów, nie wnosząc wartości merytorycznej.
+Użyto gotowej biblioteki, ponieważ integracja symulatora z algorytmem uczenia jest elementem technicznym, a nie przedmiotem badania. Samodzielne odtworzenie maszyny stanów sygnalizacji, obsługi cyklu życia symulacji i obliczania obserwacji zwiększyłoby ryzyko błędów, ale nie wniosłoby wartości merytorycznej do badania.
 
-Publiczna metoda kroku biblioteki ukrywa pośrednie sekundy okna decyzyjnego. Dlatego przygotowano własną warstwę integracyjną, która udostępnia je modułowi metryk i obsługuje wiele scenariuszy ruchu. Szczegóły zmian przedstawiono w podrozdziale~\ref{subsec:wrapper}.
+Ponieważ publiczna metoda kroku biblioteki ukrywa pośrednie sekundy okna decyzyjnego, przygotowano własną warstwę integracyjną. Udostępnia ona te sekundy modułowi metryk i obsługuje wiele scenariuszy ruchu. Szczegóły opisano w podrozdziale~\ref{subsec:wrapper}.
 
 Biblioteka \texttt{sumo-rl} nie jest autorskim elementem pracy. Własny wkład obejmuje integrację, ujednolicenie zbierania metryk oraz przygotowanie treningu, walidacji i oceny testowej.
 
 \subsection{Biblioteka algorytmów uczenia ze wzmocnieniem}
 \label{subsec:sb3}
 
-Algorytm DQN wykorzystano w implementacji dostępnej w bibliotece Stable-Baselines3 \cite{raffin2021sb3}. Biblioteka dostarcza implementacje popularnych algorytmów uczenia ze wzmocnieniem w języku Python, oparte na bibliotece PyTorch i przystosowane do współpracy ze środowiskami zgodnymi z interfejsem Gymnasium. Dzięki temu połączenie algorytmu z przygotowaną warstwą integracyjną nie wymagało dodatkowego kodu adaptacyjnego, a algorytm otrzymuje informację o przestrzeni obserwacji i przestrzeni akcji bezpośrednio ze środowiska.
+Wykorzystano implementację DQN z biblioteki Stable-Baselines3 \cite{raffin2021sb3}. Udostępnia ona popularne algorytmy uczenia ze wzmocnieniem w języku Python, oparte na PyTorch i zgodne ze środowiskami Gymnasium. Połączenie DQN z przygotowaną warstwą integracyjną nie wymagało więc dodatkowego kodu, a informacje o przestrzeniach obserwacji i akcji pochodzą bezpośrednio ze środowiska.
 
-Sieć aproksymującą funkcję wartości akcji tworzy polityka \texttt{MlpPolicy}. Biblioteka obsługuje również konfigurację hiperparametrów, zapis checkpointów i modeli oraz deterministyczny wybór akcji podczas ewaluacji. Sposób wykorzystania tych mechanizmów opisano w rozdziałach~\ref{sec:implementacja} i~\ref{sec:wyniki}.
+Do aproksymacji funkcji wartości akcji służy polityka \texttt{MlpPolicy}. Biblioteka obsługuje także konfigurację hiperparametrów, zapis checkpointów i modeli oraz deterministyczny wybór akcji podczas ewaluacji. Wykorzystanie tych mechanizmów opisano w rozdziałach~\ref{sec:implementacja} i~\ref{sec:wyniki}.
 
 \subsection{Przepływ pojedynczej decyzji}
 \label{subsec:przeplyw-decyzji}
 
-Pojedyncza decyzja agenta obejmuje sekwencję operacji przechodzącą przez wszystkie warstwy systemu. Przebiega ona następująco:
+Jedna decyzja agenta przechodzi przez wszystkie warstwy systemu w następującej kolejności:
 \begin{enumerate}
     \item agent otrzymuje wektor obserwacji opisujący stan skrzyżowania w bieżącej chwili decyzyjnej;
     \item sieć neuronowa wyznacza oszacowania wartości dla trzech dostępnych akcji, a agent wybiera akcję zgodnie z obowiązującą strategią, epsilon-zachłanną podczas treningu oraz deterministyczną podczas ewaluacji;
     \item warstwa integracyjna przekazuje wybraną akcję do maszyny stanów sygnalizacji jako wskazanie fazy docelowej;
-    \item maszyna stanów weryfikuje ograniczenia czasowe i albo kontynuuje bieżącą fazę, albo rozpoczyna przejście przez fazę żółtą, a nowy układ sygnałów ustawiany jest w symulatorze przez TraCI;
-    \item symulacja postępuje krokami o długości jednej sekundy aż do osiągnięcia następnej chwili decyzyjnej lub zakończenia epizodu;
+    \item maszyna stanów sprawdza ograniczenia czasowe i kontynuuje bieżącą fazę albo rozpoczyna przejście przez fazę żółtą, po czym TraCI ustawia nowy układ sygnałów w symulatorze;
+    \item symulacja wykonuje jednosekundowe kroki aż do następnej chwili decyzyjnej lub końca epizodu;
     \item po każdej sekundzie moduł zbierania metryk odczytuje stan sygnalizacji oraz liczbę pojazdów zatrzymanych na pasach wlotowych i dopisuje rekord do szeregu czasowego;
-    \item po osiągnięciu następnej chwili decyzyjnej wyznaczana jest nagroda jako różnica skumulowanego czasu oczekiwania względem poprzedniej chwili decyzyjnej;
+    \item w następnej chwili decyzyjnej obliczana jest nagroda jako zmiana skumulowanego czasu oczekiwania względem poprzedniej decyzji;
     \item nowy wektor obserwacji wraz z nagrodą i znacznikami zakończenia epizodu trafia do agenta, rozpoczynając kolejną iterację.
 \end{enumerate}
 
-Podział na krok decyzyjny i kroki symulacji jest kluczowy dla spójności eksperymentu. Agent obserwuje środowisko i podejmuje decyzje w odstępach pięciosekundowych, natomiast dane do metryk zbierane są co sekundę, czyli z tą samą rozdzielczością co dla metod referencyjnych. Dzięki temu różnice w wynikach nie wynikają z odmiennego sposobu próbkowania stanu ruchu.
+Podział na krok decyzyjny i kroki symulacji zapewnia spójność eksperymentu. Agent obserwuje środowisko i podejmuje decyzje co pięć sekund, natomiast dane do metryk są zbierane co sekundę, tak samo jak dla metod referencyjnych. Różnice w wynikach nie wynikają więc z innej częstotliwości próbkowania stanu ruchu.
