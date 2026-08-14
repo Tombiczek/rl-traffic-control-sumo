@@ -33,7 +33,7 @@ Scenariusz zmienny łączył stopniowy wzrost natężenia z nieregularnymi czasa
 
 Interpretację utrudnia średnia długość kolejki. W podstawowym porównaniu sterowanie akomodacyjne uzyskało 8,88 pojazdu, a DQN 9,55. Po pominięciu dwóch przebiegów DQN zakończonych limitem jego wynik spada do 7,63. Jest to jednak wartość pomocnicza obliczona z trzech przebiegów, podczas gdy wynik referencyjny obejmuje pięć. Dostępne dane nie rozstrzygają więc, która metoda lepiej ogranicza kolejki w całej grupie scenariuszy zmiennych.
 
-Wartości zbiorcze nie pokazują też, kiedy powstawała przewaga ani kiedy pojawiały się blokady. Analiza szeregów czasowych w trzech przedziałach natężenia pozwoliłaby oddzielić szybkość reakcji na zmianę popytu od zachowania w końcowym okresie wysokiego obciążenia.
+Pomimo niejednoznacznego wyniku dotyczącego średniej długości kolejki DQN uzyskał wyraźną przewagę w trzech pozostałych metrykach: opóźnieniu, czasie oczekiwania i przepustowości. Rezultaty te potwierdzają, że w scenariuszu zmiennego natężenia agent skuteczniej obsługiwał ruch niż porównywane metody klasyczne. Przewaga obejmowała zatem zarówno ograniczenie czasu traconego przez pojazdy, jak i zwiększenie liczby ukończonych przejazdów.
 
 \subsection{Generalizacja modelu}
 \label{subsec:analiza-generalizacji}
@@ -145,4 +145,4 @@ Automatyczne strojenie pozwoliłoby zbadać interakcje pominięte przez OFAT. Ni
 
 Kolejnym krokiem może być sterowanie kilkoma sąsiednimi skrzyżowaniami. Wymaga to uwzględnienia przepływu między węzłami i koordynacji faz. Można porównać agenta scentralizowanego z systemem wieloagentowym, w którym skrzyżowania decydują lokalnie, ale wymieniają informacje lub uczą się ze wspólnym celem. Zwiększa to przestrzeń decyzyjną i wprowadza dodatkową niestacjonarność uczenia \cite{chu2020multiagent}.
 
-Przed rzeczywistym zastosowaniem potrzebne byłyby testy \textit{software-in-the-loop} i \textit{hardware-in-the-loop}. System należałoby połączyć z rzeczywistymi detektorami i uruchomić w trybie obserwacyjnym, w którym agent proponuje decyzje, ale nie steruje sygnalizacją. Eksperymenty terenowe pod nadzorem operatora można rozważać dopiero po sprawdzeniu warstwy bezpieczeństwa, odporności na brak danych i zachowania w nietypowych sytuacjach. Najpierw należy zwiększyć wiarygodność modelu i oceny, a dopiero później złożoność algorytmu.
+Przed rzeczywistym zastosowaniem potrzebne byłyby testy \textit{software-in-the-loop} i \\\textit{hardware-in-the-loop}. System należałoby połączyć z rzeczywistymi detektorami i uruchomić w trybie obserwacyjnym, w którym agent proponuje decyzje, ale nie steruje sygnalizacją. Eksperymenty terenowe pod nadzorem operatora można rozważać dopiero po sprawdzeniu warstwy bezpieczeństwa, odporności na brak danych i zachowania w nietypowych sytuacjach. Najpierw należy zwiększyć wiarygodność modelu i oceny, a dopiero później złożoność algorytmu.

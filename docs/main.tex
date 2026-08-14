@@ -54,8 +54,14 @@
 %-------------------------------------
 \cleardoublepage % Zaczynamy od nieparzystej strony
 \abstract
+Praca dotyczy oceny skuteczności uczenia ze wzmocnieniem w adaptacyjnym sterowaniu sygnalizacją świetlną. Badanie przeprowadzono na modelu pojedynczego skrzyżowania ulicy Belgradzkiej i alei Komisji Edukacji Narodowej w mikroskopowym symulatorze ruchu SUMO. Porównano trzy metody: sterowanie stałoczasowe, sterowanie akomodacyjne typu \textit{gap-based} oraz agenta wykorzystującego algorytm Deep Q-Network. Agent co 5~s wybierał jedną z trzech faz zielonych na podstawie informacji o bieżącej fazie, gęstości ruchu i zapełnieniu kolejek na trzynastu pasach wlotowych. Funkcję nagrody oparto na zmianie skumulowanego czasu oczekiwania.
+
+Do połączenia SUMO z implementacją DQN w Stable-Baselines3 wykorzystano interfejs TraCI i bibliotekę \texttt{sumo-rl}. Przygotowano również własną warstwę integracyjną, która ujednoliciła zbieranie metryk dla wszystkich metod. Eksperyment wykorzystał rozdzielne zbiory treningowy, walidacyjny i testowy. Na podstawie walidacji jako model końcowy wybrano checkpoint konfiguracji bazowej po 225\,000 kroków, wytrenowany na zbiorze o regularnym napływie pojazdów. Następnie oceniono go wraz z metodami referencyjnymi na dwudziestu niezależnych scenariuszach testowych reprezentujących lekkie, średnie, wysokie i zmienne natężenie ruchu.
+
+Agent DQN uzyskał najniższe średnie opóźnienie i czas oczekiwania we wszystkich czterech grupach testowych. Średnie opóźnienie wyniosło od 13,90 do 51,82~s na pojazd, zależnie od natężenia. Względem sterowania stałoczasowego oznaczało to redukcję od 20,8\% do 50,4\%, a względem akomodacyjnego od 1,3\% do 33,6\%. Przy wysokim natężeniu DQN uzyskał także większą przepustowość niż obie metody referencyjne. Nie był jednak najlepszy według każdej metryki. W scenariuszu zmiennym sterowanie akomodacyjne osiągnęło mniejszą średnią długość kolejki, 8,88 wobec 9,55 pojazdu, a program stałoczasowy przełączał sygnalizację znacznie rzadziej. Trzy z dwudziestu przebiegów DQN osiągnęły limit czasu, przy czym udział pojazdów pozostających w sieci nie przekroczył w żadnym z nich 1\% popytu. Wyniki warunkowo potwierdzają skuteczność DQN w przyjętej konfiguracji symulacyjnej, ale nie dowodzą jego uniwersalnej przewagi ani gotowości do wdrożenia w rzeczywistym ruchu.
 
 \keywords
+uczenie ze wzmocnieniem, Deep Q-Network, adaptacyjne sterowanie ruchem, sygnalizacja świetlna, SUMO, mikrosymulacja ruchu
 
 %----------------------------------------
 % Streszczenie po angielsku dla \langpol
@@ -63,8 +69,14 @@
 %----------------------------------------
 \clearpage
 \secondabstract
+This thesis evaluates the effectiveness of reinforcement learning in adaptive traffic signal control. The study used a microscopic SUMO model of a single intersection of Belgradzka Street and Komisji Edukacji Narodowej Avenue. Three methods were compared: fixed-time control, \textit{gap-based} actuated control, and an agent using the Deep Q-Network algorithm. Every 5~s, the agent selected one of three green phases using information about the current phase, traffic density, and queue occupancy on thirteen incoming lanes. The reward function was based on the change in cumulative waiting time.
+
+SUMO was connected to the DQN implementation in Stable-Baselines3 through TraCI and the \texttt{sumo-rl} library. A custom integration layer was also developed to collect metrics consistently for all methods. Separate training, validation, and test sets were used. Based on validation results, the checkpoint of the base configuration after 225,000 steps, trained on scenarios with regular vehicle arrivals, was selected as the final model. It was then evaluated together with the reference methods on twenty independent test scenarios representing light, medium, heavy, and variable traffic demand.
+
+The DQN agent achieved the lowest mean delay and waiting time in all four test groups. Depending on traffic demand, the mean delay ranged from 13.90 to 51.82~s per vehicle. This corresponded to a reduction of 20.8\% to 50.4\% relative to fixed-time control and 1.3\% to 33.6\% relative to actuated control. Under heavy traffic, DQN also achieved higher throughput than both reference methods. However, it was not the best method for every metric. Under variable demand, actuated control produced a shorter mean queue length, 8.88 compared with 9.55 vehicles, while fixed-time control switched phases much less frequently. Three of the twenty DQN runs reached the time limit, although the share of vehicles remaining in the network was below 1\% of demand in each case. The results conditionally support the effectiveness of DQN in the adopted simulation setting, but they do not demonstrate its universal superiority or readiness for deployment in real traffic.
 
 \secondkeywords
+reinforcement learning, Deep Q-Network, adaptive traffic control, traffic signal control, SUMO, microscopic traffic simulation
 
 \pagestyle{plain}
 
@@ -107,8 +119,48 @@
 % Makro \acronym dodaje skrót/symbol do listy,
 % zapewniając podstawowe formatowanie.
 \acronymlist
-% \acronym{AE}{Autoenkoder}
-% ....
+\subsection*{Skróty}
+\acronym{A2C}{ang. Advantage Actor-Critic}
+\acronym{CSV}{ang. Comma-Separated Values}
+\acronym{DQN}{ang. Deep Q-Network}
+\acronym{FHWA}{ang. Federal Highway Administration}
+\acronym{GiB}{gibibajt, $2^{30}$ bajtów}
+\acronym{KEN}{Komisja Edukacji Narodowej}
+\acronym{OFAT}{ang. One-Factor-at-a-Time}
+\acronym{OPAC}{ang. Optimization Policies for Adaptive Control}
+\acronym{PPO}{ang. Proximal Policy Optimization}
+\acronym{RHODES}{ang. Real-Time Hierarchical Optimized Distributed Effective System}
+\acronym{RL}{ang. Reinforcement Learning}
+\acronym{SAC}{ang. Soft Actor-Critic}
+\acronym{SCATS}{ang. Sydney Coordinated Adaptive Traffic System}
+\acronym{SCOOT}{ang. Split Cycle Offset Optimisation Technique}
+\acronym{SUMO}{ang. Simulation of Urban MObility}
+\acronym{TraCI}{ang. Traffic Control Interface}
+\acronym{XML}{ang. Extensible Markup Language}
+
+\subsection*{Symbole matematyczne}
+\acronym{$A, A_t, a, a'$}{akcja agenta; indeks dolny wskazuje chwilę, a $a'$ akcję rozważaną w następnym stanie}
+\acronym{$D$}{bufor doświadczeń}
+\acronym{$G_t$}{zdyskontowany zwrot od chwili $t$}
+\acronym{$i$}{indeks aktualizacji parametrów sieci}
+\acronym{$k$}{indeks kolejnej nagrody uwzględnianej w zwrocie}
+\acronym{$L$}{zbiór pasów wlotowych sterowanych przez sygnalizację}
+\acronym{$L_i$}{funkcja straty w $i$-tej aktualizacji parametrów sieci}
+\acronym{$l$}{pas należący do zbioru $L$}
+\acronym{$N$}{liczba zakończonych podróży}
+\acronym{$Q$}{przepustowość wyrażona liczbą zakończonych podróży na godzinę}
+\acronym{$Q(S,A), Q(s,a;\theta)$}{funkcja wartości akcji oraz jej aproksymacja przez sieć neuronową}
+\acronym{$R_{t+k+1}, r, r_t$}{nagroda; indeksy wskazują chwilę jej otrzymania}
+\acronym{$S, S_t, s, s'$}{stan środowiska; indeks dolny wskazuje chwilę, a $s'$ stan po wykonaniu akcji}
+\acronym{$t$}{indeks chwili decyzyjnej}
+\acronym{$t_{\min}, t_{\max}$}{najwcześniejszy czas wyjazdu i najpóźniejszy czas przyjazdu w zbiorze zakończonych podróży}
+\acronym{$U(D)$}{rozkład jednostajny próbkowania przejść z bufora $D$}
+\acronym{$W_t$}{przeskalowana suma skumulowanego czasu oczekiwania w chwili $t$}
+\acronym{$w_{l,t}$}{część skumulowanego czasu oczekiwania przypisana pasowi $l$ w chwili $t$}
+\acronym{$\alpha$}{współczynnik uczenia}
+\acronym{$\varepsilon$}{prawdopodobieństwo wyboru losowej akcji w strategii epsilon-zachłannej}
+\acronym{$\gamma$}{współczynnik dyskontowania}
+\acronym{$\theta, \theta^{-}$}{parametry sieci głównej i sieci docelowej}
 \clearpage
 %--------------------------------------
 % Spisy: rysunków, tabel, załączników
