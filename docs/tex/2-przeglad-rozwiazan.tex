@@ -1,5 +1,5 @@
 \clearpage
-\section{Przegląd metod sterowania ruchem i istniejących rozwiązań}
+\section{Przegląd metod sterowania ruchem i rozwiązań wykorzystujących uczenie maszynowe}
 \label{sec:przeglad}
 
 Metody sterowania sygnalizacją świetlną rozwijały się od prostych programów o stałych czasach, przez rozwiązania reagujące na wykrycie pojazdów, po metody adaptacyjne i podejścia wykorzystujące uczenie maszynowe. W rozdziale omówiono te grupy metod na podstawie literatury oraz wyjaśniono podstawowe pojęcia uczenia ze wzmocnieniem, algorytm Q-Learning i algorytm Deep Q-Network, potrzebne do zrozumienia dalszej części pracy.
@@ -26,7 +26,7 @@ Sterowanie stałoczasowe (ang. fixed-time control) jest najprostszą i historycz
 
 Do zalet sterowania stałoczasowego należą prostota, przewidywalność działania oraz łatwość implementacji i utrzymania. Metoda nie wymaga detektorów pojazdów, co obniża koszt i zwiększa niezawodność \cite{wei2019survey}. Głównym ograniczeniem jest brak reakcji na bieżące natężenie ruchu. Gdy różni się ono od założonego w programie, czas zielony może być przydzielany nieefektywnie, na przykład utrzymywany dla pustego wlotu, podczas gdy na innym narasta kolejka \cite{wei2019survey, NAP22097}.
 
-W SUMO klasyczny program stałoczasowy może być reprezentowany przez sterownik typu \texttt{static}, który cyklicznie wykonuje zdefiniowaną sekwencję faz \cite{sumoTrafficLights}. Konfigurację sterowników wykorzystanych w eksperymencie opisano w dalszej części pracy.
+W SUMO klasyczny program stałoczasowy może być reprezentowany przez sterownik typu \texttt{static}, który cyklicznie wykonuje zdefiniowaną sekwencję faz \cite{sumoTrafficLights}. Konfigurację sterowników wykorzystanych w badaniu opisano w dalszej części pracy.
 
 \subsection{Sterowanie akomodacyjne}
 \label{subsec:akomodacyjne}
@@ -53,7 +53,7 @@ Omawiane grupy metod różnią się następująco:
 
 Określenie „adaptacyjne'' nie oznacza zastosowania sztucznej inteligencji. Klasyczne systemy adaptacyjne, takie jak SCOOT, SCATS, OPAC czy RHODES, powstały i były wdrażane na długo przed obecnym rozwojem uczenia maszynowego. Działają na podstawie modeli ruchu, optymalizacji matematycznej i reguł heurystycznych \cite{wei2019survey}. System reagujący na obecność pojazdów nie musi więc uczyć się polityki. Tym różni się od podejść opartych na uczeniu ze wzmocnieniem, omawianych w dalszej części rozdziału.
 
-\subsection{Podstawy uczenia ze wzmocnieniem}
+\subsection{Podstawy uczenia maszynowego ze wzmocnieniem}
 \label{subsec:rl-podstawy}
 
 Uczenie ze wzmocnieniem (ang. reinforcement learning) jest rodzajem uczenia maszynowego, w którym agent uczy się podejmować decyzje przez interakcję ze środowiskiem \cite{sutton2018reinforcement}. Proces ten najczęściej opisuje się jako proces decyzyjny Markowa. W kolejnych chwilach agent obserwuje stan środowiska, wybiera akcję, a następnie otrzymuje nagrodę i nowy stan.
@@ -68,7 +68,7 @@ Podstawowe pojęcia uczenia ze wzmocnieniem obejmują \cite{sutton2018reinforcem
     \item \emph{politykę}, czyli regułę wyboru akcji na podstawie obserwacji, którą agent stara się udoskonalić.
 \end{itemize}
 
-Agent nie maksymalizuje pojedynczej nagrody, lecz oczekiwaną, zdyskontowaną sumę nagród w czasie. Dla chwili $t$ zwrot definiuje się jako
+Agent nie maksymalizuje pojedynczej nagrody, lecz oczekiwaną, zdyskontowaną sumę nagród w czasie. Zwrot dla chwili $t$ określa wzór~\ref{eq:return}.
 \begin{equation}
     G_t = \sum_{k=0}^{\infty} \gamma^{k} R_{t+k+1},
     \label{eq:return}
@@ -82,7 +82,7 @@ Uczenie zwykle dzieli się na epizody, czyli skończone sekwencje interakcji od 
 
 Q-Learning jest jednym z podstawowych algorytmów uczenia ze wzmocnieniem. Należy do metod uczenia różnicowego (ang. temporal-difference) i nie wymaga modelu środowiska \cite{watkins1992qlearning, sutton2018reinforcement}. Szacuje funkcję wartości akcji $Q(S,A)$, czyli oczekiwany zdyskontowany zwrot po wykonaniu akcji $A$ w stanie $S$ i dalszym działaniu zgodnie z polityką.
 
-W klasycznej, tablicowej wersji wartości $Q(S,A)$ przechowuje się w tablicy indeksowanej stanami i akcjami. Po każdym przejściu ze stanu $S_t$ do stanu $S_{t+1}$ w wyniku akcji $A_t$ oraz otrzymaniu nagrody $R_{t+1}$ wartość aktualizuje się według reguły
+W klasycznej, tablicowej wersji wartości $Q(S,A)$ przechowuje się w tablicy indeksowanej stanami i akcjami. Po każdym przejściu ze stanu $S_t$ do stanu $S_{t+1}$ w wyniku akcji $A_t$ oraz otrzymaniu nagrody $R_{t+1}$ wartość aktualizuje się według reguły przedstawionej we wzorze~\ref{eq:qupdate}.
 \begin{equation}
     Q(S_t, A_t) \leftarrow Q(S_t, A_t) + \alpha \left[ R_{t+1} + \gamma \max_{a} Q(S_{t+1}, a) - Q(S_t, A_t) \right],
     \label{eq:qupdate}
@@ -96,7 +96,7 @@ Podejście tablicowe sprawdza się przy małej, dyskretnej przestrzeni stanów, 
 
 Algorytm Deep Q-Network (DQN) zastępuje tablicę wartości Q-Learningu siecią neuronową \cite{mnih2013playing, sutton2018reinforcement}. Wartość akcji zapisuje się jako $Q(s, a; \theta)$, gdzie $\theta$ oznacza parametry sieci. Pozwala to szacować wartości akcji dla stanów opisanych ciągłym, wielowymiarowym wektorem obserwacji bez jawnej dyskretyzacji przestrzeni stanów.
 
-Sieć uczy się przez minimalizację błędu różnicowego. Funkcję straty dla parametrów $\theta$ zapisuje się jako
+Sieć uczy się przez minimalizację błędu różnicowego. Funkcję straty dla parametrów $\theta$ określa wzór~\ref{eq:dqnloss}.
 \begin{equation}
     L_i(\theta_i) =
     \mathbb{E}_{(s,a,r,s') \sim U(D)}
@@ -129,7 +129,7 @@ Inna grupa badań dotyczy sterowania wieloma skrzyżowaniami, co wiąże się z 
 
 Prace te pokazują, że w sterowaniu sygnalizacją stosuje się metody oparte na funkcji wartości, takie jak DQN, oraz metody typu aktor-krytyk i inne algorytmy gradientu polityki, na przykład A2C. Dobór algorytmu zależy przede wszystkim od przestrzeni akcji oraz od tego, czy sterowanie obejmuje jedno skrzyżowanie, czy całą sieć. Dla dyskretnej przestrzeni akcji i pojedynczego skrzyżowania DQN jest jednym z częściej stosowanych i dobrze udokumentowanych rozwiązań \cite{wei2019survey, genders2016using}.
 
-\subsection{Pozycjonowanie własnego rozwiązania}
+\subsection{Podsumowanie}
 \label{subsec:pozycjonowanie}
 
-Praca dotyczy pojedynczego skrzyżowania, a nie koordynacji wielu skrzyżowań lub systemu wieloagentowego. Porównano w niej agenta DQN ze sterowaniem stałoczasowym i akomodacyjnym w kontrolowanych warunkach symulacyjnych. Celem nie jest opracowanie nowego algorytmu uczenia ze wzmocnieniem, lecz ocena skuteczności i stabilności typowego agenta DQN oraz porównanie go z metodami klasycznymi. Środowisko, przestrzenie obserwacji i akcji, funkcję nagrody oraz konfigurację eksperymentu opisano w dalszej części pracy.
+Badanie ograniczono do pojedynczego skrzyżowania, bez koordynacji wielu skrzyżowań i systemu wieloagentowego. W ramach pracy zbadano możliwości wykorzystania algorytmu DQN do sterowania sygnalizacją świetlną. Wyniki agenta porównano ze sterowaniem stałoczasowym i akomodacyjnym w kontrolowanych warunkach symulacyjnych. Dodatkowym celem była ocena stabilności procesu uczenia. Środowisko, przestrzenie obserwacji i akcji, funkcję nagrody oraz przebieg badania opisano w dalszej części pracy.

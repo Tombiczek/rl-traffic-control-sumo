@@ -2,10 +2,12 @@
 \section{Metodyka badań i opracowanie algorytmu sterowania}
 \label{sec:metodyka}
 
-\subsection{Koncepcja eksperymentu}
+W rozdziale przedstawiono koncepcję badania, model skrzyżowania, sformułowanie zadania uczenia ze wzmocnieniem, wybór algorytmu i metod referencyjnych, metryki oceny oraz podział danych.
+
+\subsection{Koncepcja badania}
 \label{subsec:koncepcja}
 
-Badanie miało formę kontrolowanego eksperymentu porównawczego. Agent uczony metodą uczenia ze wzmocnieniem oraz dwie klasyczne metody referencyjne sterowały w nim tą samą siecią drogową i były oceniane na tych samych scenariuszach ruchu. Głównym założeniem było oddzielenie danych używanych do uczenia i strojenia modelu od danych przeznaczonych do końcowej oceny.
+Przeprowadzono kontrolowane badanie porównawcze. Agent uczony metodą uczenia ze wzmocnieniem oraz dwie klasyczne metody referencyjne sterowały w nim tą samą siecią drogową i były oceniane na tych samych scenariuszach ruchu. Głównym założeniem było oddzielenie danych używanych do uczenia i strojenia modelu od danych przeznaczonych do końcowej oceny.
 
 Procedurę badawczą podzielono na następujące etapy:
 \begin{enumerate}
@@ -25,8 +27,8 @@ Wybór i strojenie modelu DQN oraz dobór parametrów metod referencyjnych opart
 
 \begin{figure}[!htbp]
     \centering
-    \includegraphics[width=0.8\textwidth]{proces_badawczy.png}
-    \caption{Schemat procedury badawczej z rozdzieleniem danych treningowych, walidacyjnych i testowych.}
+    \includegraphics[width=\textwidth]{proces_badawczy.png}
+    \caption[Procedura badawcza i podział danych.]{Schemat procedury badawczej z rozdzieleniem danych treningowych, walidacyjnych i testowych.}
     \label{fig:proces-badawczy}
 \end{figure}
 
@@ -37,7 +39,7 @@ Do badania wybrano skrzyżowanie ulicy Belgradzkiej z aleją Komisji Edukacji Na
 
 \begin{figure}[!htbp] \centering
     \includegraphics[width=0.75\linewidth]{map-2.png}
-    \caption{Położenie analizowanego skrzyżowania na tle warszawskiego Ursynowa. Skrzyżowanie zaznaczono czerwonym okręgiem. Źródło: OpenStreetMap.}
+    \caption[Położenie analizowanego skrzyżowania na warszawskim Ursynowie.]{Położenie analizowanego skrzyżowania na tle warszawskiego Ursynowa. Skrzyżowanie zaznaczono czerwonym okręgiem. Źródło: OpenStreetMap.}
     \label{fig:mapa-ursynow}
 \end{figure}
 
@@ -57,7 +59,7 @@ Skrzyżowanie ma cztery wloty, nazywane dalej północnym, południowym, wschodn
 
 Program sygnalizacji ma trzy fazy zielone rozdzielone fazami żółtymi. Pierwsza faza jednocześnie obsługuje jazdę na wprost i skręt w prawo z obu kierunków alei Komisji Edukacji Narodowej. Druga obsługuje chroniony skręt w lewo z tej alei, oddzielony w czasie od kolizyjnego strumienia jadącego na wprost z przeciwka. Trzecia obsługuje jazdę na wprost oraz skręty w prawo i w lewo z ulicy Belgradzkiej. Skręt w lewo jest w tej fazie warunkowy i wymaga ustąpienia pierwszeństwa pojazdom nadjeżdżającym z przeciwka. Różny sposób obsługi lewoskrętów wpływa na ich przepustowość, dlatego ma znaczenie przy interpretacji wyników.
 
-W modelu odwzorowano geometrię skrzyżowania, liczbę i przeznaczenie pasów ruchu, relacje kolizyjne oraz program sygnalizacji świetlnej. Model zbudowano na podstawie danych OpenStreetMap, a następnie skorygowano na potrzeby eksperymentu. Odwzorowane skrzyżowanie w środowisku SUMO przedstawiono na rysunku~\ref{fig:symulacja}.
+W modelu odwzorowano geometrię skrzyżowania, liczbę i przeznaczenie pasów ruchu, relacje kolizyjne oraz program sygnalizacji świetlnej. Model zbudowano na podstawie danych OpenStreetMap, a następnie skorygowano na potrzeby badania. Odwzorowane skrzyżowanie w środowisku SUMO przedstawiono na rysunku~\ref{fig:symulacja}.
 
 \begin{figure}[!htbp] \centering
     \includegraphics[width=0.8\linewidth]{symulacja.png}
@@ -69,6 +71,8 @@ Model nie obejmuje faz ani ograniczeń czasowych związanych z obsługą przejś
 
 \subsection{Sformułowanie problemu jako zadania uczenia ze wzmocnieniem}
 \label{subsec:sformulowanie-rl}
+
+W kolejnych podpunktach określono agenta i środowisko, przestrzenie obserwacji i akcji, funkcję nagrody oraz interwał decyzyjny.
 
 \subsubsection{Agent i środowisko}
 \label{subsubsec:agent-srodowisko}
@@ -109,12 +113,12 @@ Agent nie steruje bezpośrednio sygnałami na poszczególnych pasach ani nie mo�
 \subsubsection{Funkcja nagrody}
 \label{subsubsec:nagroda}
 
-Wykorzystano funkcję nagrody opartą na zmianie skumulowanego czasu oczekiwania pojazdów \cite{alegre2019sumorl}. W konfiguracji nosi ona nazwę \texttt{diff-waiting-time}. W chwili decyzyjnej $t$ obliczana jest wartość
+Wykorzystano funkcję nagrody opartą na zmianie skumulowanego czasu oczekiwania pojazdów \cite{alegre2019sumorl}. W konfiguracji nosi ona nazwę \texttt{diff-waiting-time}. W chwili decyzyjnej $t$ wartość $W_t$ oblicza się zgodnie ze wzorem~\ref{eq:waiting-total}.
 \begin{equation}
     W_t = \frac{1}{100} \sum_{l \in L} w_{l,t},
     \label{eq:waiting-total}
 \end{equation}
-gdzie $L$ oznacza zbiór pasów wlotowych sterowanych przez sygnalizację, a $w_{l,t}$ część skumulowanego czasu oczekiwania pojazdów na pasie $l$, przypisaną temu pasowi. SUMO raportuje skumulowany czas oczekiwania pojazdu, czyli czas jazdy z prędkością poniżej progu zatrzymania. Gdy pojazd zmienia pas w sterowanym obszarze, biblioteka rozdziela tę wartość między kolejno zajmowane pasy. Zapobiega to wielokrotnemu uwzględnianiu tego samego czasu oczekiwania. Czynnik $\frac{1}{100}$ zmniejsza zakres liczbowy sumy. Nagroda jest różnicą między wartością z poprzedniej i bieżącej chwili decyzyjnej:
+gdzie $L$ oznacza zbiór pasów wlotowych sterowanych przez sygnalizację, a $w_{l,t}$ część skumulowanego czasu oczekiwania pojazdów na pasie $l$, przypisaną temu pasowi. SUMO raportuje skumulowany czas oczekiwania pojazdu, czyli czas jazdy z prędkością poniżej progu zatrzymania. Gdy pojazd zmienia pas w sterowanym obszarze, biblioteka rozdziela tę wartość między kolejno zajmowane pasy. Zapobiega to wielokrotnemu uwzględnianiu tego samego czasu oczekiwania. Czynnik $\frac{1}{100}$ zmniejsza zakres liczbowy sumy. Nagrodę wyznacza różnica między wartością z poprzedniej i bieżącej chwili decyzyjnej, opisana wzorem~\ref{eq:reward}.
 \begin{equation}
     r_t = W_{t-1} - W_t.
     \label{eq:reward}
@@ -184,7 +188,7 @@ Metrykę podaje się w pojazdach, a niższa wartość jest korzystniejsza. Rejes
 \subsubsection{Przepustowość}
 \label{subsubsec:metryka-przepustowosc}
 
-Przepustowość oblicza się na podstawie liczby podróży zakończonych podczas symulacji, czyli pojazdów, które opuściły sieć drogową. Liczbę tę dzieli się przez czas od najwcześniejszego wyjazdu do najpóźniejszego przyjazdu wśród zakończonych podróży, a następnie przelicza na godzinę:
+Przepustowość oblicza się na podstawie liczby podróży zakończonych podczas symulacji, czyli pojazdów, które opuściły sieć drogową. Liczbę tę dzieli się przez czas od najwcześniejszego wyjazdu do najpóźniejszego przyjazdu wśród zakończonych podróży, a następnie przelicza na godzinę zgodnie ze wzorem~\ref{eq:throughput}.
 \begin{equation}
     Q = \frac{N}{t_{\max} - t_{\min}} \cdot 3600,
     \label{eq:throughput}
@@ -200,7 +204,7 @@ Częstotliwość przełączeń wskazuje, jak często zmienia się układ sygnał
 
 Metrykę podaje się w przełączeniach na godzinę i nie ma ona jednoznacznie korzystnego kierunku zmian. Zbyt rzadkie przełączanie wydłuża oczekiwanie na nieobsługiwanych wlotach. Zbyt częste zwiększa udział czasu międzyzielonego, gdy żaden strumień nie korzysta ze skrzyżowania, oraz obniża komfort i przewidywalność jazdy. Metryka pełni więc funkcję kontrolną: pokazuje, czy pozostałe wskaźniki nie poprawiły się kosztem niestabilnego sterowania.
 
-\subsection{Podział danych eksperymentalnych}
+\subsection{Podział danych w badaniu}
 \label{subsec:podzial-danych}
 
 Scenariusze ruchu wygenerowano skryptem \texttt{randomTrips.py} dostarczanym z SUMO \cite{sumo_randomtrips_docs}. Natężenie regulowano parametrem określającym średni odstęp między wyjazdami pojazdów, a układ tras różnicowano przez zmianę ziarna generatora liczb losowych. Wygenerowane podróże przekształcano następnie w poprawne trasy w analizowanej sieci.
@@ -209,7 +213,7 @@ Dane podzielono na trzy rozłączne zbiory: treningowy, walidacyjny i testowy. P
 
 \begin{figure}[!htbp] \centering
     \includegraphics[width=\linewidth]{podzial_danych.png}
-    \caption{Podział danych eksperymentalnych oraz przeznaczenie poszczególnych zbiorów.}
+    \caption{Podział danych w badaniu oraz przeznaczenie poszczególnych zbiorów.}
     \label{fig:podzial-danych}
 \end{figure}
 

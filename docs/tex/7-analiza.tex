@@ -1,11 +1,13 @@
 \clearpage
-\section{Analiza wyników, ograniczenia i kierunki rozwoju}
+\section{Analiza uzyskanych wyników, ograniczenia oraz kierunki rozwoju systemu}
 \label{sec:analiza}
 
 W rozdziale zinterpretowano wyniki, skupiając się na skuteczności DQN względem metod referencyjnych, stabilności uczenia i ograniczeniach badania. Wnioski dotyczą tylko przyjętej konfiguracji: pojedynczego skrzyżowania, syntetycznych scenariuszy ruchu, zastosowanej obserwacji i funkcji nagrody oraz zbadanego zakresu hiperparametrów.
 
 \subsection{Wpływ natężenia i charakteru ruchu}
 \label{subsec:analiza-natezenia}
+
+Analizę przeprowadzono osobno dla ruchu lekkiego, średniego, wysokiego i zmiennego.
 
 \subsubsection{Ruch lekki}
 
@@ -42,14 +44,16 @@ Model końcowy trenowano na trzydziestu scenariuszach o trzech stałych poziomac
 
 Nie oznacza to jednak szerokiej generalizacji. Wszystkie zbiory wygenerowano tym samym narzędziem dla tej samej sieci i trzech podstawowych poziomów natężenia. Wynik potwierdza działanie na nowych wariantach ruchu o podobnym rozkładzie, ale nie dowodzi, że politykę można przenieść na inne skrzyżowanie, inny układ faz lub jakościowo odmienne profile popytu.
 
-Porównanie zbiorów nie potwierdziło intuicji, że większa losowość automatycznie poprawia generalizację. Modele trenowane na regularnym zbiorze miały niższe opóźnienie we wszystkich scenariuszach walidacyjnych, także przy nieregularnym napływie. Nie oznacza to ogólnej przewagi regularnych danych. Wariant nieregularny różnił się zarówno czasami wyjazdu, jak i średnim okresem napływu między plikami, więc eksperyment nie oddzielał wpływu tych dwóch zmian.
+Porównanie zbiorów nie potwierdziło intuicji, że większa losowość automatycznie poprawia generalizację. Modele trenowane na regularnym zbiorze miały niższe opóźnienie we wszystkich scenariuszach walidacyjnych, także przy nieregularnym napływie. Nie oznacza to ogólnej przewagi regularnych danych. Wariant nieregularny różnił się zarówno czasami wyjazdu, jak i średnim okresem napływu między plikami, więc badanie nie oddzielało wpływu tych dwóch zmian.
 
-Jednym z możliwych wyjaśnień jest to, że regularny zbiór nadal różnicował trasy dzięki dziesięciu ziarnom na poziom, ale zachowywał bardziej powtarzalne obciążenie. Przy stałej liczbie kroków większa zmienność drugiego zbioru mogła ograniczyć liczbę podobnych doświadczeń dla każdego rodzaju sytuacji i zwiększyć zmienność celów uczących. Znaczenie mogły mieć też sekwencyjna kolejność scenariuszy i zmiany składu bufora doświadczeń. Tych hipotez nie sprawdzono jednak w osobnych eksperymentach.
+Jednym z możliwych wyjaśnień jest to, że regularny zbiór nadal różnicował trasy dzięki dziesięciu ziarnom na poziom, ale zachowywał bardziej powtarzalne obciążenie. Przy stałej liczbie kroków większa zmienność drugiego zbioru mogła ograniczyć liczbę podobnych doświadczeń dla każdego rodzaju sytuacji i zwiększyć zmienność celów uczących. Znaczenie mogły mieć też sekwencyjna kolejność scenariuszy i zmiany składu bufora doświadczeń. Tych hipotez nie sprawdzono jednak w osobnych badaniach.
 
 Model kontrastowy dostarcza dodatkowych informacji. Krótsza faza eksploracji pogorszyła wyniki walidacyjne, a następnie testowe przy wysokim i zmiennym natężeniu. Wspiera to użycie walidacji do wyboru modelu i pokazuje, że lekki oraz średni ruch nie wystarczają do oceny generalizacji. Model działał w nich poprawnie, a jego główna słabość ujawniła się dopiero przy dużym obciążeniu. Na teście sprawdzono jednak tylko jeden model kontrastowy, więc wynik nie określa ogólnej zależności między walidacją i testem.
 
 \subsection{Stabilność procesu uczenia i wpływ hiperparametrów}
 \label{subsec:analiza-stabilnosci}
+
+Stabilność oceniono na podstawie zmian jakości kolejnych checkpointów oraz wyników wariantów hiperparametrów.
 
 \subsubsection{Zmiana jakości wraz z długością treningu}
 
@@ -91,8 +95,10 @@ Przed wdrożeniem decyzje agenta należałoby oddzielić od warstwy bezpieczeńs
 \end{itemize}
 Wytyczne FHWA opisują niezależny monitor nieprawidłowego działania, który wykrywa kolizyjne wskazania i wymusza stan bezpieczny \cite{fhwa2023traffic_signal_handbook}. Są to wytyczne i przykładowe wymagania, a nie pełna specyfikacja wdrożenia ani podstawa oceny zgodności w Polsce. Ograniczenia czasowe w środowisku są tylko częścią takich zabezpieczeń. Ocena akceptowalności rozwiązania wymagałaby również analizy długości faz, maksymalnego czasu czerwonego, liczby zatrzymań, gwałtowności zmian prędkości i wyników poszczególnych relacji, a nie tylko średnich \cite{NAP22097}.
 
-\subsection{Ograniczenia wiarygodności eksperymentu}
+\subsection{Ograniczenia wiarygodności badania}
 \label{subsec:ograniczenia-wiarygodnosci}
+
+Ograniczenia dotyczą zakresu modelu i danych, liczby powtórzeń oraz konstrukcji pomiaru i porównania.
 
 \subsubsection{Zakres modelu i danych}
 
@@ -123,6 +129,8 @@ Bardziej wymagającą metodą referencyjną był lokalny sterownik akomodacyjny 
 \subsection{Kierunki dalszego rozwoju}
 \label{subsec:kierunki-rozwoju}
 
+Dalszy rozwój może objąć dane rzeczywiste i kalibrację symulacji, rozszerzenie procedury oceny, rozwój algorytmu oraz sterowanie siecią skrzyżowań.
+
 \subsubsection{Dane rzeczywiste i kalibracja symulacji}
 
 Najpierw należy zwiększyć realizm danych wejściowych. Pomiary z detektorów, dane o natężeniu poszczególnych relacji i rozkłady ruchu w ciągu dnia pozwoliłyby utworzyć empiryczne profile popytu zamiast losować podróże tym samym mechanizmem dla całej sieci. Na tej podstawie można skalibrować zachowanie pojazdów w SUMO i sprawdzić model na osobnych danych.
@@ -145,4 +153,4 @@ Automatyczne strojenie pozwoliłoby zbadać interakcje pominięte przez OFAT. Ni
 
 Kolejnym krokiem może być sterowanie kilkoma sąsiednimi skrzyżowaniami. Wymaga to uwzględnienia przepływu między węzłami i koordynacji faz. Można porównać agenta scentralizowanego z systemem wieloagentowym, w którym skrzyżowania decydują lokalnie, ale wymieniają informacje lub uczą się ze wspólnym celem. Zwiększa to przestrzeń decyzyjną i wprowadza dodatkową niestacjonarność uczenia \cite{chu2020multiagent}.
 
-Przed rzeczywistym zastosowaniem potrzebne byłyby testy \textit{software-in-the-loop} i \\\textit{hardware-in-the-loop}. System należałoby połączyć z rzeczywistymi detektorami i uruchomić w trybie obserwacyjnym, w którym agent proponuje decyzje, ale nie steruje sygnalizacją. Eksperymenty terenowe pod nadzorem operatora można rozważać dopiero po sprawdzeniu warstwy bezpieczeństwa, odporności na brak danych i zachowania w nietypowych sytuacjach. Najpierw należy zwiększyć wiarygodność modelu i oceny, a dopiero później złożoność algorytmu.
+Przed rzeczywistym zastosowaniem potrzebne byłyby testy \textit{software-in-the-loop} i \\\textit{hardware-in-the-loop}. System należałoby połączyć z rzeczywistymi detektorami i uruchomić w trybie obserwacyjnym, w którym agent proponuje decyzje, ale nie steruje sygnalizacją. Badania terenowe pod nadzorem operatora można rozważać dopiero po sprawdzeniu warstwy bezpieczeństwa, odporności na brak danych i zachowania w nietypowych sytuacjach. Najpierw należy zwiększyć wiarygodność modelu i oceny, a dopiero później złożoność algorytmu.

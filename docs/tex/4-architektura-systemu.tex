@@ -40,14 +40,14 @@ SUMO (ang. Simulation of Urban MObility) jest otwartym pakietem do mikroskopowej
 
 SUMO modeluje środowisko. Odpowiada za geometrię sieci drogowej, ruch i dynamikę pojazdów, przejazd wyznaczonymi trasami, logikę sygnalizacji świetlnej oraz dane potrzebne do obliczenia obserwacji, nagrody i metryk. Symulator nie zawiera elementów uczenia maszynowego. Jego stan zmienia się w kolejnych krokach symulacji.
 
-Konfigurację eksperymentu opisują pliki w formacie XML:
+Konfigurację badania opisują pliki w formacie XML:
 \begin{itemize}
     \item pliki sieci drogowej z rozszerzeniem \texttt{.net.xml}, zawierające odcinki dróg, pasy ruchu, węzły, relacje kolizyjne oraz definicje programów sygnalizacji;
     \item pliki tras z rozszerzeniem \texttt{.rou.xml}, opisujące pojazdy, ich czasy wyjazdu oraz ciągi odcinków, którymi się poruszają;
     \item pliki konfiguracyjne z rozszerzeniem \texttt{.sumocfg}, wiążące sieć z plikami tras oraz ustawiające opcje przetwarzania i raportowania;
 \end{itemize}
 
-W eksperymencie wykorzystano dwa pliki sieci o tej samej geometrii i układzie faz, ale różnych typach logiki sygnalizacji. Plik z logiką statyczną obsługuje sterowanie stałoczasowe, a plik z logiką akomodacyjną metodę referencyjną typu gap-based. Każda z trzech metod ma osobny plik konfiguracyjny. Aby zmienić metodę sterowania, wystarczy więc wskazać inną konfigurację bez modyfikowania danych wejściowych. Plik tras podaje się w wierszu poleceń, ponieważ ta sama konfiguracja obsługuje wiele scenariuszy o różnych ziarnach generatora.
+W badaniu wykorzystano dwa pliki sieci o tej samej geometrii i układzie faz, ale różnych typach logiki sygnalizacji. Plik z logiką statyczną obsługuje sterowanie stałoczasowe, a plik z logiką akomodacyjną metodę referencyjną typu gap-based. Każda z trzech metod ma osobny plik konfiguracyjny. Aby zmienić metodę sterowania, wystarczy więc wskazać inną konfigurację bez modyfikowania danych wejściowych. Plik tras podaje się w wierszu poleceń, ponieważ ta sama konfiguracja obsługuje wiele scenariuszy o różnych ziarnach generatora.
 
 Po zakończeniu symulacji SUMO zapisuje w pliku \texttt{tripinfo.xml} opis każdej zakończonej podróży \cite{sumo_tripinfo_docs}. Jest to jedno z dwóch źródeł metryk opisanych w podrozdziale~\ref{subsec:metryki}. Drugim są dane odczytywane podczas symulacji przez TraCI.
 
@@ -110,4 +110,4 @@ Jedna decyzja agenta przechodzi przez wszystkie warstwy systemu w następującej
     \item nowy wektor obserwacji wraz z nagrodą i znacznikami zakończenia epizodu trafia do agenta, rozpoczynając kolejną iterację.
 \end{enumerate}
 
-Podział na krok decyzyjny i kroki symulacji zapewnia spójność eksperymentu. Agent obserwuje środowisko i podejmuje decyzje co pięć sekund, natomiast dane do metryk są zbierane co sekundę, tak samo jak dla metod referencyjnych. Różnice w wynikach nie wynikają więc z innej częstotliwości próbkowania stanu ruchu.
+Podział na krok decyzyjny i kroki symulacji zapewnia spójność badania. Agent obserwuje środowisko i podejmuje decyzje co pięć sekund, natomiast dane do metryk są zbierane co sekundę, tak samo jak dla metod referencyjnych. Różnice w wynikach nie wynikają więc z innej częstotliwości próbkowania stanu ruchu.

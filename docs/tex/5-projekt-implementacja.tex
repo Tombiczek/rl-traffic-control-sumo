@@ -7,12 +7,14 @@ Rozdział opisuje techniczne szczegóły rozwiązania przedstawionego w rozdzia�
 \subsection{Przygotowanie modelu skrzyżowania}
 \label{subsec:model-skrzyzowania}
 
+Model przygotowano w trzech etapach: pozyskano i skorygowano sieć, odwzorowano pasy i relacje skrętne oraz skonfigurowano sygnalizację.
+
 \subsubsection{Pozyskanie i korekta sieci}
 \label{subsubsec:pozyskanie-sieci}
 
 Punktem wyjścia były dane OpenStreetMap z otoczenia analizowanego skrzyżowania. Zaimportowano je do SUMO narzędziem \texttt{netconvert}, a następnie poprawiono model w edytorze graficznym \texttt{netedit}. Zmieniono liczbę i przeznaczenie pasów na wlotach, dopuszczalne relacje skrętne oraz program sygnalizacji, ponieważ dane źródłowe nie opisują w pełni organizacji ruchu na skrzyżowaniu.
 
-Najważniejsze dla eksperymentu ustawienia narzędzia to:
+Najważniejsze dla badania ustawienia narzędzia to:
 \begin{itemize}
     \item \texttt{no-turnarounds}, wyłączające generowanie relacji zawracania, zgodnie z organizacją ruchu na skrzyżowaniu;
     \item \texttt{walkingareas} o wartości zero, wyłączające tworzenie infrastruktury pieszej, co odpowiada ograniczeniu zakresu przedstawionemu w podrozdziale~\ref{subsec:zalozenia-ograniczenia};
@@ -74,6 +76,8 @@ Układ faz sprawdzono w edytorze \texttt{netedit}. Potwierdzono, że wzajemnie k
 
 \subsection{Generowanie scenariuszy ruchu}
 \label{subsec:generowanie-scenariuszy}
+
+Przygotowano scenariusze o stałym i zmiennym natężeniu oraz wariant treningowy o nieregularnym napływie pojazdów.
 
 \subsubsection{Mechanizm generowania}
 \label{subsubsec:mechanizm-generowania}
@@ -333,10 +337,12 @@ Warstwa integracyjna przyjmuje listę plików tras. Na początku epizodu wybiera
 
 Rozszerzono również warunki zakończenia epizodu. Biblioteka rozpoznaje tylko przekroczenie zadanego czasu symulacji, czyli zakończenie przez ucięcie. Jest to właściwe podczas treningu, gdy każdy epizod ma ustaloną długość. W ewaluacji każdy pojazd powinien dotrzeć do celu, aby plik \texttt{tripinfo.xml} zawierał wszystkie podróże. Dodano więc warunek kończący epizod po obsłużeniu ostatniego pojazdu. Osobny parametr środowiska włącza ten tryb, dzięki czemu trening i ewaluacja korzystają z tego samego kodu.
 
-Środowisko zwraca też nazwę pliku tras wybranego na początku epizodu oraz przyczynę zakończenia: przekroczenie czasu symulacji albo obsłużenie wszystkich pojazdów. Ułatwia to kontrolę długich serii eksperymentów.
+Środowisko zwraca też nazwę pliku tras wybranego na początku epizodu oraz przyczynę zakończenia: przekroczenie czasu symulacji albo obsłużenie wszystkich pojazdów. Ułatwia to kontrolę długich serii przebiegów.
 
 \subsection{Proces treningu}
 \label{subsec:proces-treningu}
+
+Proces treningu obejmował inicjalizację środowiska i modelu, wykonywanie epizodów, zapis checkpointów i logów oraz ewaluację zapisanych modeli.
 
 \subsubsection{Inicjalizacja}
 \label{subsubsec:inicjalizacja-treningu}
@@ -425,6 +431,8 @@ Wartość \texttt{total\_timesteps} określa długość całego treningu, a nie 
 \subsection{Zbieranie i przetwarzanie wyników}
 \label{subsec:przetwarzanie-wynikow}
 
+Dane z każdego przebiegu najpierw zapisywano w plikach wyjściowych, a następnie agregowano do wyników używanych w analizie.
+
 \subsubsection{Pliki wyjściowe pojedynczego przebiegu}
 \label{subsubsec:pliki-przebiegu}
 
@@ -439,9 +447,9 @@ Po zapisaniu wiersza pliki wyjściowe są przenoszone do katalogu, którego nazw
 
 Wyniki testowe analizowano oddzielnie dla każdej metody sterowania i każdego poziomu natężenia ruchu. Dla każdej kombinacji obliczono średnią oraz odchylenie standardowe z pięciu przebiegów różniących się ziarnem. Nie wyznaczano jednej średniej obejmującej wszystkie poziomy natężenia, ponieważ reprezentują one odmienne warunki obciążenia.
 
-\subsection{Środowisko kontenerowe i kontrola warunków eksperymentu}
+\subsection{Środowisko kontenerowe i kontrola warunków badania}
 \label{subsec:impl-konteneryzacja}
 
-Eksperymenty uruchamiano w kontenerach Docker o architekturze \texttt{linux/amd64}. Kontenery izolowały zależności i pozwalały uniknąć instalacji środowiska treningowego bezpośrednio w macOS. Pozwoliły też ominąć problemy z SUMO występujące przy bezpośrednim uruchamianiu na maszynie oraz utrzymać symulator, biblioteki i kod w jednym środowisku. Katalog projektu montowano jako wolumen, więc konfiguracje, modele i wyniki pozostawały poza kontenerem.
+Obliczenia wykonywano w kontenerach Docker o architekturze \texttt{linux/amd64}. Kontenery izolowały zależności i pozwalały uniknąć instalacji środowiska treningowego bezpośrednio w macOS. Pozwoliły też ominąć problemy z SUMO występujące przy bezpośrednim uruchamianiu na maszynie oraz utrzymać symulator, biblioteki i kod w jednym środowisku. Katalog projektu montowano jako wolumen, więc konfiguracje, modele i wyniki pozostawały poza kontenerem.
 
 W badaniu kontrolowano trzy źródła losowości. Pliki tras zapisano wraz z ziarnami generatora. Podczas walidacji i testów porównywane metody korzystały z tego samego scenariusza i ziarna symulacji. Wszystkie warianty uczenia używały ziarna algorytmu równego 42, a podczas ewaluacji akcje wybierano deterministycznie. Ograniczało to niekontrolowaną zmienność i zapewniało możliwie zgodne warunki porównania.

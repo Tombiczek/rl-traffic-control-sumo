@@ -1,16 +1,18 @@
 \clearpage
-\section{Przebieg eksperymentów i wyniki}
+\section{Przebieg badania i wyniki}
 \label{sec:wyniki}
 
-Rozdział przedstawia wyniki kolejnych etapów eksperymentu: ustalenia parametrów metod referencyjnych, wyboru długości treningu, porównania zbiorów treningowych, strojenia hiperparametrów oraz końcowej oceny na zbiorze testowym. Parametry metod referencyjnych wyznaczono na zbiorze treningowym, a decyzje dotyczące DQN podejmowano na podstawie walidacji, zgodnie z zasadami z podrozdziału~\ref{subsubsec:przenikanie-danych}. Wyniki testowe nie były formalnym kryterium wyboru modelu. Ich interpretację w odniesieniu do hipotezy badawczej przedstawiono w rozdziale~\ref{sec:analiza}.
+Rozdział przedstawia wyniki kolejnych etapów badania: ustalenia parametrów metod referencyjnych, wyboru długości treningu, porównania zbiorów treningowych, strojenia hiperparametrów oraz końcowej oceny na zbiorze testowym. Parametry metod referencyjnych wyznaczono na zbiorze treningowym, a decyzje dotyczące DQN podejmowano na podstawie walidacji, zgodnie z zasadami z podrozdziału~\ref{subsubsec:przenikanie-danych}. Wyniki testowe nie były formalnym kryterium wyboru modelu. Ich interpretację w odniesieniu do hipotezy badawczej przedstawiono w rozdziale~\ref{sec:analiza}.
 
 \subsection{Środowisko uruchomieniowe i koszt obliczeniowy}
 \label{subsec:srodowisko-uruchomieniowe}
 
+Opis środowiska obejmuje konfigurację sprzętową i programową, liczbę wykonanych przebiegów oraz czas obliczeń.
+
 \subsubsection{Konfiguracja sprzętowa i programowa}
 \label{subsubsec:konfiguracja-sprzetowa}
 
-Wszystkie eksperymenty przeprowadzono na jednej maszynie o konfiguracji podanej w tabeli~\ref{tab:srodowisko}. Obliczenia wykonywano w kontenerach opisanych w podrozdziale~\ref{subsec:impl-konteneryzacja}, bez dostępu do procesora graficznego, czyli wyłącznie na procesorze głównym.
+Badanie przeprowadzono na jednej maszynie o konfiguracji podanej w tabeli~\ref{tab:srodowisko}. Obliczenia wykonywano w kontenerach opisanych w podrozdziale~\ref{subsec:impl-konteneryzacja}, bez dostępu do procesora graficznego, czyli wyłącznie na procesorze głównym.
 
 \begin{table}[!htbp] \centering
     \caption{Konfiguracja środowiska uruchomieniowego.}
@@ -65,6 +67,8 @@ O czasie pojedynczej ewaluacji decyduje głównie symulacja ruchu, a nie wybór 
 \subsection{Wyznaczenie długości treningu}
 \label{subsec:dlugosc-treningu}
 
+Odpowiednią długość treningu wyznaczono przez ocenę modeli zapisanych w kolejnych checkpointach.
+
 \subsubsection{Procedura}
 \label{subsubsec:procedura-checkpointy}
 
@@ -76,7 +80,7 @@ Konfigurację bazową z podrozdziału~\ref{subsec:konfiguracja-bazowa} trenowano
 Tabela~\ref{tab:checkpointy-fixed} zawiera wyniki modeli trenowanych na regularnym zbiorze, a rysunek~\ref{fig:checkpointy-fixed} przedstawia ich zmiany.
 
 \begin{table}[!htbp] \centering
-    \caption{Średnie opóźnienie kolejnych checkpointów na scenariuszach walidacyjnych. Zbiór treningowy o regularnym napływie pojazdów.}
+    \caption[Walidacja checkpointów dla regularnego zbioru treningowego.]{Średnie opóźnienie kolejnych checkpointów na scenariuszach walidacyjnych. Zbiór treningowy o regularnym napływie pojazdów.}
     \label{tab:checkpointy-fixed}
     \small
     \begin{tabular}{| r | r | r | r | r | r |} \hline
@@ -98,7 +102,7 @@ Tabela~\ref{tab:checkpointy-fixed} zawiera wyniki modeli trenowanych na regularn
 
 \begin{figure}[!htbp] \centering
     \includegraphics[width=0.9\linewidth]{validate_steps_fixed.png}
-    \caption{Średnie opóźnienie kolejnych checkpointów modelu trenowanego na regularnym zbiorze treningowym, w podziale na scenariusze walidacyjne.}
+    \caption[Walidacja checkpointów dla regularnego zbioru treningowego.]{Średnie opóźnienie kolejnych checkpointów modelu trenowanego na regularnym zbiorze treningowym, w podziale na scenariusze walidacyjne.}
     \label{fig:checkpointy-fixed}
 \end{figure}
 
@@ -118,7 +122,7 @@ Procedurę powtórzono dla drugiego zbioru treningowego z podrozdziału~\ref{sub
 Tabela~\ref{tab:zbiory-treningowe} porównuje oba warianty, a rysunek~\ref{fig:zbiory-treningowe} przedstawia przebieg wyników.
 
 \begin{table}[!htbp] \centering
-    \caption{Porównanie wariantów zbioru treningowego. Wartości uśrednione po dwunastu checkpointach, w nawiasie odchylenie standardowe.}
+    \caption[Porównanie wariantów zbioru treningowego.]{Porównanie wariantów zbioru treningowego. Wartości uśrednione po dwunastu checkpointach, w nawiasie odchylenie standardowe.}
     \label{tab:zbiory-treningowe}
     \small
     \begin{tabular}{| l | r | r | r | r |} \hline
@@ -130,7 +134,7 @@ Tabela~\ref{tab:zbiory-treningowe} porównuje oba warianty, a rysunek~\ref{fig:z
 
 \begin{figure}[!htbp] \centering
     \includegraphics[width=\linewidth]{validate_steps_stabilne_vs_ciezki.png}
-    \caption{Porównanie wariantów zbioru treningowego na scenariuszach stabilnych oraz na scenariuszu o wysokim natężeniu.}
+    \caption[Porównanie wariantów zbioru treningowego.]{Porównanie wariantów zbioru treningowego na scenariuszach stabilnych oraz na scenariuszu o wysokim natężeniu.}
     \label{fig:zbiory-treningowe}
 \end{figure}
 
@@ -146,7 +150,7 @@ Dlatego w dalszych etapach używano regularnego zbioru treningowego. Wszystkie w
 Ponieważ jeden przebieg walidacyjny nie wystarczał do wiarygodnego wyboru, trzech kandydatów oceniono na pięciu ziarnach symulacji. Były to checkpoint po 225\,000 kroków, wcześniej oceniony jako najlepszy, oraz dwa sąsiednie w rankingu, po 200\,000 i 275\,000 kroków. Wyniki przedstawiono w tabeli~\ref{tab:checkpointy-ziarna} i na rysunku~\ref{fig:checkpointy-ziarna}.
 
 \begin{table}[!htbp] \centering
-    \caption{Walidacja kandydatów na model końcowy na pięciu ziarnach symulacji. W nawiasie odchylenie standardowe.}
+    \caption[Walidacja kandydatów na model końcowy.]{Walidacja kandydatów na model końcowy na pięciu ziarnach symulacji. W nawiasie odchylenie standardowe.}
     \label{tab:checkpointy-ziarna}
     \small
     \begin{tabular}{| r | r | r | r | r | r |} \hline
@@ -170,7 +174,9 @@ Odchylenia standardowe wyraźnie różnią się między scenariuszami. Dla lekki
 \subsection{Dobór hiperparametrów}
 \label{subsec:strojenie}
 
-\subsubsection{Plan eksperymentu}
+Hiperparametry dobierano etapami: zaplanowano zmiany, oceniono pojedyncze warianty i ich połączenia, a najlepsze wyniki zweryfikowano na wielu ziarnach symulacji.
+
+\subsubsection{Plan badania}
 \label{subsubsec:plan-strojenia}
 
 Podczas strojenia zmieniano po jednym hiperparametrze, pozostawiając pozostałe wartości bez zmian. Punktem odniesienia była konfiguracja bazowa z tabeli~\ref{tab:konfiguracja-bazowa}. Każdy wariant trenowano na regularnym zbiorze przez 225\,000 kroków, czyli tyle samo co wybrany checkpoint bazowy. Jednakowa długość treningu nie zaburza więc porównania. Nie zmieniano ziarna algorytmu ani procedury walidacji.
@@ -183,7 +189,7 @@ Sprawdzono trzynaście wariantów zmieniających pojedynczy hiperparametr, jeden
 Tabela~\ref{tab:strojenie} przedstawia warianty rosnąco według średniej z czterech scenariuszy walidacyjnych. Na rysunku~\ref{fig:strojenie} górny panel pokazuje średnią, a dolny wyniki poszczególnych scenariuszy.
 
 \begin{table}[!htbp] \centering
-    \caption{Wyniki strojenia hiperparametrów na zbiorze walidacyjnym. Średnie opóźnienie w sekundach, pojedynczy przebieg na scenariusz.}
+    \caption[Wyniki strojenia hiperparametrów.]{Wyniki strojenia hiperparametrów na zbiorze walidacyjnym. Średnie opóźnienie w sekundach, pojedynczy przebieg na scenariusz.}
     \label{tab:strojenie}
     \footnotesize
     \setlength{\tabcolsep}{4pt}
@@ -211,7 +217,7 @@ Tabela~\ref{tab:strojenie} przedstawia warianty rosnąco według średniej z czt
 
 \begin{figure}[!htbp] \centering
     \includegraphics[width=\linewidth]{hyperparameter_tuning.png}
-    \caption{Wyniki strojenia hiperparametrów: średnia z czterech scenariuszy oraz rozbicie na poszczególne scenariusze.}
+    \caption[Wyniki strojenia hiperparametrów.]{Wyniki strojenia hiperparametrów: średnia z czterech scenariuszy oraz rozbicie na poszczególne scenariusze.}
     \label{fig:strojenie}
 \end{figure}
 
@@ -238,7 +244,7 @@ Tempo uczenia 0,0003 połączone ze współczynnikiem dyskontowania 0,98 dało �
 Ranking z tabeli~\ref{tab:strojenie} oparto na jednym przebiegu każdego scenariusza, a konfigurację bazową oceniono już na pięciu ziarnach. Dla porównywalności trzy najlepsze warianty oceniono tą samą procedurą wieloziarnową. Wyniki przedstawiono w tabeli~\ref{tab:strojenie-ziarna} i na rysunku~\ref{fig:strojenie-ziarna}.
 
 \begin{table}[!htbp] \centering
-    \caption{Porównanie trzech najlepszych wariantów z konfiguracją bazową na pięciu ziarnach symulacji. W nawiasie odchylenie standardowe.}
+    \caption[Walidacja najlepszych wariantów hiperparametrów.]{Porównanie trzech najlepszych wariantów z konfiguracją bazową na pięciu ziarnach symulacji. W nawiasie odchylenie standardowe.}
     \label{tab:strojenie-ziarna}
     \small
     \begin{tabular}{| l | r | r | r | r | r |} \hline
@@ -252,7 +258,7 @@ Ranking z tabeli~\ref{tab:strojenie} oparto na jednym przebiegu każdego scenari
 
 \begin{figure}[!htbp] \centering
     \includegraphics[width=0.85\linewidth]{hyperparameter_wieloziarnowa.png}
-    \caption{Trzy najlepsze warianty hiperparametrów w porównaniu z konfiguracją bazową, ocena na pięciu ziarnach symulacji.}
+    \caption[Walidacja najlepszych wariantów hiperparametrów.]{Trzy najlepsze warianty hiperparametrów w porównaniu z konfiguracją bazową, ocena na pięciu ziarnach symulacji.}
     \label{fig:strojenie-ziarna}
 \end{figure}
 
@@ -271,6 +277,8 @@ Konfigurację modelu końcowego zamrożono przed jego pierwszą ewaluacją testo
 
 \subsection{Końcowe porównanie metod na zbiorze testowym}
 \label{subsec:wyniki-testowe}
+
+W końcowym porównaniu przedstawiono przebieg oceny oraz wyniki pięciu metryk dla wszystkich metod sterowania.
 
 \subsubsection{Przebieg oceny}
 \label{subsubsec:przebieg-oceny-testowej}
@@ -309,7 +317,7 @@ W analizie wrażliwości średnie opóźnienie i czas oczekiwania zmieniły się
 Wartości średniego opóźnienia zestawiono w tabeli~\ref{tab:test-opoznienie}, a ich rozkład przedstawiono na rysunkach~\ref{fig:test-opoznienie} oraz~\ref{fig:test-opoznienie-box}.
 
 \begin{table}[!htbp] \centering
-    \caption{Średnie opóźnienie na zbiorze testowym w sekundach na pojazd. W nawiasie odchylenie standardowe.}
+    \caption[Średnie opóźnienie na zbiorze testowym.]{Średnie opóźnienie na zbiorze testowym w sekundach na pojazd. W nawiasie odchylenie standardowe.}
     \label{tab:test-opoznienie}
     \small
     \begin{tabular}{| l | r | r | r | r |} \hline
@@ -328,7 +336,7 @@ Wartości średniego opóźnienia zestawiono w tabeli~\ref{tab:test-opoznienie},
 
 \begin{figure}[!htbp] \centering
     \includegraphics[width=0.8\linewidth]{results_boxplot_mean_delay_simp.png}
-    \caption{Rozkład średniego opóźnienia według scenariusza natężenia oraz metody sterowania.}
+    \caption[Rozkład średniego opóźnienia.]{Rozkład średniego opóźnienia według scenariusza natężenia oraz metody sterowania.}
     \label{fig:test-opoznienie-box}
 \end{figure}
 
@@ -344,7 +352,7 @@ W ruchu wysokim tylko program akomodacyjny wypada gorzej od stałoczasowego. DQN
 Wartości średniego czasu oczekiwania zestawiono w tabeli~\ref{tab:test-oczekiwanie}, a ich porównanie przedstawiono na rysunku~\ref{fig:test-oczekiwanie}.
 
 \begin{table}[!htbp] \centering
-    \caption{Średni czas oczekiwania na zbiorze testowym w sekundach na pojazd. W nawiasie odchylenie standardowe.}
+    \caption[Średni czas oczekiwania na zbiorze testowym.]{Średni czas oczekiwania na zbiorze testowym w sekundach na pojazd. W nawiasie odchylenie standardowe.}
     \label{tab:test-oczekiwanie}
     \small
     \begin{tabular}{| l | r | r | r | r |} \hline
@@ -373,7 +381,7 @@ Rejestrowano również wartości dla pojazdów obsłużonych najgorzej. Kwantyl 
 Wartości średniej długości kolejki zestawiono w tabeli~\ref{tab:test-kolejka}, a ich porównanie przedstawiono na rysunku~\ref{fig:test-kolejka}.
 
 \begin{table}[!htbp] \centering
-    \caption{Średnia długość kolejki na zbiorze testowym w pojazdach. W nawiasie odchylenie standardowe.}
+    \caption[Średnia długość kolejki na zbiorze testowym.]{Średnia długość kolejki na zbiorze testowym w pojazdach. W nawiasie odchylenie standardowe.}
     \label{tab:test-kolejka}
     \small
     \begin{tabular}{| l | r | r | r | r |} \hline
@@ -402,7 +410,7 @@ Rejestrowano także długość kolejki na każdym z czterech wlotów. Dla DQN pr
 Wartości przepustowości zestawiono w tabeli~\ref{tab:test-przepustowosc}, a ich porównanie przedstawiono na rysunku~\ref{fig:test-przepustowosc}.
 
 \begin{table}[!htbp] \centering
-    \caption{Przepustowość na zbiorze testowym w pojazdach na godzinę. W nawiasie odchylenie standardowe.}
+    \caption[Przepustowość na zbiorze testowym.]{Przepustowość na zbiorze testowym w pojazdach na godzinę. W nawiasie odchylenie standardowe.}
     \label{tab:test-przepustowosc}
     \small
     \begin{tabular}{| l | r | r | r | r |} \hline
@@ -429,7 +437,7 @@ Różnice pojawiają się w scenariuszu o wysokim natężeniu. Agent DQN obsług
 Wartości częstotliwości przełączeń zestawiono w tabeli~\ref{tab:test-przelaczenia}, a ich porównanie przedstawiono na rysunku~\ref{fig:test-przelaczenia}.
 
 \begin{table}[!htbp] \centering
-    \caption{Częstotliwość przełączeń na zbiorze testowym w przełączeniach na godzinę. W nawiasie odchylenie standardowe. Dla agenta DQN podano dodatkowo wartość wyznaczoną bez przebiegów przerwanych limitem czasu.}
+    \caption[Częstotliwość przełączeń na zbiorze testowym.]{Częstotliwość przełączeń na zbiorze testowym w przełączeniach na godzinę. W nawiasie odchylenie standardowe. Dla agenta DQN podano dodatkowo wartość wyznaczoną bez przebiegów przerwanych limitem czasu.}
     \label{tab:test-przelaczenia}
     \footnotesize
     \setlength{\tabcolsep}{5pt}
@@ -457,7 +465,9 @@ Obie metody reagujące na ruch przełączają sygnalizację częściej niż prog
 \subsection{Ocena modelu kontrastowego}
 \label{subsec:model-kontrastowy}
 
-\subsubsection{Cel eksperymentu}
+Model kontrastowy oceniono dodatkowo, aby sprawdzić związek między wynikami walidacyjnymi i testowymi.
+
+\subsubsection{Cel dodatkowej analizy}
 \label{subsubsec:cel-kontrastowy}
 
 Konfiguracje wybierano na podstawie zbioru walidacyjnego, zakładając, że wynik walidacyjny wskazuje zdolność działania na nowych danych. Aby to sprawdzić, na zbiorze testowym oceniono też model o najsłabszych wynikach walidacyjnych.
@@ -470,7 +480,7 @@ Wybrano wariant ze skróconą fazą eksploracji, oznaczony w tabeli~\ref{tab:str
 Porównanie obu modeli przedstawiono w tabeli~\ref{tab:kontrastowy} oraz na rysunkach~\ref{fig:kontrastowy-opoznienie} i~\ref{fig:kontrastowy-kolejka}.
 
 \begin{table}[!htbp] \centering
-    \caption{Model końcowy i model kontrastowy na zbiorze testowym. W nawiasie odchylenie standardowe.}
+    \caption[Porównanie modelu końcowego i kontrastowego.]{Model końcowy i model kontrastowy na zbiorze testowym. W nawiasie odchylenie standardowe.}
     \label{tab:kontrastowy}
     \footnotesize
     \setlength{\tabcolsep}{4pt}

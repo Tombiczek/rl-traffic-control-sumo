@@ -44,7 +44,7 @@
 }
 \author{Tomasz Lewiński}
 \album{323692}
-\promotor{dr inż Tomasz Mrozek}
+\promotor{dr inż. Tomasz Mrozek}
 \date{\the\year}
 \maketitle
 
@@ -56,7 +56,7 @@
 \abstract
 Praca dotyczy oceny skuteczności uczenia ze wzmocnieniem w adaptacyjnym sterowaniu sygnalizacją świetlną. Badanie przeprowadzono na modelu pojedynczego skrzyżowania ulicy Belgradzkiej i alei Komisji Edukacji Narodowej w mikroskopowym symulatorze ruchu SUMO. Porównano trzy metody: sterowanie stałoczasowe, sterowanie akomodacyjne typu \textit{gap-based} oraz agenta wykorzystującego algorytm Deep Q-Network. Agent co 5~s wybierał jedną z trzech faz zielonych na podstawie informacji o bieżącej fazie, gęstości ruchu i zapełnieniu kolejek na trzynastu pasach wlotowych. Funkcję nagrody oparto na zmianie skumulowanego czasu oczekiwania.
 
-Do połączenia SUMO z implementacją DQN w Stable-Baselines3 wykorzystano interfejs TraCI i bibliotekę \texttt{sumo-rl}. Przygotowano również własną warstwę integracyjną, która ujednoliciła zbieranie metryk dla wszystkich metod. Eksperyment wykorzystał rozdzielne zbiory treningowy, walidacyjny i testowy. Na podstawie walidacji jako model końcowy wybrano checkpoint konfiguracji bazowej po 225\,000 kroków, wytrenowany na zbiorze o regularnym napływie pojazdów. Następnie oceniono go wraz z metodami referencyjnymi na dwudziestu niezależnych scenariuszach testowych reprezentujących lekkie, średnie, wysokie i zmienne natężenie ruchu.
+Do połączenia SUMO z implementacją DQN w Stable-Baselines3 wykorzystano interfejs TraCI i bibliotekę \texttt{sumo-rl}. Przygotowano również własną warstwę integracyjną, która ujednoliciła zbieranie metryk dla wszystkich metod. W badaniu wykorzystano rozdzielne zbiory treningowy, walidacyjny i testowy. Na podstawie walidacji jako model końcowy wybrano checkpoint konfiguracji bazowej po 225\,000 kroków, wytrenowany na zbiorze o regularnym napływie pojazdów. Następnie oceniono go wraz z metodami referencyjnymi na dwudziestu niezależnych scenariuszach testowych reprezentujących lekkie, średnie, wysokie i zmienne natężenie ruchu.
 
 Agent DQN uzyskał najniższe średnie opóźnienie i czas oczekiwania we wszystkich czterech grupach testowych. Średnie opóźnienie wyniosło od 13,90 do 51,82~s na pojazd, zależnie od natężenia. Względem sterowania stałoczasowego oznaczało to redukcję od 20,8\% do 50,4\%, a względem akomodacyjnego od 1,3\% do 33,6\%. Przy wysokim natężeniu DQN uzyskał także większą przepustowość niż obie metody referencyjne. Nie był jednak najlepszy według każdej metryki. W scenariuszu zmiennym sterowanie akomodacyjne osiągnęło mniejszą średnią długość kolejki, 8,88 wobec 9,55 pojazdu, a program stałoczasowy przełączał sygnalizację znacznie rzadziej. Trzy z dwudziestu przebiegów DQN osiągnęły limit czasu, przy czym udział pojazdów pozostających w sieci nie przekroczył w żadnym z nich 1\% popytu. Wyniki warunkowo potwierdzają skuteczność DQN w przyjętej konfiguracji symulacyjnej, ale nie dowodzą jego uniwersalnej przewagi ani gotowości do wdrożenia w rzeczywistym ruchu.
 
@@ -119,7 +119,7 @@ reinforcement learning, Deep Q-Network, adaptive traffic control, traffic signal
 % Makro \acronym dodaje skrót/symbol do listy,
 % zapewniając podstawowe formatowanie.
 \acronymlist
-\subsection*{Skróty}
+\noindent\textbf{Skróty}
 \acronym{A2C}{ang. Advantage Actor-Critic}
 \acronym{CSV}{ang. Comma-Separated Values}
 \acronym{DQN}{ang. Deep Q-Network}
@@ -138,7 +138,8 @@ reinforcement learning, Deep Q-Network, adaptive traffic control, traffic signal
 \acronym{TraCI}{ang. Traffic Control Interface}
 \acronym{XML}{ang. Extensible Markup Language}
 
-\subsection*{Symbole matematyczne}
+\par\medskip
+\noindent\textbf{Symbole matematyczne}
 \acronym{$A, A_t, a, a'$}{akcja agenta; indeks dolny wskazuje chwilę, a $a'$ akcję rozważaną w następnym stanie}
 \acronym{$D$}{bufor doświadczeń}
 \acronym{$G_t$}{zdyskontowany zwrot od chwili $t$}
@@ -167,6 +168,6 @@ reinforcement learning, Deep Q-Network, adaptive traffic control, traffic signal
 %--------------------------------------
 \pagestyle{plain}
 \listoffigurestoc    % Spis rysunków.
-\clearpage      % vertical space
+\clearpage           % vertical space
 \listoftablestoc     % Spis tabel.
 \end{document} % Dobranoc.

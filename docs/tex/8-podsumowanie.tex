@@ -2,12 +2,11 @@
 \section{Podsumowanie}
 \label{sec:podsumowanie}
 
-Celem pracy było sprawdzenie, czy agent wykorzystujący algorytm Deep Q-Network może skutecznie sterować sygnalizacją świetlną na pojedynczym skrzyżowaniu i osiągać lepsze wyniki niż wybrane metody klasyczne. Badanie przeprowadzono w symulacji na modelu skrzyżowania ulicy Belgradzkiej i alei Komisji Edukacji Narodowej. Zakres pozwolił przeprowadzić pełny, kontrolowany eksperyment obejmujący przygotowanie środowiska, trening, walidację i ocenę na odrębnym zbiorze testowym.
+Celem pracy było sprawdzenie, czy agent wykorzystujący algorytm Deep Q-Network może skutecznie sterować sygnalizacją świetlną na pojedynczym skrzyżowaniu i osiągać lepsze wyniki niż wybrane metody klasyczne. Badanie przeprowadzono w symulacji na modelu skrzyżowania ulicy Belgradzkiej i alei Komisji Edukacji Narodowej. Zakres pozwolił przeprowadzić pełne, kontrolowane badanie obejmujące przygotowanie środowiska, trening, walidację i ocenę na odrębnym zbiorze testowym.
 
-\subsection{Zrealizowane prace}
 \label{subsec:podsumowanie-prace}
 
-Przygotowano w SUMO model skrzyżowania z geometrią dróg, trzynastoma pasami wlotowymi, relacjami skrętnymi i trzema fazami sygnalizacji. Zaimplementowano dwa punkty odniesienia: sterowanie stałoczasowe oraz akomodacyjne typu \textit{gap-based}. Ich parametry wyznaczono z danych treningowych i zamrożono przed oceną DQN.
+W tym celu przygotowano w SUMO model skrzyżowania z geometrią dróg, trzynastoma pasami wlotowymi, relacjami skrętnymi i trzema fazami sygnalizacji. Zaimplementowano dwa punkty odniesienia: sterowanie stałoczasowe oraz akomodacyjne typu \textit{gap-based}. Ich parametry wyznaczono z danych treningowych i zamrożono przed oceną DQN.
 
 Opracowano rozdzielne zbiory treningowy, walidacyjny i testowy, reprezentujące lekkie, średnie, wysokie oraz zmienne natężenie ruchu. Przygotowano dwa warianty danych treningowych, różniące się regularnością napływu pojazdów. Zbiór testowy obejmował dwadzieścia scenariuszy niewykorzystywanych podczas uczenia ani doboru konfiguracji.
 
@@ -15,10 +14,9 @@ Na podstawie \texttt{sumo-rl} zbudowano warstwę łączącą SUMO z implementacj
 
 Podczas uczenia oceniono kolejne checkpointy, porównano dwa zbiory treningowe i sprawdzono szesnaście wariantów hiperparametrów. Wybrane modele dodatkowo zwalidowano na kilku ziarnach symulacji. Następnie zamrożono model końcowy i oceniono go na tych samych scenariuszach testowych co metody referencyjne.
 
-\subsection{Najważniejsze wyniki}
 \label{subsec:podsumowanie-wyniki}
 
-Modelem końcowym został checkpoint konfiguracji bazowej po 225\,000 kroków, wytrenowany na zbiorze o regularnym napływie. Zbiór bardziej nieregularny nie poprawił walidacji, a żaden z szesnastu wariantów hiperparametrów nie przewyższył konfiguracji bazowej na całym zbiorze walidacyjnym. Kontynuowanie treningu do 300\,000 kroków także nie pomogło. Potwierdziło to potrzebę wyboru checkpointu przez walidację zamiast przyjmowania ostatniego modelu.
+Na podstawie walidacji modelem końcowym został checkpoint konfiguracji bazowej po 225\,000 kroków, wytrenowany na zbiorze o regularnym napływie. Zbiór bardziej nieregularny nie poprawił walidacji, a żaden z szesnastu wariantów hiperparametrów nie przewyższył konfiguracji bazowej na całym zbiorze walidacyjnym. Kontynuowanie treningu do 300\,000 kroków także nie pomogło. Potwierdziło to potrzebę wyboru checkpointu przez walidację zamiast przyjmowania ostatniego modelu.
 
 DQN uzyskał najniższe średnie opóźnienie i czas oczekiwania we wszystkich czterech grupach testowych. Średnie opóźnienie wyniosło 13,90~s dla ruchu lekkiego, 17,79~s dla średniego, 51,82~s dla wysokiego i 34,23~s dla zmiennego. Względem sterowania stałoczasowego oznacza to redukcję od 20,8\% do 50,4\%, a względem akomodacyjnego od 1,3\% do 33,6\%. Przewaga nad metodą akomodacyjną była największa przy wysokim natężeniu, a najmniejsza przy średnim, gdzie wyniki były podobne.
 
@@ -26,11 +24,10 @@ Przy wysokim natężeniu agent uzyskał również większą przepustowość niż
 
 DQN nie był jednak najlepszy według każdej metryki. W scenariuszu zmiennym sterowanie akomodacyjne uzyskało krótszą średnią kolejkę: 8,88 pojazdu wobec 9,55. Miało też nieznacznie lepszy kwantyl rzędu 0,95 czasu oczekiwania w ruchu lekkim i średnim. Program stałoczasowy przełączał znacznie rzadziej i działał bardziej przewidywalnie. W trzech z dwudziestu przebiegów modelu końcowego niewielka grupa pojazdów nie opuściła sieci przed limitem. W każdym przypadku stanowiła mniej niż 1\% popytu. Brak ich metryk ogranicza wnioski o przerwanych przebiegach i wskazuje element wymagający poprawy.
 
-\subsection{Odpowiedź na pytanie badawcze}
 \label{subsec:odpowiedz-badawcza}
 
 Wyniki pozwalają odpowiedzieć na pytanie badawcze twierdząco. W przyjętych warunkach odpowiednio wytrenowany DQN był skuteczniejszy od badanego sterowania stałoczasowego i akomodacyjnego pod względem średniego opóźnienia i czasu oczekiwania. Przewaga wystąpiła we wszystkich grupach scenariuszy, ale zależała od natężenia. Przy średnim obciążeniu różnica względem sterowania akomodacyjnego była mała, natomiast przy wysokim DQN uzyskał także wyraźnie większą przepustowość.
 
-Hipoteza została więc warunkowo potwierdzona w zakresie eksperymentu. Potwierdzono ją dla opóźnienia i czasu oczekiwania, a w większości scenariuszy także dla długości kolejek. Wyjątkiem był scenariusz zmienny, w którym podstawowy wynik kolejki był lepszy dla sterowania akomodacyjnego. Nie oznacza to, że DQN przewyższa każdą metodę klasyczną w każdych warunkach i według każdego kryterium. Wyniki pokazują jednak, że uczenie ze wzmocnieniem może prowadzić do wyuczenia skutecznej polityki konkurencyjnej wobec starannie skonfigurowanych metod referencyjnych.
+Hipoteza została więc warunkowo potwierdzona w zakresie badania. Potwierdzono ją dla opóźnienia i czasu oczekiwania, a w większości scenariuszy także dla długości kolejek. Wyjątkiem był scenariusz zmienny, w którym podstawowy wynik kolejki był lepszy dla sterowania akomodacyjnego. Nie oznacza to, że DQN przewyższa każdą metodę klasyczną w każdych warunkach i według każdego kryterium. Wyniki pokazują jednak, że uczenie ze wzmocnieniem może prowadzić do wyuczenia skutecznej polityki konkurencyjnej wobec starannie skonfigurowanych metod referencyjnych.
 
 Badanie świadomie ograniczono do pojedynczego skrzyżowania, syntetycznych scenariuszy i jednego głównego algorytmu RL. Wyniki potwierdzają więc potencjał DQN w badanym zadaniu, ale nie oceniają wszystkich systemów sterowania ani gotowości do wdrożenia. Dalsze badania powinny objąć kalibrację na danych pomiarowych, inne geometrie, więcej ziaren treningu, dodatkowych uczestników ruchu i pełną warstwę bezpieczeństwa.

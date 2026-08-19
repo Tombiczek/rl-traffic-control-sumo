@@ -2,7 +2,6 @@
 \section{Wstęp}
 \label{sec:wstep}
 
-\subsection{Wprowadzenie do problematyki}
 \label{subsec:wprowadzenie}
 
 Zatory drogowe wydłużają czas przejazdu, a związany z nimi ruch z częstym zatrzymywaniem i ruszaniem zwiększa zużycie paliwa oraz emisję zanieczyszczeń \cite{treiber2008congestion}.
@@ -31,7 +30,7 @@ Hipoteza dotyczy wskaźników opisujących płynność ruchu, przede wszystkim o
 \subsection{Cel i zakres pracy}
 \label{subsec:cel-zakres}
 
-Celem pracy jest zaprojektowanie, wytrenowanie oraz ocena algorytmu DQN sterującego sygnalizacją świetlną na zamodelowanym skrzyżowaniu ulicy Belgradzkiej i alei Komisji Edukacji Narodowej (al. KEN).
+Celem pracy jest zbadanie możliwości zastosowania algorytmu DQN do sterowania sygnalizacją świetlną na zamodelowanym skrzyżowaniu ulicy Belgradzkiej i alei Komisji Edukacji Narodowej (al. KEN) przez porównanie wyników agenta z wynikami klasycznych metod sterowania ruchem: sterowania stałoczasowego i akomodacyjnego. DQN jest stosowany także w innych zadaniach decyzyjnych, co uzasadnia zbadanie jego możliwości w tym zastosowaniu.
 
 Aby osiągnąć ten cel, zrealizowano następujące cele szczegółowe:
 \begin{itemize}
@@ -50,6 +49,6 @@ Aby osiągnąć ten cel, zrealizowano następujące cele szczegółowe:
 \subsection{Założenia i ograniczenia pracy}
 \label{subsec:zalozenia-ograniczenia}
 
-Zakres pracy świadomie ograniczono, aby przeprowadzić kontrolowany eksperyment. Badano pojedyncze skrzyżowanie bez uwzględniania wpływu skrzyżowań sąsiednich. W modelu ruchu uwzględniono wyłącznie pojazdy silnikowe, pomijając ruch pieszy, rowerowy i komunikację miejską. Ruch drogowy wygenerowano syntetycznie za pomocą skryptu \texttt{randomTrips.py} \cite{sumo_randomtrips_docs}, dlatego nie odwzorowuje on bezpośrednio rzeczywistych pomiarów natężenia. Wszystkie eksperymenty przeprowadzono wyłącznie w symulacji, bez wdrożenia na rzeczywistym sterowniku sygnalizacji.
+Zakres pracy świadomie ograniczono, aby przeprowadzić kontrolowane badanie. Badano pojedyncze skrzyżowanie bez uwzględniania wpływu skrzyżowań sąsiednich. W modelu ruchu uwzględniono wyłącznie pojazdy silnikowe, pomijając ruch pieszy, rowerowy i komunikację miejską. Ruch drogowy wygenerowano syntetycznie za pomocą skryptu \texttt{randomTrips.py} \cite{sumo_randomtrips_docs}, dlatego nie odwzorowuje on bezpośrednio rzeczywistych pomiarów natężenia. Całe badanie przeprowadzono wyłącznie w symulacji, bez wdrożenia na rzeczywistym sterowniku sygnalizacji.
 
-Celem pracy nie było stworzenie gotowego systemu produkcyjnego ani certyfikowanego sterownika ruchu. Przeprowadzono kontrolowany eksperyment, aby ocenić potencjał DQN w adaptacyjnym sterowaniu sygnalizacją świetlną w porównaniu z klasycznymi, deterministycznymi metodami sterowania.
+Celem pracy nie było stworzenie gotowego systemu produkcyjnego ani certyfikowanego sterownika ruchu. Przeprowadzono kontrolowane badanie, aby ocenić potencjał DQN w adaptacyjnym sterowaniu sygnalizacją świetlną w porównaniu z klasycznymi, deterministycznymi metodami sterowania.
