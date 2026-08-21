@@ -67,8 +67,6 @@ W modelu odwzorowano geometrię skrzyżowania, liczbę i przeznaczenie pasów ru
     \label{fig:symulacja}
 \end{figure}
 
-Model nie obejmuje faz ani ograniczeń czasowych związanych z obsługą przejść dla pieszych, zgodnie z zakresem opisanym w podrozdziale~\ref{subsec:zalozenia-ograniczenia}.
-
 \subsection{Sformułowanie problemu jako zadania uczenia ze wzmocnieniem}
 \label{subsec:sformulowanie-rl}
 
@@ -77,7 +75,7 @@ W kolejnych podpunktach określono agenta i środowisko, przestrzenie obserwacji
 \subsubsection{Agent i środowisko}
 \label{subsubsec:agent-srodowisko}
 
-Problem sterowania sygnalizacją sformułowano jako zadanie uczenia ze wzmocnieniem. Agent wybiera fazę sygnalizacji świetlnej, a środowiskiem jest symulacja ruchu drogowego w SUMO. Interfejs TraCI łączy agenta z symulatorem oraz pozwala wykonywać kolejne kroki symulacji, odczytywać stan ruchu i zmieniać sygnalizację.
+Problem sterowania sygnalizacją sformułowano jako zadanie uczenia ze wzmocnieniem. Agent wybiera fazę sygnalizacji świetlnej, a środowiskiem jest symulacja ruchu drogowego w SUMO przedstawiona na rysunku \ref{fig:symulacja}. Interfejs TraCI łączy agenta z symulatorem oraz pozwala wykonywać kolejne kroki symulacji, odczytywać stan ruchu i zmieniać sygnalizację.
 
 Biblioteka \texttt{sumo-rl} pośredniczy między symulatorem a algorytmem uczenia i udostępnia symulację jako środowisko zgodne z interfejsem Gymnasium \cite{alegre2019sumorl}. Na jej podstawie przygotowano własną warstwę integracyjną, opisaną w rozdziałach~\ref{sec:architektura} oraz~\ref{sec:implementacja}.
 

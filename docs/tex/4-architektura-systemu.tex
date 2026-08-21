@@ -66,7 +66,7 @@ TraCI jest jedynym połączeniem między symulatorem a kodem w języku Python. O
 
 W metodach referencyjnych TraCI służy tylko do odczytu stanu i wykonywania kolejnych kroków symulacji. Sterowaniem zajmuje się SUMO, dlatego metody klasyczne działają zgodnie z definicją w pliku sieci.
 
-\subsection{Biblioteka \texttt{sumo-rl}}
+\subsection{Biblioteka sumo-rl}
 \label{subsec:sumo-rl}
 
 Biblioteka \texttt{sumo-rl} pośredniczy między SUMO a algorytmem uczenia ze wzmocnieniem \cite{alegre2019sumorl}. Jej głównym elementem jest klasa \texttt{SumoEnvironment}, która uruchamia symulację, łączy się przez TraCI i udostępnia środowisko zgodne z interfejsem Gymnasium \cite{towers2025gymnasium}. Interfejs określa sposób rozpoczynania epizodu i wykonywania kroku w odpowiedzi na akcję oraz opisuje przestrzenie obserwacji i akcji.
