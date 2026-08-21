@@ -9,19 +9,19 @@ W rozdziale zinterpretowano wyniki, skupiając się na skuteczności DQN względ
 
 Analizę przeprowadzono osobno dla ruchu lekkiego, średniego, wysokiego i zmiennego.
 
-\subsubsection{Ruch lekki}
+\subsubsection{Lekkie natężenie ruchu}
 
 Przy lekkim natężeniu wszystkie metody obsłużyły zgłoszony popyt, o czym świadczy niemal taka sama przepustowość. Różnił się więc sposób obsługi pojazdów, a nie liczba zakończonych podróży. Program stałoczasowy utrzymywał przydzielony czas zielony także przy małym chwilowym zapotrzebowaniu na daną fazę. Sterowanie akomodacyjne i DQN mogły wcześniej przekazać prawo przejazdu innemu strumieniowi. Może to wyjaśniać ich wyraźną przewagę nad programem stałoczasowym.
 
 Opóźnienie DQN było o 1,32~s na pojazd mniejsze niż dla sterowania akomodacyjnego. Jest to wynik korzystny, ale znacznie mniejszy od przewagi nad programem stałoczasowym. Ponadto kwantyl rzędu 0,95 czasu oczekiwania był dla DQN nieznacznie wyższy niż dla sterownika akomodacyjnego. Przy lekkim ruchu DQN nie poprawił więc jednoznacznie sytuacji wszystkich uczestników, a prostsza metoda oparta na detekcji osiągnęła bardzo podobną jakość sterowania.
 
-\subsubsection{Ruch średni}
+\subsubsection{Średnie natężenie ruchu}
 
 Przy średnim natężeniu wyniki są podobne. Wszystkie metody obsłużyły popyt, ale program stałoczasowy ponownie powodował większe opóźnienie, czas oczekiwania i kolejki. Różnica między DQN a sterowaniem akomodacyjnym zmalała do 0,23~s opóźnienia, 0,24~s czasu oczekiwania i 0,07 pojazdu średniej kolejki.
 
 Różnice są małe również w porównaniu ze zmiennością pięciu przebiegów. Analiza opisowa nie daje podstaw do stwierdzenia wyraźnej przewagi DQN w tym scenariuszu. Obie metody reagujące na ruch można więc uznać za porównywalne. DQN przełączał sygnalizację nieco rzadziej niż sterownik akomodacyjny, zatem niewielka poprawa średnich wyników nie wynikała z większej liczby zmian faz.
 
-\subsubsection{Ruch wysoki}
+\subsubsection{Wysokie natężenie ruchu}
 
 Wysokie natężenie najsilniej różnicowało metody. Sterowanie akomodacyjne miało większe opóźnienie i czas oczekiwania niż program stałoczasowy, a częstotliwość jego przełączeń spadła do poziomu tego programu. Jest to zgodne z działaniem sterowania \textit{gap-based}. Przy niemal ciągłym strumieniu pojazdów rzadko pojawia się przerwa pozwalająca wcześniej zakończyć fazę, więc reguła akomodacyjna w dużym stopniu traci zdolność reagowania \cite{NAP22097,sumoTrafficLights}.
 
@@ -29,7 +29,7 @@ DQN nie korzystał wyłącznie z przerw w obsługiwanym strumieniu. Obserwował 
 
 Przy wysokim natężeniu DQN uzyskał największą przewagę nad sterowaniem akomodacyjnym: opóźnienie było niższe o 26,25~s na pojazd, a przepustowość wyższa o 7,7\%. W tym samym scenariuszu wystąpiły jednak duży rozrzut, nierównomierne kolejki między wlotami i jeden przebieg zakończony limitem czasu. Średnio polityka DQN była więc skuteczniejsza, ale mniej przewidywalna niż program stałoczasowy. Nie obsłużyła też poprawnie wszystkich pojazdów w każdym uruchomieniu.
 
-\subsubsection{Ruch zmienny}
+\subsubsection{Zmienne natężenie ruchu}
 
 Scenariusz zmienny łączył stopniowy wzrost natężenia z nieregularnymi czasami wyjazdu. DQN osiągnął w nim najniższe opóźnienie i czas oczekiwania oraz najwyższą przepustowość. Wynik ten wskazuje, że polityka wyuczona na stałych poziomach obciążenia działała także wtedy, gdy poziomy następowały po sobie w jednym przebiegu, a napływ był mniej regularny.
 

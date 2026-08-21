@@ -27,7 +27,9 @@ Sterowanie obejmuje trzynaście pasów wlotowych i szesnaście relacji, czyli po
 
 Indeks sygnału wskazuje pozycję znaku w łańcuchu opisującym stan sygnalizacji. Znajomość układu indeksów jest więc potrzebna do interpretacji programu sygnalizacji. Ich przypisanie do wlotów przedstawiono w tabeli~\ref{tab:indeksy-sygnalow}.
 
-\begin{table}[!htbp] \centering
+W pliku sieci krawędź wlotowa oznacza skierowany odcinek drogi prowadzący do skrzyżowania. Kolumna \emph{Krawędź wlotowa} zawiera jego techniczny identyfikator używany przez SUMO i TraCI, natomiast kolumna \emph{Wlot} podaje odpowiadającą mu nazwę stosowaną w tekście. Zakres w kolumnie \emph{Indeksy} wskazuje pozycje relacji w szesnastoznakowym łańcuchu stanu sygnalizacji, a nie numery pasów. Przykładowo wartości 0--3 oznaczają cztery relacje z wschodniego wlotu ulicy Belgradzkiej, uporządkowane zgodnie z ostatnią kolumną tabeli.
+
+\begin{table}[htbp] \centering
     \caption{Przypisanie indeksów sygnałów do wlotów i relacji skrętnych.}
     \label{tab:indeksy-sygnalow}
     \small
@@ -39,6 +41,7 @@ Indeks sygnału wskazuje pozycję znaku w łańcuchu opisującym stan sygnalizac
         12--15 & \texttt{1029639687\#0} & al. KEN, północny    & prawo, wprost, wprost, lewo \\ \hline
     \end{tabular}
 \end{table}
+\FloatBarrier
 
 Wlot południowy alei Komisji Edukacji Narodowej, z którego ruch odbywa się na północ, jest jedynym wlotem z osobnym pasem dla każdej z czterech relacji. Na pozostałych wlotach skręt w lewo ma wydzielony pas, natomiast skręt w prawo i jazda na wprost korzystają ze wspólnego pasa skrajnego.
 
@@ -82,7 +85,8 @@ Przygotowano scenariusze o stałym i zmiennym natężeniu oraz wariant treningow
 \subsubsection{Mechanizm generowania}
 \label{subsubsec:mechanizm-generowania}
 
-Wszystkie scenariusze wygenerowano skryptem \texttt{randomTrips.py} dostarczanym z SUMO \cite{sumo_randomtrips_docs}. Skrypt losuje początkową i końcową krawędź każdej podróży, domyślnie z rozkładem jednostajnym wśród krawędzi sieci, i zapisuje zbiór podróży. Opcja \texttt{-{}-route-file} automatycznie uruchamia narzędzie \texttt{duarouter}. Wyznacza ono trasy i odrzuca podróże niemożliwe do wykonania, na przykład przy braku połączenia między wylosowanymi krawędziami.
+{\setlength{\emergencystretch}{1em}
+Wszystkie scenariusze wygenerowano skryptem \texttt{randomTrips.py} dostarczanym z SUMO \cite{sumo_randomtrips_docs}. Skrypt losuje początkową i końcową krawędź każdej podróży, domyślnie z rozkładem jednostajnym wśród krawędzi sieci, i zapisuje zbiór podróży. Opcja \texttt{-{}-route-file} automatycznie uruchamia narzędzie \texttt{duarouter}. Wyznacza ono trasy i odrzuca podróże niemożliwe do wykonania, na przykład przy braku połączenia między wylosowanymi krawędziami.\par}
 
 Wykorzystane opcje mają następujące znaczenie \cite{sumo_randomtrips_docs}:
 \begin{itemize}
@@ -146,7 +150,7 @@ Tabela~\ref{tab:scenariusze} zawiera konfigurację wszystkich wygenerowanych sce
     \label{tab:scenariusze}
     \footnotesize
     \begin{tabular}{| l | l | r | r | r | c | l |} \hline
-        Zbiór & Scenariusz & Okres [s] & Wariantów & Długość [s] & Losowe odjazdy & Ziarna \\ \hline\hline
+        Zbiór & Scenariusz\textsuperscript{*} & Okres [s] & Wariantów & Długość [s] & Losowe odjazdy & Ziarna \\ \hline\hline
         treningowy 1 & lekki   & 5,000 & 10 & 1800 & nie & 1001--1010 \\ \hline
         treningowy 1 & średni  & 2,500 & 10 & 1800 & nie & 2001--2010 \\ \hline
         treningowy 1 & wysoki  & 1,250 & 10 & 1800 & nie & 3001--3010 \\ \hline
@@ -162,6 +166,9 @@ Tabela~\ref{tab:scenariusze} zawiera konfigurację wszystkich wygenerowanych sce
         testowy T3   & wysoki  & 1,250 & 5  & 3600 & nie & 301--305 \\ \hline
         testowy G1   & zmienny & 5,0; 2,5; 1,25 & 5 & 3600 & tak & 401--405 \\ \hline
     \end{tabular}
+    \par\smallskip
+    {\raggedright\footnotesize
+    \textsuperscript{*} Określenia \emph{lekki}, \emph{średni} i \emph{wysoki} opisują względny poziom napływu pojazdów w całym scenariuszu, a nie pomiar natężenia na konkretnym wlocie. Poziom zależy od wartości opcji \texttt{-{}-period}: krótszy średni odstęp między wyjazdami oznacza większe natężenie. Szczegółowe wartości i sposób utworzenia scenariusza zmiennego opisano w podrozdziałach~\ref{subsubsec:scenariusze-stale} i~\ref{subsubsec:scenariusz-zmienny}.\par}
 \end{table}
 
 Żaden plik tras nie powtarza się między zbiorami treningowym, walidacyjnym i testowym. Do ich generowania użyto też rozłącznych zakresów ziaren, zgodnie z zasadami z podrozdziału~\ref{subsubsec:przenikanie-danych}.
@@ -186,7 +193,7 @@ Pełny cykl trwa 81~s. Trzy fazy żółte po 3~s zajmują łącznie 9~s, więc n
     \small
     \setlength{\tabcolsep}{3.5pt}
     \begin{tabular}{| l | r | r | r |} \hline
-        Faza & Natężenie pasa krytycznego [poj./h] & Czas zielony [s] & \texttt{maxDur} [s] \\ \hline\hline
+        Faza & Natężenie pasa krytycznego [poj./h] & Czas zielony [s] & \shortstack{Maks. czas\\zielony [s]} \\ \hline\hline
         A: al. KEN, wprost i w prawo & 229 & 14 & 21 \\ \hline
         B: al. KEN, skręt w lewo     & 463 & 29 & 43 \\ \hline
         C: Belgradzka                & 477 & 29 & 44 \\ \hline
@@ -371,7 +378,7 @@ environment:
 
 Oddzielenie konfiguracji od kodu pozwoliło stroić hiperparametry przez dodawanie plików konfiguracyjnych bez zmiany kodu źródłowego. Każdy zestaw parametrów można było dzięki temu jednoznacznie przypisać do przebiegu.
 
-Na podstawie konfiguracji tworzone są środowisko oraz obiekt DQN z biblioteki Stable-Baselines3, korzystający z polityki \texttt{MlpPolicy}. Pole architektury sieci jest opcjonalne. Jego brak pozostawia architekturę domyślną, a podanie pozwala określić własny układ warstw ukrytych. Skorzystano z tego w jednym wariancie strojenia.
+Na podstawie konfiguracji tworzone są środowisko oraz obiekt DQN z biblioteki Stable-\allowbreak Baselines3, korzystający z polityki \texttt{MlpPolicy}. Pole architektury sieci jest opcjonalne. Jego brak pozostawia architekturę domyślną, a podanie pozwala określić własny układ warstw ukrytych. Skorzystano z tego w jednym wariancie strojenia.
 
 \subsubsection{Przebieg epizodów}
 \label{subsubsec:przebieg-epizodow}
@@ -383,7 +390,7 @@ Kolejne epizody korzystają z kolejnych plików na posortowanej liście, a po os
 \subsubsection{Checkpointy i logi}
 \label{subsubsec:checkpointy-logi}
 
-Stany pośrednie zapisuje standardowy mechanizm wywołań zwrotnych Stable-Baselines3, konfigurowany częstotliwością zapisu i przedrostkiem nazwy pliku. Domyślnie checkpoint powstaje co 25\,000 kroków. Jego nazwa zawiera przedrostek i numer kroku, co jednoznacznie wiąże model z etapem treningu. Częstotliwość równa zeru wyłącza checkpointy. Ustawienie to zastosowano dla wariantów strojenia porównywanych dopiero po zakończeniu treningu.
+Biblioteka Stable-Baselines3 udostępnia standardowy mechanizm wywołań zwrotnych, który zapisuje stany pośrednie. Konfiguruje się go przez podanie częstotliwości zapisu i przedrostka nazwy pliku. Domyślnie checkpoint powstaje co 25\,000 kroków. Jego nazwa zawiera przedrostek i numer kroku, co jednoznacznie wiąże model z etapem treningu. Częstotliwość równa zeru wyłącza checkpointy. Ustawienie to zastosowano dla wariantów strojenia porównywanych dopiero po zakończeniu treningu.
 
 Biblioteka zapisuje w logach między innymi liczbę wykonanych kroków, bieżący współczynnik eksploracji, tempo przetwarzania i wartość funkcji straty. Logi kontenerów trafiają do katalogu użytego zbioru treningowego, osobno dla każdego wariantu konfiguracji.
 
@@ -422,6 +429,17 @@ Tabela~\ref{tab:konfiguracja-bazowa} przedstawia konfigurację bazową używaną
 
 Poniżej wyjaśniono znaczenie tych wartości w badanym zadaniu.
 
+Mechanizmy, do których odnoszą się parametry, opisano w podrozdziale~\ref{subsec:dqn}. Dla ułatwienia odczytania tabeli najważniejsze z pozostałych parametrów oznaczają:
+{\setlength{\emergencystretch}{1em}
+\begin{itemize}
+    \item \texttt{learning\_rate}, krok używany do aktualizacji wag sieci, który określa skalę pojedynczej zmiany podczas uczenia;
+    \item \texttt{learning\_starts} i \texttt{batch\_size}, odpowiednio liczbę kroków zbierania przejść przed rozpoczęciem aktualizacji oraz liczbę przejść losowanych z bufora do jednej aktualizacji;
+    \item \texttt{gamma}, wagę przyszłych nagród względem nagrody otrzymanej bezpośrednio po akcji;
+    \item \texttt{train\_freq} i \texttt{target\_update\_interval}, odpowiednio częstotliwość aktualizacji sieci głównej oraz odstęp między aktualizacjami sieci docelowej;
+    \item \texttt{seed}, początkowy stan generatorów liczb pseudolosowych używanych podczas treningu.
+\end{itemize}
+}
+
 Przy interwale 5~s i epizodzie 2100~s bufor o pojemności 50\,000 przejść mieści około stu dwudziestu epizodów. Jest to wielokrotnie więcej niż pełny obieg zbioru treningowego. Bufor przechowuje więc jednocześnie przejścia ze wszystkich trzech poziomów natężenia, co ogranicza ryzyko dopasowania polityki do ostatniego scenariusza.
 
 Współczynnik eksploracji $\varepsilon$ maleje liniowo od 1,0 do 0,05 podczas pierwszych dwudziestu procent treningu. Przy 300\,000 kroków spadek trwa przez pierwsze 60\,000 kroków. Później agent działa niemal zachłannie, ale nadal wykonuje niewielką część działań losowych.
@@ -436,7 +454,8 @@ Dane z każdego przebiegu najpierw zapisywano w plikach wyjściowych, a następn
 \subsubsection{Pliki wyjściowe pojedynczego przebiegu}
 \label{subsubsec:pliki-przebiegu}
 
-Każda ewaluacja tworzy cztery pliki. Symulator zapisuje \texttt{tripinfo.xml} z opisem zakończonych podróży oraz diagnostyczny \texttt{statistic.xml}. Kod pomiarowy tworzy \texttt{timeseries.csv} z danymi co sekundę i \texttt{summary.csv} z ich podsumowaniem. Metryki pochodzą z \texttt{tripinfo.xml} i szeregu czasowego, które opisują odpowiednio zakończone podróże oraz zmiany stanu skrzyżowania.
+{\setlength{\emergencystretch}{1em}
+Każda ewaluacja tworzy cztery pliki. Symulator zapisuje \texttt{tripinfo.xml} z opisem zakończonych podróży oraz diagnostyczny \texttt{statistic.xml}. Kod pomiarowy tworzy \texttt{timeseries.csv} z danymi co sekundę i \texttt{summary.csv} z ich podsumowaniem. Metryki pochodzą z \texttt{tripinfo.xml} i szeregu czasowego, które opisują odpowiednio zakończone podróże oraz zmiany stanu skrzyżowania.\par}
 
 Z obu źródeł powstaje jeden wiersz opisujący cały przebieg. Zawiera jego identyfikację, metryki z podrozdziału~\ref{subsec:metryki} i wartości uzupełniające. Wszystkie metody używają wspólnego formatu i tych samych zasad agregacji.
 

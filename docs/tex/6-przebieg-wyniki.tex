@@ -36,6 +36,8 @@ Wersję symulatora ustala znacznik obrazu bazowego. Pakiety języka Python insta
 \subsubsection{Liczba przeprowadzonych przebiegów}
 \label{subsubsec:liczba-przebiegow}
 
+Przebieg treningowy oznacza jedno pełne uruchomienie procesu uczenia dla określonego zbioru treningowego i konfiguracji hiperparametrów. Obejmuje wiele kolejnych epizodów aż do wykonania zadanej liczby kroków. Zapisywane w jego trakcie checkpointy są stanami tego samego modelu, a nie osobnymi przebiegami. Przebieg ewaluacyjny oznacza jednokrotne uruchomienie ustalonej metody na jednym scenariuszu, bez dalszego uczenia modelu.
+
 Wykonano 18 przebiegów treningowych i 360 ewaluacyjnych. Ich zestawienie przedstawiono w tabeli~\ref{tab:liczba-przebiegow}.
 
 \begin{table}[!htbp] \centering
@@ -79,7 +81,7 @@ Konfigurację bazową z podrozdziału~\ref{subsec:konfiguracja-bazowa} trenowano
 
 Tabela~\ref{tab:checkpointy-fixed} zawiera wyniki modeli trenowanych na regularnym zbiorze, a rysunek~\ref{fig:checkpointy-fixed} przedstawia ich zmiany.
 
-\begin{table}[!htbp] \centering
+\begin{table}[htbp] \centering
     \caption[Walidacja checkpointów dla regularnego zbioru treningowego.]{Średnie opóźnienie kolejnych checkpointów na scenariuszach walidacyjnych. Zbiór treningowy o regularnym napływie pojazdów.}
     \label{tab:checkpointy-fixed}
     \small
@@ -100,7 +102,7 @@ Tabela~\ref{tab:checkpointy-fixed} zawiera wyniki modeli trenowanych na regularn
     \end{tabular}
 \end{table}
 
-\begin{figure}[!htbp] \centering
+\begin{figure}[htbp] \centering
     \includegraphics[width=0.9\linewidth]{validate_steps_fixed.png}
     \caption[Walidacja checkpointów dla regularnego zbioru treningowego.]{Średnie opóźnienie kolejnych checkpointów modelu trenowanego na regularnym zbiorze treningowym, w podziale na scenariusze walidacyjne.}
     \label{fig:checkpointy-fixed}
@@ -132,7 +134,7 @@ Tabela~\ref{tab:zbiory-treningowe} porównuje oba warianty, a rysunek~\ref{fig:z
     \end{tabular}
 \end{table}
 
-\begin{figure}[!htbp] \centering
+\begin{figure}[htbp] \centering
     \includegraphics[width=\linewidth]{validate_steps_stabilne_vs_ciezki.png}
     \caption[Porównanie wariantów zbioru treningowego.]{Porównanie wariantów zbioru treningowego na scenariuszach stabilnych oraz na scenariuszu o wysokim natężeniu.}
     \label{fig:zbiory-treningowe}
@@ -149,7 +151,7 @@ Dlatego w dalszych etapach używano regularnego zbioru treningowego. Wszystkie w
 
 Ponieważ jeden przebieg walidacyjny nie wystarczał do wiarygodnego wyboru, trzech kandydatów oceniono na pięciu ziarnach symulacji. Były to checkpoint po 225\,000 kroków, wcześniej oceniony jako najlepszy, oraz dwa sąsiednie w rankingu, po 200\,000 i 275\,000 kroków. Wyniki przedstawiono w tabeli~\ref{tab:checkpointy-ziarna} i na rysunku~\ref{fig:checkpointy-ziarna}.
 
-\begin{table}[!htbp] \centering
+\begin{table}[htbp] \centering
     \caption[Walidacja kandydatów na model końcowy.]{Walidacja kandydatów na model końcowy na pięciu ziarnach symulacji. W nawiasie odchylenie standardowe.}
     \label{tab:checkpointy-ziarna}
     \small
@@ -161,7 +163,7 @@ Ponieważ jeden przebieg walidacyjny nie wystarczał do wiarygodnego wyboru, trz
     \end{tabular}
 \end{table}
 
-\begin{figure}[!htbp] \centering
+\begin{figure}[htbp] \centering
     \includegraphics[width=0.85\linewidth]{validate_steps_wieloziarnowa.png}
     \caption{Walidacja trzech kandydatów na model końcowy na pięciu ziarnach symulacji.}
     \label{fig:checkpointy-ziarna}
@@ -188,7 +190,7 @@ Sprawdzono trzynaście wariantów zmieniających pojedynczy hiperparametr, jeden
 
 Tabela~\ref{tab:strojenie} przedstawia warianty rosnąco według średniej z czterech scenariuszy walidacyjnych. Na rysunku~\ref{fig:strojenie} górny panel pokazuje średnią, a dolny wyniki poszczególnych scenariuszy.
 
-\begin{table}[!htbp] \centering
+\begin{table}[htbp] \centering
     \caption[Wyniki strojenia hiperparametrów.]{Wyniki strojenia hiperparametrów na zbiorze walidacyjnym. Średnie opóźnienie w sekundach, pojedynczy przebieg na scenariusz.}
     \label{tab:strojenie}
     \footnotesize
@@ -215,7 +217,7 @@ Tabela~\ref{tab:strojenie} przedstawia warianty rosnąco według średniej z czt
     \end{tabular}
 \end{table}
 
-\begin{figure}[!htbp] \centering
+\begin{figure}[htbp] \centering
     \includegraphics[width=\linewidth]{hyperparameter_tuning.png}
     \caption[Wyniki strojenia hiperparametrów.]{Wyniki strojenia hiperparametrów: średnia z czterech scenariuszy oraz rozbicie na poszczególne scenariusze.}
     \label{fig:strojenie}
@@ -224,7 +226,7 @@ Tabela~\ref{tab:strojenie} przedstawia warianty rosnąco według średniej z czt
 Żaden z szesnastu badanych wariantów nie poprawił średniej z czterech scenariuszy względem konfiguracji bazowej. Najlepszy z nich uzyskał 35,32 wobec 30,33, a najgorszy 51,70.
 
 Dla czterech hiperparametrów sprawdzono zmianę w obie strony i w każdym z tych przypadków wartość bazowa okazała się lepsza od obu wartości sąsiednich. Częstotliwość aktualizacji sieci docelowej dała 35,32 dla wartości 250 oraz 36,15 dla wartości 1000, przy 30,33 dla wartości 500. Współczynnik dyskontowania dał 39,33 dla 0,98 oraz 41,28 dla 0,995. Rozmiar batcha dał 35,43 dla 32 oraz 36,90 dla 128. Długość fazy eksploracji dała 51,70 dla 0,1 oraz 39,09 dla 0,3.
-
+\FloatBarrier
 Najsilniejszy wpływ na wynik miała długość fazy eksploracji. Skrócenie jej z 0,2 do 0,1 pogorszyło średnią o 70,5\%. Pogorszenie dotyczyło przede wszystkim scenariuszy o wysokim i zmiennym natężeniu, w których opóźnienie wzrosło odpowiednio z 51,35 do 104,92 oraz z 36,63 do 65,69. Wariant ten wybrano następnie jako model kontrastowy do oceny na zbiorze testowym, co opisano w podrozdziale~\ref{subsec:model-kontrastowy}.
 
 Dolny panel rysunku~\ref{fig:strojenie} pokazuje, że sama średnia nie opisuje wariantów w pełni. Niektóre są lepsze od konfiguracji bazowej w pojedynczych scenariuszach. Tempo uczenia 0,0003 daje najniższe opóźnienie w ruchu lekkim. W ruchu średnim najniższy wynik daje połączenie tego tempa z mniejszym batchem, a w ruchu zmiennym batch równy 32. W ostatnim przypadku wynik wynosi 32,48 wobec 36,63. Żaden wariant nie przewyższył konfiguracji bazowej przy wysokim natężeniu. Najlepszy wynik wariantu to 69,09 wobec 51,35. Ponieważ opóźnienie jest w tym scenariuszu największe, to ono decyduje o rankingu opartym na średniej.
@@ -243,7 +245,7 @@ Tempo uczenia 0,0003 połączone ze współczynnikiem dyskontowania 0,98 dało �
 
 Ranking z tabeli~\ref{tab:strojenie} oparto na jednym przebiegu każdego scenariusza, a konfigurację bazową oceniono już na pięciu ziarnach. Dla porównywalności trzy najlepsze warianty oceniono tą samą procedurą wieloziarnową. Wyniki przedstawiono w tabeli~\ref{tab:strojenie-ziarna} i na rysunku~\ref{fig:strojenie-ziarna}.
 
-\begin{table}[!htbp] \centering
+\begin{table}[htbp] \centering
     \caption[Walidacja najlepszych wariantów hiperparametrów.]{Porównanie trzech najlepszych wariantów z konfiguracją bazową na pięciu ziarnach symulacji. W nawiasie odchylenie standardowe.}
     \label{tab:strojenie-ziarna}
     \small
@@ -256,7 +258,7 @@ Ranking z tabeli~\ref{tab:strojenie} oparto na jednym przebiegu każdego scenari
     \end{tabular}
 \end{table}
 
-\begin{figure}[!htbp] \centering
+\begin{figure}[htbp] \centering
     \includegraphics[width=0.85\linewidth]{hyperparameter_wieloziarnowa.png}
     \caption[Walidacja najlepszych wariantów hiperparametrów.]{Trzy najlepsze warianty hiperparametrów w porównaniu z konfiguracją bazową, ocena na pięciu ziarnach symulacji.}
     \label{fig:strojenie-ziarna}
@@ -289,7 +291,7 @@ Przebiegi kończyły się na dwa sposoby. Metody referencyjne zawsze obsłużył
 
 Wpływa to na interpretację wyników, ponieważ część metryk jest normowana czasem symulacji. Wrażliwość wartości zbiorczych sprawdzono, porównując wyniki ze wszystkich przebiegów z wynikami przebiegów zakończonych naturalnie. Wyniki zawiera tabela~\ref{tab:blokady}.
 
-\begin{table}[!htbp] \centering
+\begin{table}[htbp] \centering
     \caption{Wpływ przebiegów zakończonych limitem czasu na wyniki agenta DQN.}
     \label{tab:blokady}
     \footnotesize
@@ -328,18 +330,18 @@ Wartości średniego opóźnienia zestawiono w tabeli~\ref{tab:test-opoznienie},
     \end{tabular}
 \end{table}
 
-\begin{figure}[!htbp] \centering
+\begin{figure}[htbp] \centering
     \includegraphics[width=0.8\linewidth]{results_bar_mean_delay_simp.png}
     \caption{Średnie opóźnienie według scenariusza natężenia oraz metody sterowania.}
     \label{fig:test-opoznienie}
 \end{figure}
 
-\begin{figure}[!htbp] \centering
+\begin{figure}[htbp] \centering
     \includegraphics[width=0.8\linewidth]{results_boxplot_mean_delay_simp.png}
     \caption[Rozkład średniego opóźnienia.]{Rozkład średniego opóźnienia według scenariusza natężenia oraz metody sterowania.}
     \label{fig:test-opoznienie-box}
 \end{figure}
-
+\FloatBarrier
 DQN uzyskał najniższe średnie opóźnienie we wszystkich czterech scenariuszach. Względem programu stałoczasowego różnica wynosi od 20,8\% w ruchu wysokim do 50,4\% w lekkim. W porównaniu z programem akomodacyjnym jest mniejsza w ruchu lekkim i średnim, odpowiednio 8,7\% i 1,3\%, a największa w wysokim, 33,6\%. W scenariuszu zmiennym wynosi 13,9\%.
 
 Rozkład wyników pokazuje, że przewaga w ruchu lekkim i średnim jest systematyczna: wszystkie pięć przebiegów agenta wypada tam lepiej od programu stałoczasowego, a odchylenia standardowe nie przekraczają 0,6. W ruchu wysokim oraz w ruchu zmiennym rozrzut jest znacznie większy dla wszystkich metod. Odchylenie standardowe agenta wynosi tam 6,95 oraz 5,36, a więc jest zbliżone do odchylenia programu akomodacyjnego i większe niż programu stałoczasowego.
@@ -351,7 +353,7 @@ W ruchu wysokim tylko program akomodacyjny wypada gorzej od stałoczasowego. DQN
 
 Wartości średniego czasu oczekiwania zestawiono w tabeli~\ref{tab:test-oczekiwanie}, a ich porównanie przedstawiono na rysunku~\ref{fig:test-oczekiwanie}.
 
-\begin{table}[!htbp] \centering
+\begin{table}[htbp] \centering
     \caption[Średni czas oczekiwania na zbiorze testowym.]{Średni czas oczekiwania na zbiorze testowym w sekundach na pojazd. W nawiasie odchylenie standardowe.}
     \label{tab:test-oczekiwanie}
     \small
@@ -363,7 +365,7 @@ Wartości średniego czasu oczekiwania zestawiono w tabeli~\ref{tab:test-oczekiw
     \end{tabular}
 \end{table}
 
-\begin{figure}[!htbp] \centering
+\begin{figure}[htbp] \centering
     \includegraphics[width=0.8\linewidth]{results_bar_mean_waiting_simp.png}
     \caption{Średni czas oczekiwania według scenariusza natężenia oraz metody sterowania.}
     \label{fig:test-oczekiwanie}
@@ -380,7 +382,7 @@ Rejestrowano również wartości dla pojazdów obsłużonych najgorzej. Kwantyl 
 
 Wartości średniej długości kolejki zestawiono w tabeli~\ref{tab:test-kolejka}, a ich porównanie przedstawiono na rysunku~\ref{fig:test-kolejka}.
 
-\begin{table}[!htbp] \centering
+\begin{table}[htbp] \centering
     \caption[Średnia długość kolejki na zbiorze testowym.]{Średnia długość kolejki na zbiorze testowym w pojazdach. W nawiasie odchylenie standardowe.}
     \label{tab:test-kolejka}
     \small
@@ -392,7 +394,7 @@ Wartości średniej długości kolejki zestawiono w tabeli~\ref{tab:test-kolejka
     \end{tabular}
 \end{table}
 
-\begin{figure}[!htbp] \centering
+\begin{figure}[htbp] \centering
     \includegraphics[width=0.8\linewidth]{results_bar_mean_queue_simp.png}
     \caption{Średnia długość kolejki według scenariusza natężenia oraz metody sterowania.}
     \label{fig:test-kolejka}
@@ -409,7 +411,7 @@ Rejestrowano także długość kolejki na każdym z czterech wlotów. Dla DQN pr
 
 Wartości przepustowości zestawiono w tabeli~\ref{tab:test-przepustowosc}, a ich porównanie przedstawiono na rysunku~\ref{fig:test-przepustowosc}.
 
-\begin{table}[!htbp] \centering
+\begin{table}[htbp] \centering
     \caption[Przepustowość na zbiorze testowym.]{Przepustowość na zbiorze testowym w pojazdach na godzinę. W nawiasie odchylenie standardowe.}
     \label{tab:test-przepustowosc}
     \small
@@ -421,7 +423,7 @@ Wartości przepustowości zestawiono w tabeli~\ref{tab:test-przepustowosc}, a ic
     \end{tabular}
 \end{table}
 
-\begin{figure}[!htbp] \centering
+\begin{figure}[htbp] \centering
     \includegraphics[width=0.8\linewidth]{results_bar_throughput_simp.png}
     \caption{Przepustowość według scenariusza natężenia oraz metody sterowania.}
     \label{fig:test-przepustowosc}
@@ -436,7 +438,7 @@ Różnice pojawiają się w scenariuszu o wysokim natężeniu. Agent DQN obsług
 
 Wartości częstotliwości przełączeń zestawiono w tabeli~\ref{tab:test-przelaczenia}, a ich porównanie przedstawiono na rysunku~\ref{fig:test-przelaczenia}.
 
-\begin{table}[!htbp] \centering
+\begin{table}[htbp] \centering
     \caption[Częstotliwość przełączeń na zbiorze testowym.]{Częstotliwość przełączeń na zbiorze testowym w przełączeniach na godzinę. W nawiasie odchylenie standardowe. Dla agenta DQN podano dodatkowo wartość wyznaczoną bez przebiegów przerwanych limitem czasu.}
     \label{tab:test-przelaczenia}
     \footnotesize
@@ -450,7 +452,7 @@ Wartości częstotliwości przełączeń zestawiono w tabeli~\ref{tab:test-przel
     \end{tabular}
 \end{table}
 
-\begin{figure}[!htbp] \centering
+\begin{figure}[htbp] \centering
     \includegraphics[width=0.8\linewidth]{results_bar_switching_freq_simp.png}
     \caption{Częstotliwość przełączeń według scenariusza natężenia oraz metody sterowania.}
     \label{fig:test-przelaczenia}
@@ -479,7 +481,7 @@ Wybrano wariant ze skróconą fazą eksploracji, oznaczony w tabeli~\ref{tab:str
 
 Porównanie obu modeli przedstawiono w tabeli~\ref{tab:kontrastowy} oraz na rysunkach~\ref{fig:kontrastowy-opoznienie} i~\ref{fig:kontrastowy-kolejka}.
 
-\begin{table}[!htbp] \centering
+\begin{table}[htbp] \centering
     \caption[Porównanie modelu końcowego i kontrastowego.]{Model końcowy i model kontrastowy na zbiorze testowym. W nawiasie odchylenie standardowe.}
     \label{tab:kontrastowy}
     \footnotesize
@@ -495,18 +497,18 @@ Porównanie obu modeli przedstawiono w tabeli~\ref{tab:kontrastowy} oraz na rysu
     \end{tabular}
 \end{table}
 
-\begin{figure}[!htbp] \centering
+\begin{figure}[htbp] \centering
     \includegraphics[width=0.8\linewidth]{results_bar_mean_delay_2.png}
     \caption{Średnie opóźnienie modelu końcowego i modelu kontrastowego.}
     \label{fig:kontrastowy-opoznienie}
 \end{figure}
 
-\begin{figure}[!htbp] \centering
+\begin{figure}[htbp] \centering
     \includegraphics[width=0.8\linewidth]{results_bar_mean_queue_2.png}
     \caption{Średnia długość kolejki modelu końcowego i modelu kontrastowego.}
     \label{fig:kontrastowy-kolejka}
 \end{figure}
-
+\FloatBarrier
 Słaby wynik walidacyjny powtórzył się na zbiorze testowym, ale w różnym stopniu zależnie od scenariusza. W ruchu lekkim i średnim opóźnienie modelu kontrastowego jest większe od końcowego tylko o 12,8\% i 3,3\%. Nadal wypada lepiej od programu stałoczasowego i podobnie do akomodacyjnego, którego wyniki wynoszą 15,22 i 18,02. W tych warunkach model kontrastowy działa więc poprawnie.
 
 Różnice rosną w trudniejszych scenariuszach. W ruchu wysokim opóźnienie zwiększa się o 115,0\%, do 111,41, a w zmiennym o 110,3\%, do 71,96. Model kontrastowy jest tam gorszy od modelu końcowego i obu metod referencyjnych. Średnia kolejka rośnie odpowiednio o 183,5\% i 281,2\%, a przepustowość spada o 21,2\% i 9,7\%. Sterowanie nie może więc obsłużyć zgłoszonego popytu.

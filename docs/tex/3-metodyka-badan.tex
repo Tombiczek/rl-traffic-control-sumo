@@ -25,35 +25,37 @@ Procedurę badawczą podzielono na następujące etapy:
 
 Wybór i strojenie modelu DQN oraz dobór parametrów metod referencyjnych oparto wyłącznie na danych treningowych i walidacyjnych. Zbiór testowy służył do porównania zamrożonych konfiguracji metod i nie był formalnym kryterium wyboru DQN. Kolejność jego wykorzystania i związane z nią ograniczenie omówiono w podrozdziale~\ref{subsec:ograniczenia-wiarygodnosci}. Cały proces badawczy przedstawiono na rysunku~\ref{fig:proces-badawczy}.
 
-\begin{figure}[!htbp]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{proces_badawczy.png}
     \caption[Procedura badawcza i podział danych.]{Schemat procedury badawczej z rozdzieleniem danych treningowych, walidacyjnych i testowych.}
     \label{fig:proces-badawczy}
 \end{figure}
+\FloatBarrier
 
 \subsection{Charakterystyka analizowanego skrzyżowania}
 \label{subsec:skrzyzowanie}
 
 Do badania wybrano skrzyżowanie ulicy Belgradzkiej z aleją Komisji Edukacji Narodowej, położone na warszawskim Ursynowie. Ma ono stosunkowo prostą geometrię, ale jest znacznie obciążone ruchem, a aleja Komisji Edukacji Narodowej jest kierunkiem głównym. Położenie skrzyżowania w dzielnicy przedstawiono na rysunku~\ref{fig:mapa-ursynow}, a jego bezpośrednie otoczenie na rysunkach~\ref{fig:mapa-osm} oraz~\ref{fig:satelita}.
 
-\begin{figure}[!htbp] \centering
+\begin{figure}[htbp] \centering
     \includegraphics[width=0.75\linewidth]{map-2.png}
-    \caption[Położenie analizowanego skrzyżowania na warszawskim Ursynowie.]{Położenie analizowanego skrzyżowania na tle warszawskiego Ursynowa. Skrzyżowanie zaznaczono czerwonym okręgiem. Źródło: OpenStreetMap.}
+    \caption[Położenie analizowanego skrzyżowania na warszawskim Ursynowie.]{Położenie analizowanego skrzyżowania na tle warszawskiego Ursynowa. Skrzyżowanie zaznaczono czerwonym okręgiem. Źródło: OpenStreetMap \cite{openstreetmap_copyright}.}
     \label{fig:mapa-ursynow}
 \end{figure}
 
-\begin{figure}[!htbp] \centering
+\begin{figure}[htbp] \centering
     \includegraphics[width=0.75\linewidth]{map.png}
-    \caption{Analizowane skrzyżowanie na mapie OpenStreetMap.}
+    \caption[Analizowane skrzyżowanie na mapie OpenStreetMap.]{Analizowane skrzyżowanie na mapie OpenStreetMap. Źródło: OpenStreetMap \cite{openstreetmap_copyright}.}
     \label{fig:mapa-osm}
 \end{figure}
 
-\begin{figure}[!htbp] \centering
+\begin{figure}[htbp] \centering
     \includegraphics[width=0.75\linewidth]{satelita.png}
-    \caption{Widok satelitarny analizowanego skrzyżowania. Źródło: Google Maps.}
+    \caption[Widok satelitarny analizowanego skrzyżowania.]{Widok satelitarny analizowanego skrzyżowania. Źródło: Google Maps \cite{google_maps_geo_guidelines}.}
     \label{fig:satelita}
 \end{figure}
+
 
 Skrzyżowanie ma cztery wloty, nazywane dalej północnym, południowym, wschodnim i zachodnim. Nazwy wskazują położenie wlotu względem środka skrzyżowania, a nie kierunek jazdy. Model dopuszcza ruch z każdego wlotu we wszystkich dostępnych kierunkach poza zawracaniem. Wlot południowy, z którego pojazdy jadą na północ, ma cztery pasy, a każdy z pozostałych wlotów po trzy. Sterowanie obejmuje więc łącznie trzynaście pasów wlotowych.
 
@@ -61,7 +63,7 @@ Program sygnalizacji ma trzy fazy zielone rozdzielone fazami żółtymi. Pierwsz
 
 W modelu odwzorowano geometrię skrzyżowania, liczbę i przeznaczenie pasów ruchu, relacje kolizyjne oraz program sygnalizacji świetlnej. Model zbudowano na podstawie danych OpenStreetMap, a następnie skorygowano na potrzeby badania. Odwzorowane skrzyżowanie w środowisku SUMO przedstawiono na rysunku~\ref{fig:symulacja}.
 
-\begin{figure}[!htbp] \centering
+\begin{figure}[htbp] \centering
     \includegraphics[width=0.8\linewidth]{symulacja.png}
     \caption{Model analizowanego skrzyżowania w środowisku symulacyjnym SUMO.}
     \label{fig:symulacja}
@@ -209,11 +211,12 @@ Scenariusze ruchu wygenerowano skryptem \texttt{randomTrips.py} dostarczanym z S
 
 Dane podzielono na trzy rozłączne zbiory: treningowy, walidacyjny i testowy. Podział ten przedstawiono na rysunku~\ref{fig:podzial-danych}.
 
-\begin{figure}[!htbp] \centering
+\begin{figure}[htbp] \centering
     \includegraphics[width=\linewidth]{podzial_danych.png}
     \caption{Podział danych w badaniu oraz przeznaczenie poszczególnych zbiorów.}
     \label{fig:podzial-danych}
 \end{figure}
+\FloatBarrier
 
 \subsubsection{Zbiór treningowy}
 \label{subsubsec:zbior-treningowy}
