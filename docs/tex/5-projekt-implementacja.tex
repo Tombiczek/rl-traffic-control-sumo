@@ -150,7 +150,7 @@ Tabela~\ref{tab:scenariusze} zawiera konfigurację wszystkich wygenerowanych sce
     \label{tab:scenariusze}
     \footnotesize
     \begin{tabular}{| l | l | r | r | r | c | l |} \hline
-        Zbiór & Scenariusz\textsuperscript{*} & Okres [s] & Wariantów & Długość [s] & Losowe odjazdy & Ziarna \\ \hline\hline
+        Zbiór & Scenariusz\textsuperscript{*} & Okres [s] & Wariantów\textsuperscript{**} & Długość [s] & Losowe odjazdy & Ziarna \\ \hline\hline
         treningowy 1 & lekki   & 5,000 & 10 & 1800 & nie & 1001--1010 \\ \hline
         treningowy 1 & średni  & 2,500 & 10 & 1800 & nie & 2001--2010 \\ \hline
         treningowy 1 & wysoki  & 1,250 & 10 & 1800 & nie & 3001--3010 \\ \hline
@@ -168,7 +168,9 @@ Tabela~\ref{tab:scenariusze} zawiera konfigurację wszystkich wygenerowanych sce
     \end{tabular}
     \par\smallskip
     {\raggedright\footnotesize
-    \textsuperscript{*} Określenia \emph{lekki}, \emph{średni} i \emph{wysoki} opisują względny poziom napływu pojazdów w całym scenariuszu, a nie pomiar natężenia na konkretnym wlocie. Poziom zależy od wartości opcji \texttt{-{}-period}: krótszy średni odstęp między wyjazdami oznacza większe natężenie. Szczegółowe wartości i sposób utworzenia scenariusza zmiennego opisano w podrozdziałach~\ref{subsubsec:scenariusze-stale} i~\ref{subsubsec:scenariusz-zmienny}.\par}
+    \textsuperscript{*} Określenia \emph{lekki}, \emph{średni} i \emph{wysoki} opisują względny poziom napływu pojazdów w całym scenariuszu. Poziom zależy od wartości opcji \texttt{-{}-period}: krótszy średni odstęp między wyjazdami oznacza większe natężenie. Szczegółowe wartości i sposób utworzenia scenariusza zmiennego opisano w podrozdziałach~\ref{subsubsec:scenariusze-stale} i~\ref{subsubsec:scenariusz-zmienny}.\par}
+
+    \textsuperscript{**} Określa liczbę scenariuszy wygenerowanych dla danej konfiguracji z użyciem różnych ziaren generatora liczb losowych.
 \end{table}
 
 Żaden plik tras nie powtarza się między zbiorami treningowym, walidacyjnym i testowym. Do ich generowania użyto też rozłącznych zakresów ziaren, zgodnie z zasadami z podrozdziału~\ref{subsubsec:przenikanie-danych}.
@@ -181,25 +183,7 @@ SUMO w całości obsługuje obie metody referencyjne, zgodnie z opisem w podrozd
 \subsubsection{Program stałoczasowy}
 \label{subsubsec:impl-staloczasowy}
 
-Metoda stałoczasowa korzysta z programu z listingu~\ref{lst:tllogic-static}. Sterownik typu \texttt{static} włącza fazy w ustalonej kolejności, a po ostatniej rozpoczyna nowy cykl. Stały czas każdej fazy określa atrybut \texttt{duration} \cite{sumoTrafficLights}.
-
-Czasy zielone wyznaczono na podstawie obciążenia pasów \cite{NAP22097, koonce2008traffic}. Dla każdej fazy wybrano obsługiwany w niej pas o największym natężeniu, nazywany pasem krytycznym. Natężenia oszacowano wyłącznie ze scenariuszy o dużym natężeniu w zbiorze treningowym, zgodnie z zasadą z podrozdziału~\ref{subsubsec:przenikanie-danych}.
-
-Pełny cykl trwa 81~s. Trzy fazy żółte po 3~s zajmują łącznie 9~s, więc na fazy zielone pozostają 72~s. Czas ten podzielono proporcjonalnie do natężeń pasów krytycznych. Dla wszystkich pasów przyjęto to samo natężenie nasycenia 1800~poj./h, dlatego nie wpływa ono na proporcje. Faza A otrzymała 14~s, a fazy B i C po 29~s. Dane użyte w obliczeniach zestawiono w tabeli~\ref{tab:podzial-czasow}.
-
-\begin{table}[!htbp] \centering
-    \caption{Natężenia pasów krytycznych i wyznaczone czasy faz.}
-    \label{tab:podzial-czasow}
-    \small
-    \setlength{\tabcolsep}{3.5pt}
-    \begin{tabular}{| l | r | r | r |} \hline
-        Faza & Natężenie pasa krytycznego [poj./h] & Czas zielony [s] & \shortstack{Maks. czas\\zielony [s]} \\ \hline\hline
-        A: al. KEN, wprost i w prawo & 229 & 14 & 21 \\ \hline
-        B: al. KEN, skręt w lewo     & 463 & 29 & 43 \\ \hline
-        C: Belgradzka                & 477 & 29 & 44 \\ \hline
-        Suma                         &     & 72 &    \\ \hline
-    \end{tabular}
-\end{table}
+Metodę stałoczasową zrealizowano za pomocą sterownika typu \texttt{static}. Program przedstawiony w listingu~\ref{lst:tllogic-static} wykonuje fazy w ustalonej kolejności, a ich czasy określają atrybuty \texttt{duration} \cite{sumoTrafficLights}.
 
 Listing~\ref{lst:baseline-loop} przedstawia główną pętlę obserwatora. Wykonuje ona kolejne sekundy symulacji, dopóki w sieci pozostają pojazdy oczekujące na obsługę. Co sekundę zapisuje liczbę pojazdów zatrzymanych na pasach wlotowych, numer bieżącej fazy i łańcuch stanu sygnałów.
 
@@ -269,9 +253,6 @@ Przebiegi uruchamia się i mierzy tak samo jak dla programu stałoczasowego. Ró
 
 \subsection{Dostosowanie środowiska \texttt{sumo-rl}}
 \label{subsec:wrapper}
-
-\subsubsection{Ograniczenie standardowej implementacji}
-\label{subsubsec:ograniczenie-sumo-rl}
 
 Biblioteka \texttt{sumo-rl} udostępnia symulację jako środowisko Gymnasium. Jedno wywołanie metody kroku obejmuje całe okno decyzyjne. W tym czasie symulator wykonuje kolejne sekundy i aktualizuje maszynę stanów sygnalizacji, ale zwraca sterowanie dopiero w następnej chwili decyzyjnej. Kod wywołujący nie ma więc dostępu do stanu ruchu w sekundach pośrednich.
 
@@ -427,16 +408,14 @@ Tabela~\ref{tab:konfiguracja-bazowa} przedstawia konfigurację bazową używaną
     \end{tabular}
 \end{table}
 
-Poniżej wyjaśniono znaczenie tych wartości w badanym zadaniu.
-
-Mechanizmy, do których odnoszą się parametry, opisano w podrozdziale~\ref{subsec:dqn}. Dla ułatwienia odczytania tabeli najważniejsze z pozostałych parametrów oznaczają:
+Poniżej wyjaśniono, jak poszczególne parametry wpływają na przebieg treningu:
 {\setlength{\emergencystretch}{1em}
 \begin{itemize}
-    \item \texttt{learning\_rate}, krok używany do aktualizacji wag sieci, który określa skalę pojedynczej zmiany podczas uczenia;
-    \item \texttt{learning\_starts} i \texttt{batch\_size}, odpowiednio liczbę kroków zbierania przejść przed rozpoczęciem aktualizacji oraz liczbę przejść losowanych z bufora do jednej aktualizacji;
-    \item \texttt{gamma}, wagę przyszłych nagród względem nagrody otrzymanej bezpośrednio po akcji;
-    \item \texttt{train\_freq} i \texttt{target\_update\_interval}, odpowiednio częstotliwość aktualizacji sieci głównej oraz odstęp między aktualizacjami sieci docelowej;
-    \item \texttt{seed}, początkowy stan generatorów liczb pseudolosowych używanych podczas treningu.
+    \item \texttt{learning\_rate} określa, jak duże są pojedyncze korekty parametrów wewnętrznych sieci neuronowej, nazywanych wagami. Od tych parametrów zależy ocena dostępnych akcji. Wartość 0,001 oznacza, że w każdym kroku uczenia wprowadzana jest niewielka korekta;
+    \item wartość \texttt{learning\_starts} wynosząca 1000 oznacza, że agent najpierw wykonuje 1000 decyzji i zapisuje zdobyte doświadczenia, zanim rozpocznie aktualizowanie sieci. Pojedyncze doświadczenie zawiera obserwację sytuacji na skrzyżowaniu, wybraną akcję, otrzymaną nagrodę i kolejną obserwację. Parametr \texttt{batch\_size} równy 64 oznacza, że do każdej aktualizacji losowane są 64 takie doświadczenia;
+    \item \texttt{gamma} określa, jak duże znaczenie mają przyszłe nagrody. Przy wartości 0,99 nagroda oczekiwana o jeden krok później ma wagę równą 99\% wagi nagrody natychmiastowej, a znaczenie kolejnych nagród stopniowo maleje. Agent uwzględnia dzięki temu późniejsze skutki swoich decyzji;
+    \item wartość \texttt{train\_freq} wynosząca 1 oznacza, że sieć główna jest aktualizowana po każdej decyzji agenta. Sieć docelowa dostarcza stabilnego punktu odniesienia podczas obliczania tych aktualizacji. Parametr \texttt{target\_update\_interval} równy 500 oznacza, że co 500 kroków otrzymuje ona kopię aktualnych wag sieci głównej;
+    \item wartość \texttt{seed} wynosząca 42 ustala początek sekwencji zdarzeń losowych, takich jak początkowe ustawienie wag, wybór losowych akcji podczas eksploracji i pobieranie doświadczeń z bufora. Użycie tej samej wartości ułatwia powtórzenie treningu w tych samych warunkach.
 \end{itemize}
 }
 

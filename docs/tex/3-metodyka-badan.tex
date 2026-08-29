@@ -152,7 +152,7 @@ Do porównania z agentem DQN przygotowano dwie klasyczne metody sterowania. Obie
 \subsubsection{Sterowanie stałoczasowe}
 \label{subsubsec:ref-staloczasowe}
 
-Sterowanie stałoczasowe jest podstawowym punktem odniesienia. W SUMO obsługuje je statyczna logika sygnalizacji \cite{sumoTrafficLights}. Czasy faz zielonych wyznaczono proporcjonalnie do natężenia na pasie krytycznym każdej fazy, oszacowanego na podstawie zbioru treningowego. Wynoszą one 14~s, 29~s oraz 29~s, a rozdzielające je fazy żółte trwają po 3~s. Pełny cykl trwa 81~s.
+Sterowanie stałoczasowe stanowiło podstawowy punkt odniesienia. Czasy faz zielonych wyznaczono proporcjonalnie do natężenia na pasie krytycznym każdej fazy, oszacowanego wyłącznie na podstawie scenariuszy o wysokim natężeniu ze zbioru treningowego. Faza A otrzymała 14~s, a fazy B i C po 29~s. Fazy żółte trwają po 3~s, dlatego pełny cykl trwa 81~s.
 
 \subsubsection{Sterowanie akomodacyjne}
 \label{subsubsec:ref-akomodacyjne}
