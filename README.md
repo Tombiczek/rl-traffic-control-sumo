@@ -210,12 +210,6 @@ run_*.sh        experiment runners
 
 This is a research demonstrator, not a deployable controller. It covers a single intersection with synthetic demand, no pedestrians, no coordination between intersections, one RL algorithm and a limited hyperparameter search. Results obtained in simulation do not guarantee the same behaviour in real traffic.
 
-## 💭 Feedback and Contributing
-
-Questions, ideas and corrections are welcome. Open an [issue](https://github.com/Tombiczek/rl-traffic-control-sumo/issues) or start a [discussion](https://github.com/Tombiczek/rl-traffic-control-sumo/discussions).
-
-If you want to extend the work, the most interesting directions are multi-intersection coordination, comparing DQN against other RL algorithms, adding pedestrians, and calibrating demand against real traffic counts.
-
 ## 🙏 Acknowledgements
 
 Built on [SUMO](https://eclipse.dev/sumo/), [sumo-rl](https://github.com/LucasAlegre/sumo-rl) by Lucas Alegre, [Stable-Baselines3](https://stable-baselines3.readthedocs.io/) and [Gymnasium](https://gymnasium.farama.org/). The road network is derived from [OpenStreetMap](https://www.openstreetmap.org/) data.
