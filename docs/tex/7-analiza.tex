@@ -1,0 +1,156 @@
+\clearpage
+\section{Analiza uzyskanych wyników, ograniczenia oraz kierunki rozwoju systemu}
+\label{sec:analiza}
+
+W rozdziale zinterpretowano wyniki, skupiając się na skuteczności DQN względem metod referencyjnych, stabilności uczenia i ograniczeniach badania. Wnioski dotyczą tylko przyjętej konfiguracji: pojedynczego skrzyżowania, syntetycznych scenariuszy ruchu, zastosowanej obserwacji i funkcji nagrody oraz zbadanego zakresu hiperparametrów.
+
+\subsection{Wpływ natężenia i charakteru ruchu}
+\label{subsec:analiza-natezenia}
+
+Analizę przeprowadzono osobno dla ruchu lekkiego, średniego, wysokiego i zmiennego.
+
+\subsubsection{Lekkie natężenie ruchu}
+
+Przy lekkim natężeniu wszystkie metody obsłużyły zgłoszony popyt, o czym świadczy niemal taka sama przepustowość. Różnił się więc sposób obsługi pojazdów, a nie liczba zakończonych podróży. Program stałoczasowy utrzymywał przydzielony czas zielony także przy małym chwilowym zapotrzebowaniu na daną fazę. Sterowanie akomodacyjne i DQN mogły wcześniej przekazać prawo przejazdu innemu strumieniowi. Może to wyjaśniać ich wyraźną przewagę nad programem stałoczasowym.
+
+Opóźnienie DQN było o 1,32~s na pojazd mniejsze niż dla sterowania akomodacyjnego. Jest to wynik korzystny, ale znacznie mniejszy od przewagi nad programem stałoczasowym. Ponadto kwantyl rzędu 0,95 czasu oczekiwania był dla DQN nieznacznie wyższy niż dla sterownika akomodacyjnego. Przy lekkim ruchu DQN nie poprawił więc jednoznacznie sytuacji wszystkich uczestników, a prostsza metoda oparta na detekcji osiągnęła bardzo podobną jakość sterowania.
+
+\subsubsection{Średnie natężenie ruchu}
+
+Przy średnim natężeniu wyniki są podobne. Wszystkie metody obsłużyły popyt, ale program stałoczasowy ponownie powodował większe opóźnienie, czas oczekiwania i kolejki. Różnica między DQN a sterowaniem akomodacyjnym zmalała do 0,23~s opóźnienia, 0,24~s czasu oczekiwania i 0,07 pojazdu średniej kolejki.
+
+Różnice są małe również w porównaniu ze zmiennością pięciu przebiegów. Analiza opisowa nie daje podstaw do stwierdzenia wyraźnej przewagi DQN w tym scenariuszu. Obie metody reagujące na ruch można więc uznać za porównywalne. DQN przełączał sygnalizację nieco rzadziej niż sterownik akomodacyjny, zatem niewielka poprawa średnich wyników nie wynikała z większej liczby zmian faz.
+
+\subsubsection{Wysokie natężenie ruchu}
+
+Wysokie natężenie najsilniej różnicowało metody. Sterowanie akomodacyjne miało większe opóźnienie i czas oczekiwania niż program stałoczasowy, a częstotliwość jego przełączeń spadła do poziomu tego programu. Jest to zgodne z działaniem sterowania \textit{gap-based}. Przy niemal ciągłym strumieniu pojazdów rzadko pojawia się przerwa pozwalająca wcześniej zakończyć fazę, więc reguła akomodacyjna w dużym stopniu traci zdolność reagowania \cite{NAP22097,sumoTrafficLights}.
+
+DQN nie korzystał wyłącznie z przerw w obsługiwanym strumieniu. Obserwował też gęstość i zapełnienie kolejki na wszystkich pasach wlotowych. Wyniki mogą wskazywać, że ta szersza obserwacja pomagała lepiej przydzielać fazy przy dużym obciążeniu. Nie przeanalizowano jednak wybieranych faz ani ich rzeczywistych czasów trwania. Same metryki końcowe nie pozwalają więc wskazać konkretnej reguły wyuczonej przez agenta.
+
+Przy wysokim natężeniu DQN uzyskał największą przewagę nad sterowaniem akomodacyjnym: opóźnienie było niższe o 26,25~s na pojazd, a przepustowość wyższa o 7,7\%. W tym samym scenariuszu wystąpiły jednak duży rozrzut, nierównomierne kolejki między wlotami i jeden przebieg zakończony limitem czasu. Średnio polityka DQN była więc skuteczniejsza, ale mniej przewidywalna niż program stałoczasowy. Nie obsłużyła też poprawnie wszystkich pojazdów w każdym uruchomieniu.
+
+\subsubsection{Zmienne natężenie ruchu}
+
+Scenariusz zmienny łączył stopniowy wzrost natężenia z nieregularnymi czasami wyjazdu. DQN osiągnął w nim najniższe opóźnienie i czas oczekiwania oraz najwyższą przepustowość. Wynik ten wskazuje, że polityka wyuczona na stałych poziomach obciążenia działała także wtedy, gdy poziomy następowały po sobie w jednym przebiegu, a napływ był mniej regularny.
+
+Interpretację utrudnia średnia długość kolejki. W podstawowym porównaniu sterowanie akomodacyjne uzyskało 8,88 pojazdu, a DQN 9,55. Po pominięciu dwóch przebiegów DQN zakończonych limitem jego wynik spada do 7,63. Jest to jednak wartość pomocnicza obliczona z trzech przebiegów, podczas gdy wynik referencyjny obejmuje pięć. Dostępne dane nie rozstrzygają więc, która metoda lepiej ogranicza kolejki w całej grupie scenariuszy zmiennych.
+
+Pomimo niejednoznacznego wyniku dotyczącego średniej długości kolejki DQN uzyskał wyraźną przewagę w trzech pozostałych metrykach: opóźnieniu, czasie oczekiwania i przepustowości. Rezultaty te potwierdzają, że w scenariuszu zmiennego natężenia agent skuteczniej obsługiwał ruch niż porównywane metody klasyczne. Przewaga obejmowała zatem zarówno ograniczenie czasu traconego przez pojazdy, jak i zwiększenie liczby ukończonych przejazdów.
+
+\subsection{Generalizacja modelu}
+\label{subsec:analiza-generalizacji}
+
+Model końcowy trenowano na trzydziestu scenariuszach o trzech stałych poziomach natężenia, a testowano na innych trasach i ziarnach. Przewaga w głównych metrykach testowych pokazuje, że agent nie zapamiętał wyłącznie tras treningowych. Ważny jest zwłaszcza scenariusz zmienny, który łączy poziomy poznawane osobno podczas treningu i wprowadza nieregularne czasy wyjazdu.
+
+Nie oznacza to jednak szerokiej generalizacji. Wszystkie zbiory wygenerowano tym samym narzędziem dla tej samej sieci i trzech podstawowych poziomów natężenia. Wynik potwierdza działanie na nowych wariantach ruchu o podobnym rozkładzie, ale nie dowodzi, że politykę można przenieść na inne skrzyżowanie, inny układ faz lub jakościowo odmienne profile popytu.
+
+Porównanie zbiorów nie potwierdziło intuicji, że większa losowość automatycznie poprawia generalizację. Modele trenowane na regularnym zbiorze miały niższe opóźnienie we wszystkich scenariuszach walidacyjnych, także przy nieregularnym napływie. Nie oznacza to ogólnej przewagi regularnych danych. Wariant nieregularny różnił się zarówno czasami wyjazdu, jak i średnim okresem napływu między plikami, więc badanie nie oddzielało wpływu tych dwóch zmian.
+
+Jednym z możliwych wyjaśnień jest to, że regularny zbiór nadal różnicował trasy dzięki dziesięciu ziarnom na poziom, ale zachowywał bardziej powtarzalne obciążenie. Przy stałej liczbie kroków większa zmienność drugiego zbioru mogła ograniczyć liczbę podobnych doświadczeń dla każdego rodzaju sytuacji i zwiększyć zmienność celów uczących. Znaczenie mogły mieć też sekwencyjna kolejność scenariuszy i zmiany składu bufora doświadczeń. Tych hipotez nie sprawdzono jednak w osobnych badaniach.
+
+Model kontrastowy dostarcza dodatkowych informacji. Krótsza faza eksploracji pogorszyła wyniki walidacyjne, a następnie testowe przy wysokim i zmiennym natężeniu. Wspiera to użycie walidacji do wyboru modelu i pokazuje, że lekki oraz średni ruch nie wystarczają do oceny generalizacji. Model działał w nich poprawnie, a jego główna słabość ujawniła się dopiero przy dużym obciążeniu. Na teście sprawdzono jednak tylko jeden model kontrastowy, więc wynik nie określa ogólnej zależności między walidacją i testem.
+
+\subsection{Stabilność procesu uczenia i wpływ hiperparametrów}
+\label{subsec:analiza-stabilnosci}
+
+Stabilność oceniono na podstawie zmian jakości kolejnych checkpointów oraz wyników wariantów hiperparametrów.
+
+\subsubsection{Zmiana jakości wraz z długością treningu}
+
+Kolejne kroki treningu nie poprawiały modelu w sposób ciągły. Po początkowej poprawie wyniki ruchu lekkiego, średniego i zmiennego ustabilizowały się, ale opóźnienie przy wysokim natężeniu nadal silnie się zmieniało. Najlepszy był checkpoint po 225\,000 kroków. Modele po 250\,000, 275\,000 i 300\,000 kroków ponownie miały znacznie większe opóźnienie w najtrudniejszym scenariuszu.
+
+Zaobserwowane pogorszenie wyników późniejszych checkpointów nie musi oznaczać klasycznego przeuczenia. Analiza koncentrowała się na jakości modeli na zbiorze walidacyjnym, dlatego nie pozwala jednoznacznie oddzielić przeuczenia od innych źródeł niestabilności DQN. Na przebieg uczenia mogą wpływać między innymi zmieniający się skład bufora doświadczeń, aproksymacja funkcji wartości oraz okresowe aktualizowanie sieci docelowej, które zmienia wartości wykorzystywane podczas kolejnych aktualizacji modelu \cite{mnih2013playing}.
+
+Walidacja na pięciu ziarnach potwierdziła wybór checkpointu po 225\,000 kroków, ale pokazała też, że jego pojedynczy wynik przy wysokim natężeniu był zbyt optymistyczny. Wybór na podstawie jednego przebiegu zależałby więc od przypadkowego wariantu symulacji. Zapisywanie checkpointów i osobna walidacja były potrzebną częścią wyboru modelu, a nie tylko zabezpieczeniem technicznym.
+
+\subsubsection{Interpretacja strojenia hiperparametrów}
+
+Żaden wariant nie poprawił średniego wyniku konfiguracji bazowej. Nie można jednak uznać wartości bazowych za globalnie optymalne. Były najlepsze tylko wśród sprawdzonych konfiguracji, przy jednym ziarnie uczenia i ustalonej długości treningu.
+
+Zmniejszenie \texttt{learning\_rate} do 0,0003 nieco poprawiło ruch lekki i średni. Mniejszy krok optymalizacji oznacza mniejsze zmiany wag i teoretycznie może ograniczać wahania oszacowań. Nie ustabilizował jednak całej polityki: przy wysokim natężeniu wynik pogorszył się z 51,35 do 76,55~s. W limicie 225\,000 kroków wolniejsze aktualizacje mogły nie wystarczyć do nauczenia się trudniejszych sytuacji. Różnica mogła też wynikać z losowości pojedynczego treningu.
+
+Zmiana \texttt{target\_update\_interval} z 500 na 1000 oznaczała rzadsze kopiowanie parametrów do sieci docelowej. Cele mogły przez to wolniej uwzględniać poprawę polityki i bardziej różnić się od sieci głównej. Interwał 250 także pogorszył wynik, więc zbyt częsta zmiana celów również nie była korzystna. Spośród trzech wartości najlepszy był interwał 500, zapewniający najlepszą równowagę między aktualnością i stabilnością sieci docelowej.
+
+Największą wrażliwość wykazała długość eksploracji. Skrócenie jej udziału do 0,1 szybko zmniejszało liczbę losowych działań. Agent mógł więc zebrać zbyt mało różnorodnych doświadczeń z rzadkich stanów silnego przeciążenia. Testy są zgodne z tą interpretacją: różnice były małe w łatwych scenariuszach, a duże przy wysokim i zmiennym natężeniu. Wydłużenie eksploracji do 0,3 także nie pomogło. Ważna była więc równowaga między eksploracją i utrwalaniem dobrych decyzji, a nie sama liczba działań losowych.
+
+Korzyści z pojedynczych zmian nie sumowały się po ich połączeniu. Tempo uczenia, rozmiar batcha i współczynnik dyskontowania wspólnie wpływają na skalę, zmienność i horyzont aktualizacji wartości, więc ich efekty nie są addytywne. Mniejszy batch poprawił na przykład wynik w scenariuszu zmiennym, ale po połączeniu z mniejszym tempem uczenia pogorszył wynik przy wysokim natężeniu bardziej niż każda zmiana osobno.
+
+Metoda zmiany jednego czynnika (ang. \textit{One-Factor-at-a-Time}, OFAT) ułatwia powiązanie różnicy z parametrem, ale nie bada systematycznie interakcji. Pomija też inne zakresy wartości i harmonogramy parametrów. Każdy wariant trenowano tylko raz z tym samym ziarnem algorytmu. Kilka ziaren symulacji mierzy odporność gotowej polityki na zmiany środowiska, ale nie zastępuje treningów z różnymi inicjalizacjami sieci i próbkowaniem bufora. Ranking dotyczy więc konkretnej realizacji uczenia.
+
+\subsection{Znaczenie praktyczne wyników}
+\label{subsec:znaczenie-praktyczne}
+
+Znaczenie praktyczne zależy od ruchu. Przy lekkim i średnim natężeniu różnice między DQN a sterowaniem akomodacyjnym były małe wobec zmienności przebiegów. Większe korzyści pojawiły się w scenariuszach wysokim i zmiennym, ale dotyczą tylko badanego modelu symulacyjnego. Bez kalibracji na pomiarach terenowych nie można ich bezpośrednio odnieść do rzeczywistego skrzyżowania.
+
+Większej przepustowości przy wysokim obciążeniu towarzyszyły częstsze przełączenia. Każda zmiana wymaga trzysekundowej fazy żółtej, dlatego zwiększa udział czasu przejściowego. Jest to jednak tylko współwystępowanie i nie dowodzi, że częstsze przełączanie spowodowało poprawę.
+
+Funkcja nagrody nie karała bezpośrednio za zmianę fazy, maksymalny czas oczekiwania ani nierównomierne obciążenie wlotów. Poprawa średniej mogła więc występować razem z częstszymi zmianami sygnałów, gorszym wynikiem części pojazdów lub czasowym pomijaniem relacji. W trzech przebiegach modelu końcowego niewielka grupa pojazdów nie opuściła sieci przed limitem. Stanowiła mniej niż 1\% popytu, ale w rzeczywistym sterowaniu nawet rzadka, długotrwała niedostateczna obsługa byłaby trudna do przyjęcia.
+
+Przed wdrożeniem decyzje agenta należałoby oddzielić od warstwy bezpieczeństwa sterownika. Warstwa ta powinna co najmniej:
+\begin{itemize}
+    \item wymuszać dozwolone układy sygnałów, pełne czasy międzyzielone oraz minimalne i maksymalne czasy faz \cite{NAP22097,brummond2018central_signal_systems};
+    \item ustalać maksymalny czas między kolejnymi wyświetleniami fazy przy obecnym popycie, tak aby żaden zgłoszony strumień nie był bezterminowo pomijany \cite{brummond2018central_signal_systems};
+    \item wykrywać brak, opóźnienie lub niespójność danych z detektorów oraz przełączać sterowanie na zweryfikowany program rezerwowy \cite{brummond2018central_signal_systems};
+    \item zapewniać nadzór operatora, rejestrowanie decyzji, kontrolę poprawności działania i bezpieczne przejęcie sterowania po awarii \cite{brummond2018central_signal_systems}.
+\end{itemize}
+Wytyczne FHWA opisują niezależny monitor nieprawidłowego działania, który wykrywa kolizyjne wskazania i wymusza stan bezpieczny \cite{fhwa2023traffic_signal_handbook}. Są to wytyczne i przykładowe wymagania, a nie pełna specyfikacja wdrożenia ani podstawa oceny zgodności w Polsce. Ograniczenia czasowe w środowisku są tylko częścią takich zabezpieczeń. Ocena akceptowalności rozwiązania wymagałaby również analizy długości faz, maksymalnego czasu czerwonego, liczby zatrzymań, gwałtowności zmian prędkości i wyników poszczególnych relacji, a nie tylko średnich \cite{NAP22097}.
+
+\subsection{Ograniczenia wiarygodności badania}
+\label{subsec:ograniczenia-wiarygodnosci}
+
+Ograniczenia dotyczą zakresu modelu i danych, liczby powtórzeń oraz konstrukcji pomiaru i porównania.
+
+\subsubsection{Zakres modelu i danych}
+
+Podstawowe ograniczenia opisano w podrozdziale~\ref{subsec:zalozenia-ograniczenia}. Ograniczają one trafność zewnętrzną, czyli możliwość uogólnienia wyników. Politykę wytrenowano i oceniono dla jednej geometrii skrzyżowania i jednego układu faz. Nie wiadomo więc, czy podobne zależności wystąpiłyby przy innej liczbie pasów, innym rozkładzie skrętów lub koordynacji z sąsiednimi sygnalizacjami.
+
+Scenariusze ruchu są syntetyczne. \texttt{randomTrips.py} losuje początek i koniec podróży bez rzeczywistego rozkładu kierunków, więc udział pojazdów na poszczególnych relacjach może być inny niż w rzeczywistości \cite{sumo_randomtrips_docs}. Dotyczy to także dużego obciążenia lewoskrętu alei KEN, które wpływa na wyznaczenie programu stałoczasowego i doświadczenia agenta. Nie skalibrowano zachowania kierowców ani napływu pojazdów, dlatego wartości opóźnienia nie są prognozą dla rzeczywistego skrzyżowania.
+
+Nie uwzględniono pieszych, rowerzystów ani priorytetów transportu publicznego. Ich dodanie nie polegałoby wyłącznie na zwiększeniu liczby obiektów w symulacji, lecz zmieniłoby minimalne czasy faz, zbiór zgłoszeń oraz kryteria oceny. Polityka wyuczona bez tych uczestników nie powinna być bezpośrednio stosowana w środowisku, w którym ich obsługa jest wymagana.
+
+\subsubsection{Zakres powtórzeń i wnioskowanie statystyczne}
+
+Każdą kombinację metody i poziomu natężenia oceniono na pięciu wariantach testowych. Wszystkie metody korzystały z tych samych wariantów, co zapewnia zgodne warunki i ogranicza wpływ pojedynczego układu tras. Wyniki podano jako średnie i odchylenia standardowe. Mała liczba przebiegów wymaga jednak ostrożności przy niewielkich różnicach i dużym rozrzucie.
+
+Wszystkie treningi używały ziarna 42, co zapewniało spójne porównanie konfiguracji DQN. Walidacja wieloziarnowa oceniała gotowe modele przy różnych ziarnach SUMO. Wpływ losowości uczenia wymagałby powtórzenia treningu z kilkoma ziarnami.
+
+Zbiór walidacyjny zawierał po jednym pliku tras dla każdego rodzaju ruchu. Wszystkie checkpointy i warianty oceniano na tych samych czterech scenariuszach, a wybrany model sprawdzono później na odrębnych trasach testowych. Procedurę można rozszerzyć o kilka wariantów walidacyjnych każdego rodzaju ruchu.
+
+\subsubsection{Konstrukcja pomiaru i porównania}
+
+Trzy przebiegi modelu końcowego osiągnęły limit 20\,000~s. Plik \texttt{tripinfo.xml} zawiera tylko zakończone podróże, więc metryki pomijają pojazdy, które mogły być obsłużone najgorzej. W każdym z tych przebiegów stanowiły mniej niż 1\% popytu, ale bez ich wyników nie można określić wielkości ani kierunku obciążenia średniego opóźnienia i czasu oczekiwania. Tabela~\ref{tab:blokady} pokazuje tylko wpływ usunięcia całych przerwanych przebiegów. Także metryki normowane czasem silnie zależą od limitu. Wnioski o kolejce i przełączeniach w scenariuszu zmiennym wymagają więc ostrożności.
+
+Model wybierano głównie według średniego opóźnienia, a nagrodę oparto na zmianie czasu oczekiwania. Przepustowość, liczba przełączeń, równomierność obsługi wlotów i wyniki skrajne nie wpływały bezpośrednio na uczenie ani główny ranking walidacyjny. Funkcja celu mogła więc preferować dobre wartości średnie kosztem komfortu, równomierności obsługi lub odporności na blokadę.
+
+Ranking walidacyjny wyznaczono na podstawie średniego opóźnienia w czterech scenariuszach. Ze względu na wyższe wartości opóźnienia przy dużym natężeniu wyniki tego scenariusza silniej wpływały na pozycję modelu w rankingu.
+
+Bardziej wymagającą metodą referencyjną był lokalny sterownik akomodacyjny typu \textit{gap-based}, a nie profesjonalny, skoordynowany system miejski ani zaawansowany algorytm optymalizacji. DQN był lepszy od obu testowanych metod klasycznych w przyjętej konfiguracji, ale nie porównano go z innymi systemami adaptacyjnymi.
+
+\subsection{Kierunki dalszego rozwoju}
+\label{subsec:kierunki-rozwoju}
+
+Dalszy rozwój może objąć dane rzeczywiste i kalibrację symulacji, rozszerzenie procedury oceny, rozwój algorytmu oraz sterowanie siecią skrzyżowań.
+
+\subsubsection{Dane rzeczywiste i kalibracja symulacji}
+
+Najpierw należy zwiększyć realizm danych wejściowych. Pomiary z detektorów, dane o natężeniu poszczególnych relacji i rozkłady ruchu w ciągu dnia pozwoliłyby utworzyć empiryczne profile popytu zamiast losować podróże tym samym mechanizmem dla całej sieci. Na tej podstawie można skalibrować zachowanie pojazdów w SUMO i sprawdzić model na osobnych danych.
+
+Model powinien zostać rozszerzony o pieszych, rowerzystów oraz transport publiczny. Wymagałoby to uzupełnienia programu faz, obserwacji i funkcji celu, a w przypadku transportu publicznego także rozważenia priorytetu zależnego od opóźnienia pojazdu lub liczby pasażerów. Pozwoliłoby to ocenić, czy poprawa ruchu samochodowego nie odbywa się kosztem innych uczestników.
+
+\subsubsection{Rozszerzenie procedury oceny}
+
+Porównanie regularnego i nieregularnego zbioru pozwoliło ocenić wpływ zróżnicowania danych w przyjętej konfiguracji. W kolejnych badaniach regularność odjazdów, średnie natężenie i zachowanie kierowców można zmieniać osobno, aby określić wpływ każdego czynnika. Scenariusze można rozszerzyć o nierównomierny ruch kierunkowy, nagłe skoki popytu, wypadki, zamknięcia pasów, awarie detektorów i blokady skrzyżowania. Można też losować parametry środowiska lub geometrię podczas uczenia, aby zwiększyć różnorodność doświadczeń.
+
+\subsubsection{Rozwój algorytmu i funkcji celu}
+
+Do funkcji nagrody można dodać długość kolejek, maksymalny czas oczekiwania, równomierność obsługi wlotów i koszt przełączenia. Wagi powinny wynikać z jasno określonych priorytetów operacyjnych, a nie tylko z najlepszej wartości jednej metryki. Maksymalny czas czerwonego i poprawne przejścia między fazami powinny pozostać twardymi ograniczeniami środowiska, ponieważ bezpieczeństwo nie może zależeć od nagrody.
+
+Warto porównać podstawowy DQN z wariantami Double DQN i Dueling DQN. Osobno można zbadać algorytmy typu aktor-krytyk, takie jak PPO i A2C, a po wprowadzeniu ciągłego wyboru czasu zielonego także SAC. Porównanie powinno używać tych samych danych, ograniczeń sygnalizacji i budżetu obliczeniowego. Dobór algorytmu oraz reprezentacji stanu i nagrody zależy od sformułowania zadania \cite{wei2019survey}.
+
+Automatyczne strojenie pozwoliłoby zbadać interakcje pominięte przez OFAT. Nie powinno jednak dopasowywać modelu tylko do czterech obecnych scenariuszy walidacyjnych. Wymagałoby większego zbioru walidacyjnego i wielu ziaren treningu. Ograniczyłoby to ryzyko wyboru konfiguracji dobrej tylko dla jednego poziomu natężenia.
+
+\subsubsection{Sterowanie siecią i przygotowanie do wdrożenia}
+
+Kolejnym krokiem może być sterowanie kilkoma sąsiednimi skrzyżowaniami. Wymaga to uwzględnienia przepływu między węzłami i koordynacji faz. Można porównać agenta scentralizowanego z systemem wieloagentowym, w którym skrzyżowania decydują lokalnie, ale wymieniają informacje lub uczą się ze wspólnym celem. Zwiększa to przestrzeń decyzyjną i wprowadza dodatkową niestacjonarność uczenia \cite{chu2020multiagent}.
+
+Przed rzeczywistym zastosowaniem potrzebne byłyby testy \textit{software-in-the-loop} i \\\textit{hardware-in-the-loop}. System należałoby połączyć z rzeczywistymi detektorami i uruchomić w trybie obserwacyjnym, w którym agent proponuje decyzje, ale nie steruje sygnalizacją. Badania terenowe pod nadzorem operatora można rozważać dopiero po sprawdzeniu warstwy bezpieczeństwa, odporności na brak danych i zachowania w nietypowych sytuacjach. Najpierw należy zwiększyć wiarygodność modelu i oceny, a dopiero później złożoność algorytmu.

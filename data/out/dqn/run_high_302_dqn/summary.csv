@@ -1,0 +1,12 @@
+metric,value
+mean queue length,19.8662486938349
+max queue length,51.0
+mean queue N,2.18521421107628
+mean queue S,5.450104493207942
+mean queue E,8.582027168234065
+mean queue W,3.6489028213166144
+max queue N,12.0
+max queue S,20.0
+max queue E,26.0
+max queue W,17.0
+total phase switches,300.0

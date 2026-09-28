@@ -6,7 +6,7 @@ Ten plik zawiera trwały kontekst pracy magisterskiej i instrukcje dla modeli j�
 
 Nie jest to spis treści pracy. Układ rozdziałów i podrozdziałów może ulegać zmianie. Model powinien dostosowywać tekst do aktualnego polecenia użytkownika, a nie narzucać strukturę zapisaną w innych rozmowach lub wcześniejszych wersjach dokumentu.
 
-Plik celowo nie zawiera dokładnych wyników eksperymentów, końcowych wartości hiperparametrów, liczby kroków, ziaren losowych, liczby plików ani szczegółowych wartości konfiguracji. Dane te użytkownik będzie przekazywał podczas pisania odpowiednich fragmentów. Nie wolno ich zgadywać ani odtwarzać z pamięci na podstawie podobnych projektów.
+Plik zawiera potwierdzoną konfigurację eksperymentu, to jest parametry środowiska, hiperparametry, strukturę zbiorów danych oraz układ katalogów projektu. Nie zawiera natomiast liczbowych wyników eksperymentów. Wyniki należy odczytywać z plików wynikowych wskazanych w dalszej części dokumentu albo pobierać od użytkownika. Nie wolno ich zgadywać ani odtwarzać z pamięci na podstawie podobnych projektów.
 
 Jeżeli bieżące informacje przekazane przez użytkownika są sprzeczne z tym plikiem, pierwszeństwo mają najnowsze informacje użytkownika.
 
@@ -64,6 +64,35 @@ Praca dotyczy demonstratora badawczego działającego w symulacji. Nie jest to w
 
 ---
 
+## Program sygnalizacji
+
+Program sygnalizacji odwzorowuje organizację ruchu obowiązującą na skrzyżowaniu i obejmuje trzy fazy z sygnałem zielonym, rozdzielone fazami żółtymi po 3 s:
+
+- faza A: aleja KEN, jazda na wprost i skręt w prawo z obu kierunków, lewoskręt zatrzymany,
+- faza B: aleja KEN, chroniony skręt w lewo z obu kierunków,
+- faza C: ulica Belgradzka, jazda na wprost, skręt w prawo oraz warunkowy skręt w lewo.
+
+Wydzielony sygnał skrętu w lewo występuje wyłącznie na alei KEN. Na ulicy Belgradzkiej skręt w lewo odbywa się w ramach fazy ogólnej, przy ustąpieniu pierwszeństwa.
+
+Sterowaniem objętych jest trzynaście pasów wlotowych na czterech wlotach. Wlot południowy alei KEN, z którego pojazdy poruszają się w kierunku północnym, ma cztery pasy, a pozostałe trzy wloty po trzy pasy. Nazwy wlotów odnoszą się do ich położenia względem środka skrzyżowania, nie do kierunku jazdy. Jeżeli w kodzie lub plikach wynikowych występują oznaczenia `N` i `S`, opisują one kierunek jazdy: `N` odpowiada fizycznie wlotowi południowemu, a `S` wlotowi północnemu. Identyfikator sygnalizacji to `GS_cluster_300048112_300048176_300048179_32126015`.
+
+Sieć występuje w dwóch plikach o identycznej geometrii i identycznym układzie faz:
+
+- `data/osm_fixed.net.xml` z logiką `static`, czasy zielone 14 s, 29 s, 29 s, cykl 81 s,
+- `data/osm.net.xml` z logiką `actuated`, `minDur` równe 5 s oraz `maxDur` równe 21 s, 43 s i 44 s.
+
+Odpowiadające im konfiguracje symulacji:
+
+- `data/osm_static.sumocfg` dla sterowania stałoczasowego,
+- `data/osm_actuated.sumocfg` dla sterowania akomodacyjnego,
+- `data/osm.sumocfg` dla agenta DQN.
+
+Agent DQN korzysta z pliku `osm_fixed.net.xml`, ponieważ biblioteka `sumo-rl` samodzielnie odbudowuje program sygnalizacji na podstawie zbioru stanów faz zielonych i generuje własne przejścia żółte. Czasy trwania faz zapisane w pliku sieci nie mają wpływu na działanie agenta.
+
+W modelu nie odwzorowano sygnału czerwono-żółtego. Jest to uproszczenie stosowane jednakowo dla wszystkich porównywanych metod.
+
+---
+
 ## Środowisko symulacyjne
 
 Do modelowania ruchu wykorzystano SUMO, czyli Simulation of Urban Mobility.
@@ -98,6 +127,8 @@ Jest to podstawowa metoda referencyjna. Sygnalizacja cyklicznie przechodzi przez
 
 W SUMO metoda ta jest realizowana jako statyczna logika sygnalizacji.
 
+Czasy zielone wyznaczono proporcjonalnie do natężenia na pasie krytycznym każdej fazy, oszacowanego wyłącznie na podstawie scenariuszy ze zbioru treningowego. Podział ten jest zamrożony i nie wolno go przeliczać na danych walidacyjnych ani testowych.
+
 ### Sterowanie akomodacyjne
 
 Jest to bardziej zaawansowana metoda klasyczna, reagująca na obecność i napływ pojazdów. Wykorzystuje mechanizm wykrywania przerw między pojazdami i może wydłużać aktywną fazę, dopóki utrzymuje się strumień ruchu.
@@ -107,6 +138,8 @@ Preferowane określenie w polskim tekście:
 > sterowanie akomodacyjne typu gap-based
 
 Po pierwszym wyjaśnieniu można używać skróconej nazwy „sterowanie akomodacyjne”.
+
+Minimalny czas zielony wynosi 5 s, tak samo jak w środowisku agenta. Maksymalne czasy trwania faz odpowiadają około półtorakrotności czasów zielonych programu stałoczasowego.
 
 Nie należy utożsamiać tej metody z uczeniem ze wzmocnieniem. Jest ona adaptacyjna w ograniczonym, regułowym sensie, ale nie uczy się polityki na podstawie doświadczeń.
 
@@ -130,15 +163,22 @@ Agent odpowiada za wybór działania sygnalizacji świetlnej. Jego celem jest na
 
 ### Obserwacja
 
-Stan przekazywany agentowi jest wielowymiarowym wektorem wartości ciągłych, znormalizowanych do wspólnego zakresu. Reprezentuje on bieżącą sytuację ruchową oraz informacje potrzebne do podejmowania decyzji.
+Przestrzeń obserwacji ma postać `Box(0.0, 1.0, (30,), float32)`. Wykorzystano domyślną reprezentację stanu z biblioteki `sumo-rl`, złożoną z czterech grup cech:
 
-Przy pisaniu szczegółowego opisu należy używać rzeczywistej definicji obserwacji z implementacji. Nie wolno samodzielnie zgadywać znaczenia poszczególnych elementów wektora.
+- kodowanie aktywnej fazy typu one-hot, 3 wartości,
+- znacznik upłynięcia minimalnego czasu zielonego powiększonego o czas fazy żółtej, 1 wartość,
+- gęstość pasów, 13 wartości,
+- zapełnienie kolejki, 13 wartości.
+
+Pojemność pasa wyznaczana jest jako jego długość podzielona przez sumę minimalnego odstępu między pojazdami oraz średniej długości pojazdu na tym pasie. Cały wektor jest znormalizowany do przedziału od 0 do 1.
 
 ### Akcje
 
-Przestrzeń akcji jest dyskretna. Dostępne działania odpowiadają dozwolonym fazom ruchu na skrzyżowaniu.
+Przestrzeń akcji ma postać `Discrete(3)`. Każda akcja wskazuje fazę zieloną obowiązującą w kolejnym oknie decyzyjnym.
 
-Środowisko uwzględnia ograniczenia sterowania sygnalizacją, takie jak minimalny czas zielonego oraz przejścia przez fazę żółtą. Agent nie powinien być opisywany tak, jakby mógł natychmiast i dowolnie przełączać sygnały bez zachowania reguł bezpieczeństwa modelu.
+Środowisko uwzględnia ograniczenia sterowania sygnalizacją, takie jak minimalny czas zielonego oraz przejścia przez fazę żółtą. Jeżeli agent wskaże fazę bieżącą, sygnalizacja ją kontynuuje. Jeżeli wskaże inną fazę przed upływem minimalnego czasu zielonego powiększonego o czas fazy żółtej, żądanie jest ignorowane. W pozostałym przypadku środowisko wprowadza fazę żółtą, a następnie włącza wskazaną fazę zieloną.
+
+Agent nie powinien być opisywany tak, jakby mógł natychmiast i dowolnie przełączać sygnały bez zachowania reguł bezpieczeństwa modelu.
 
 ### Funkcja nagrody
 
@@ -148,9 +188,9 @@ Jeżeli powstaje szczegółowy opis matematyczny, należy oprzeć go na rzeczywi
 
 ### Interwał decyzyjny
 
-Agent podejmuje decyzje w ustalonych odstępach czasu symulacji. Między decyzjami SUMO wykonuje kolejne kroki, a środowisko egzekwuje obowiązujące ograniczenia faz.
+Agent podejmuje decyzje co 5 s symulacji. Czas fazy żółtej wynosi 3 s, a minimalny czas zielony 5 s. Te same wartości obowiązują podczas treningu, walidacji oraz oceny na zbiorze testowym.
 
-Dokładna wartość interwału powinna zostać podana dopiero wtedy, gdy użytkownik ją potwierdzi w kontekście danego fragmentu.
+Między decyzjami SUMO wykonuje kroki o długości jednej sekundy, a środowisko egzekwuje obowiązujące ograniczenia faz.
 
 ---
 
@@ -158,7 +198,7 @@ Dokładna wartość interwału powinna zostać podana dopiero wtedy, gdy użytko
 
 Początkowo rozważano klasyczny, tablicowy Q-Learning.
 
-Podejście to zostało odrzucone, ponieważ przestrzeń obserwacji jest ciągła i wielowymiarowa. Jej bezpośrednia dyskretyzacja prowadziłaby do bardzo dużej liczby potencjalnych stanów, co czyniłoby tablicę Q niepraktyczną i utrudniało skuteczne uczenie.
+Podejście to zostało odrzucone, ponieważ przestrzeń obserwacji jest ciągła i ma trzydzieści wymiarów. Jej bezpośrednia dyskretyzacja prowadziłaby do bardzo dużej liczby potencjalnych stanów, co czyniłoby tablicę Q niepraktyczną i utrudniało skuteczne uczenie.
 
 Wybrano Deep Q-Network, ponieważ:
 
@@ -188,7 +228,7 @@ W projekcie wykorzystano przede wszystkim:
 - pliki konfiguracyjne i trasy w formacie XML,
 - skrypty do treningu, ewaluacji, agregacji wyników i generowania wykresów.
 
-Docker służy przede wszystkim do zapewnienia powtarzalności środowiska i izolacji zależności. Nie jest głównym wkładem naukowym pracy.
+Docker służył przede wszystkim do izolacji zależności, uniknięcia instalowania środowiska treningowego bezpośrednio w macOS oraz utrzymywania symulatora, bibliotek i kodu w jednym środowisku. Pozwolił także ominąć problemy z działaniem SUMO obserwowane przy bezpośrednim uruchamianiu w systemie gospodarza. Kod i definicja obrazu nie są obecnie udostępniane wraz z pracą, dlatego nie należy przedstawiać konteneryzacji jako gwarancji możliwości niezależnego odtworzenia eksperymentu. Nie jest ona głównym wkładem naukowym pracy.
 
 ---
 
@@ -237,7 +277,15 @@ W projekcie występują między innymi opcje:
 
 Wygenerowane podróże są przekształcane na poprawne trasy. W przypadku użycia `--route-file` skrypt może uruchamiać `duarouter`, który wyznacza trasy i odrzuca podróże niemożliwe do zrealizowania w danej sieci.
 
-Dokładne wartości okresów, ziaren, czasów symulacji i liczby plików nie są zapisane w tym dokumencie. Należy pobrać je od użytkownika lub z aktualnych plików projektu przed przygotowaniem szczegółowej tabeli lub opisu.
+Poziomy natężenia odpowiadają wartościom opcji `--period`:
+
+- 5,0 s dla ruchu lekkiego,
+- 2,5 s dla ruchu średniego,
+- 1,25 s dla ruchu wysokiego.
+
+Scenariusz zmienny powstaje przez podanie wszystkich trzech okresów jednocześnie wraz z opcjami `--random-depart` oraz `--binomial 4`.
+
+Przykładowe komendy generowania zapisano w pliku `usefull_commands.md`.
 
 ---
 
@@ -247,16 +295,18 @@ Eksperyment wykorzystuje rozdzielone zbiory treningowy, walidacyjny i testowy.
 
 ### Dane treningowe
 
-Przygotowano dwa podejścia do generowania danych treningowych:
+Przygotowano dwa warianty zbioru treningowego, po 30 plików tras każdy, po 10 plików na każdy z trzech poziomów natężenia. Każdy scenariusz treningowy obejmuje 1800 s napływu pojazdów, a epizod treningowy trwa 2100 s, co pozwala sieci się opróżnić.
 
-- scenariusze o stałym natężeniu i regularnych czasach pojawiania się pojazdów,
-- scenariusze o podobnych poziomach natężenia, lecz bardziej nieregularnych czasach wyjazdu.
+- `data/train/fixed/` z regularnymi czasami pojawiania się pojazdów, ziarna 1001–1010, 2001–2010 i 3001–3010,
+- `data/train/randomized/` o podobnych poziomach natężenia, lecz z nieregularnymi czasami wyjazdu.
 
-Celem było sprawdzenie, czy większa losowość danych treningowych poprawia generalizację modelu.
+Celem porównania było sprawdzenie, czy większa losowość danych treningowych poprawia generalizację modelu. Wariant treningowy wybiera się zmienną `TRAIN_SET` w skrypcie `run_train_configs.sh`.
+
+Zbiór treningowy posłużył także do wyznaczenia parametrów czasowych metod referencyjnych.
 
 ### Dane walidacyjne
 
-Zbiór walidacyjny obejmuje różne poziomy natężenia oraz scenariusz dynamiczny. Służy do:
+Zbiór walidacyjny to cztery pliki w katalogu `data/valid/`, obejmujące ruch lekki, średni, wysoki oraz scenariusz zmienny. Każdy scenariusz trwa 3600 s. Służy do:
 
 - wyboru odpowiedniej długości treningu,
 - porównania wariantów danych treningowych,
@@ -264,9 +314,18 @@ Zbiór walidacyjny obejmuje różne poziomy natężenia oraz scenariusz dynamicz
 - doboru hiperparametrów,
 - wyboru modelu końcowego.
 
+Część porównań powtórzono na pięciu ziarnach symulacji SUMO, aby wnioski nie opierały się na pojedynczym przebiegu.
+
 ### Dane testowe
 
-Zbiór testowy jest niezależny od danych treningowych i walidacyjnych. Te same scenariusze testowe służą do porównania sterowania stałoczasowego, akomodacyjnego i DQN.
+Zbiór testowy jest niezależny od danych treningowych i walidacyjnych. Obejmuje cztery grupy po pięć plików, każdy o długości 3600 s:
+
+- `data/T1/` ruch lekki, ziarna 101–105,
+- `data/T2/` ruch średni, ziarna 201–205,
+- `data/T3/` ruch wysoki, ziarna 301–305,
+- `data/G1/` ruch zmienny, ziarna 401–405.
+
+Te same scenariusze testowe służą do porównania sterowania stałoczasowego, akomodacyjnego i DQN.
 
 Dane testowe nie mogą służyć do:
 
@@ -316,15 +375,47 @@ Metoda zmiany jednego parametru ułatwia interpretację, lecz nie bada systematy
 
 ### Wybór modelu końcowego
 
-Model końcowy został wybrany na podstawie działania na zbiorze walidacyjnym, stabilności procesu treningowego oraz porównania wariantów konfiguracji.
+Model końcowy został wybrany na podstawie działania na zbiorze walidacyjnym, stabilności procesu treningowego oraz porównania wariantów konfiguracji. Jest to konfiguracja bazowa wytrenowana na regularnym zbiorze treningowym.
 
-Ten plik nie wskazuje dokładnej końcowej wartości tempa uczenia ani innych wartości hiperparametrów. Przed napisaniem fragmentu o modelu końcowym należy poprosić użytkownika o aktualną, potwierdzoną konfigurację.
+Trening bazowy trwał 300 000 kroków, a modele zapisywano w checkpointach co 25 000 kroków. Model końcowy nie jest modelem z końca treningu, lecz checkpointem po 225 000 kroków, wskazanym przez walidację. Plik `data/models/dqn/dqn_final.zip` jest kopią pliku `data/models/checkpoints/dqn_fixed_225000_steps.zip`.
 
-### Analiza modelu niestabilnego
+Wartość `total_timesteps` w konfiguracji bazowej określa zatem długość całego przebiegu treningowego, a nie liczbę kroków modelu końcowego.
 
-Oprócz modelu końcowego na zbiorze testowym oceniono również jeden model, który podczas strojenia wykazywał bardzo słabe lub niestabilne zachowanie. Wybrano wariant związany z rzadszą aktualizacją sieci docelowej.
+Konfiguracja bazowa znajduje się w pliku `src/dqn/configs/base_config.yml`:
 
-Celem tego dodatkowego eksperymentu jest sprawdzenie, czy niestabilność i słabe wyniki walidacyjne przekładają się na słabą generalizację na niezależnym zbiorze testowym.
+```yaml
+environment:
+  tls_id: GS_cluster_300048112_300048176_300048179_32126015
+  decision_interval: 5
+  yellow_time: 3
+  min_green: 5
+  num_seconds: 2100
+  reward_fn: diff-waiting-time
+
+training:
+  total_timesteps: 300_000
+  seed: 42
+  learning_rate: 0.001
+  buffer_size: 50000
+  learning_starts: 1000
+  batch_size: 64
+  gamma: 0.99
+  train_freq: 1
+  target_update_interval: 500
+  exploration_fraction: 0.2
+  exploration_initial_eps: 1.0
+  exploration_final_eps: 0.05
+```
+
+Polityka to `MlpPolicy` z domyślną architekturą Stable-Baselines3.
+
+Warianty strojenia w katalogu `src/dqn/configs/` zmieniają pojedyncze hiperparametry względem konfiguracji bazowej i mają `total_timesteps` równe 225 000. Każdy wariant trenowany jest więc dokładnie do tej samej liczby kroków, którą ma model końcowy, dzięki czemu porównanie nie jest zaburzone różną długością treningu. Sufiks `225k` w nazwach plików w `data/models/finetune/` oznacza koniec treningu wariantu, a nie wybrany checkpoint.
+
+### Analiza modelu kontrastowego
+
+Oprócz modelu końcowego na zbiorze testowym oceniono również jeden model, który podczas strojenia wypadł najsłabiej na zbiorze walidacyjnym. Jest to wariant ze skróconą fazą eksploracji, zapisany jako `data/models/finetune/dqn_fixed_explore1e-1_225k.zip`.
+
+Celem tego dodatkowego eksperymentu jest sprawdzenie, czy słabe wyniki walidacyjne przekładają się na słabą generalizację na niezależnym zbiorze testowym.
 
 Nie należy traktować tego modelu jako kolejnego kandydata wybieranego na podstawie testu. Jest to analiza porównawcza wykonana po procesie selekcji głównego modelu.
 
@@ -356,6 +447,35 @@ Przy szczegółowym opisie każdej metryki trzeba podać:
 Jeżeli definicja pochodzi z SUMO lub z własnej implementacji, należy oprzeć się na rzeczywistym kodzie albo dokumentacji. Nie wolno wymyślać definicji.
 
 Średnie opóźnienie pełniło ważną rolę w porównywaniu modeli podczas walidacji, ale końcowa ocena metod nie powinna ignorować pozostałych metryk.
+
+---
+
+## Struktura projektu i pliki wynikowe
+
+Kod źródłowy:
+
+- `src/baseline/run_sim.py` uruchamia metody referencyjne przez czyste TraCI,
+- `src/dqn/env.py` zawiera klasę `DqnSumoEnv`, czyli własną warstwę nad `sumo-rl`,
+- `src/dqn/train.py` odpowiada za trening i zapis checkpointów,
+- `src/dqn/evaluate.py` odpowiada za walidację i ocenę testową,
+- `src/dqn/results.py` zawiera `EpisodeRecorder` oraz funkcje liczące metryki,
+- `src/dqn/configs/` zawiera konfigurację bazową i warianty strojenia.
+
+Skrypty uruchomieniowe w katalogu głównym: `run_baseline.sh`, `run_train_configs.sh`, `run_dqn_test.sh`. Dokumentacja komend znajduje się w `run_experiments.md`.
+
+Pliki wynikowe w katalogu `data/`:
+
+- `results.csv` oraz `results_<metoda>.csv` z oceną na zbiorze testowym,
+- `validate_steps.csv` z oceną kolejnych checkpointów,
+- `validate_steps_check_seed.csv` z powtórzeniem wyboru checkpointu na pięciu ziarnach,
+- `validation_params.csv` z oceną wariantów hiperparametrów,
+- `validation_params_check_seed.csv` z powtórzeniem porównania wariantów na pięciu ziarnach.
+
+Wykresy powstają w notatniku `data/visualise.ipynb` i zapisywane są do `docs/tex/img2/`.
+
+Wszystkie liczbowe wyniki należy odczytywać z tych plików. Nie wolno ich zgadywać.
+
+Znana właściwość danych: w przebiegach DQN kolumna `phase` w `timeseries.csv` ma zawsze wartość 0, ponieważ `sumo-rl` steruje sygnalizacją przez `setRedYellowGreenState`. Zliczanie przełączeń jest poprawne, ponieważ porównuje łańcuchy stanu sygnałów, a nie numer fazy.
 
 ---
 
@@ -587,9 +707,7 @@ Nie wolno wymyślać cytowań, autorów, tytułów publikacji ani numerów DOI.
 Model pomagający w pracy nie powinien zakładać bez potwierdzenia:
 
 - dokładnej ostatecznej struktury pracy,
-- końcowej konfiguracji najlepszego modelu,
-- dokładnych wyników testowych,
-- wartości hiperparametrów,
+- dokładnych wyników testowych i walidacyjnych,
 - liczby wykonanych eksperymentów,
 - dokładnych wersji oprogramowania,
 - rodzaju sprzętu użytego do treningu,
