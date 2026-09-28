@@ -54,7 +54,6 @@ for cfg in "${CONFIGS[@]}"; do
   docker rm -f "$name" >/dev/null 2>&1 || true
 
   docker run -d --name "$name" \
-    --env-file .env \
     -v "$PWD":/workspace \
     --platform=linux/amd64 \
     thesis-dqn train \

@@ -23,5 +23,5 @@ training:
   device: auto
 
 hub:
-  upload_to_hub: true
+  upload_to_hub: false
   model_name: dqn_fixed_trainfreq_4_225k

@@ -211,6 +211,17 @@ __marimo__/
 
 .idea/
 
-models/
+# Trained models are not versioned, except the two referenced by the README.
+data/models/**
+!data/models/dqn/
+!data/models/dqn/dqn_final.zip
+!data/models/finetune/
+!data/models/finetune/dqn_fixed_explore1e-1_225k.zip
+data/models_old/
 
-models_old/
+# Raw per-run SUMO output; the aggregated metrics live in data/results*.csv
+data/out/
+
+# Training container logs and LaTeX build artifacts
+logs/
+docs/build/
